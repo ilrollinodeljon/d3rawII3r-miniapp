@@ -123,7 +123,7 @@ export const PRODUCTS = [
   ],
   minQty: 10,
   unit: "g",
-  strains: ["Mimosa", "Tiramisu"],
+  strains: ["Mimosa", "Tiramisu, Rainbow Mints, Papaya"],
   prices: [
     { grams: 10, price: 130 },
     { grams: 25, price: 280 },

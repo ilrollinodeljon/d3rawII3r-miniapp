@@ -14,7 +14,7 @@ export default function HomePage({ onNavigate, onTabChange }) {
           <img
             src="/logo.png"
             alt="logo"
-            style={{ width: 150, height: 150, objectFit: 'contain' }}
+            style={{ width: 130, height: 130, objectFit: 'contain' }}
             onError={e => { e.target.style.display = 'none'; }}
           />
           <h1 style={{ 
