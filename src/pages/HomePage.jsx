@@ -53,16 +53,25 @@ export default function HomePage({ onNavigate, onTabChange }) {
         {/* Row 2: Telegram + Instagram - Slimmer + More Transparent */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 28 }}>
           <a 
-            href="https://t.me/therawller" 
-            target="_blank" 
-            rel="noreferrer"
-            className="btn btn-ghost"
-            style={{ padding: '18px 16px', fontWeight: 700, fontSize: 15, textDecoration: 'none', minHeight: '74px' }}
-          >
-            <span style={{ fontSize: 20 }}>✈️</span> Telegram
-          </a>
-
-          <a 
+  href="https://t.me/therawller" 
+  target="_blank" 
+  rel="noreferrer"
+  className="btn btn-ghost"
+  style={{ 
+    padding: '18px 16px', 
+    fontWeight: 700, 
+    fontSize: 15, 
+    textDecoration: 'none', 
+    minHeight: '74px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10
+  }}
+>
+  <span style={{ fontSize: 24 }}>✈️</span> 
+  Telegram
+</a>
             href="https://instagram.com/therawller" 
             target="_blank" 
             rel="noreferrer"
