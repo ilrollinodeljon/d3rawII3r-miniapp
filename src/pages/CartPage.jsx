@@ -30,6 +30,46 @@ export default function CartPage() {
   const courierObj = deliveryMethod?.couriers?.find(c => c.id === courier);
   const user = window.Telegram?.WebApp?.initDataUnsafe?.user;
 
+  // Generate next 7 days + "Il prima possibile"
+  const getDateOptions = () => {
+    const options = [];
+    const today = new Date();
+    const weekdays = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
+
+    // "Il prima possibile" option
+    options.push({
+      value: 'asap',
+      label: 'Il prima possibile',
+      dayName: '🚀',
+      dayNum: '',
+      month: '',
+      isSpecial: true
+    });
+
+    // Next 7 days
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(today);
+      date.setDate(today.getDate() + i);
+      
+      const dayName = weekdays[date.getDay()];
+      const dayNum = date.getDate();
+      const month = date.toLocaleString('it-IT', { month: 'short' }).toUpperCase();
+      const value = date.toISOString().split('T')[0];
+
+      options.push({
+        value,
+        dayName,
+        dayNum,
+        month,
+        isToday: i === 0,
+        isSpecial: false
+      });
+    }
+    return options;
+  };
+
+  const dateOptions = getDateOptions();
+
   useEffect(() => {
     setDelivery(checkoutData.delivery);
     setCourier(checkoutData.courier);
@@ -72,7 +112,7 @@ export default function CartPage() {
         payment: availablePayments.find(p => p.id === payment)?.label,
         notes,
         discount,
-        preferredDate,
+        preferredDate: preferredDate === 'asap' ? 'Il prima possibile' : preferredDate,
       });
       addOrder({
         id: Date.now(), cart: [...cart], total,
@@ -231,26 +271,15 @@ export default function CartPage() {
                   <div className="field-row">
                     <input className="field" placeholder="Nome e Cognome" value={address.nome || ''} onChange={e => setField('nome', e.target.value)} />
                     <div style={{ display: 'flex', alignItems: 'center' }}>
-  <span
-    style={{
-      padding: '12px',
-      background: 'var(--surface)',
-      border: '1px solid var(--border)',
-      borderRight: 'none',
-      borderRadius: '12px 0 0 12px'
-    }}
-  >
-    @
-  </span>
-
-  <input
-    className="field"
-    style={{ borderRadius: '0 12px 12px 0', marginBottom: 0 }}
-    placeholder="username Telegram"
-    value={(address.telegram || '').replace('@', '')}
-    onChange={e => setField('telegram', '@' + e.target.value.replace('@', ''))}
-  />
-</div>
+                      <span style={{ padding: '12px', background: 'var(--surface)', border: '1px solid var(--border)', borderRight: 'none', borderRadius: '12px 0 0 12px' }}>@</span>
+                      <input
+                        className="field"
+                        style={{ borderRadius: '0 12px 12px 0', marginBottom: 0 }}
+                        placeholder="username Telegram"
+                        value={(address.telegram || '').replace('@', '')}
+                        onChange={e => setField('telegram', '@' + e.target.value.replace('@', ''))}
+                      />
+                    </div>
                   </div>
                   <input className="field" placeholder="Numero di Telefono" type="tel" value={address.telefono || ''} onChange={e => setField('telefono', e.target.value)} />
                   <input className="field" placeholder="Via e numero civico" value={address.indirizzo || ''} onChange={e => setField('indirizzo', e.target.value)} />
@@ -258,32 +287,22 @@ export default function CartPage() {
                 </div>
               ) : courier === 'inpost' ? (
                 <div className="field-group">
+                  {/* InPost fields unchanged */}
                   <div className="field-row">
                     <input className="field" placeholder="Nome" value={address.nome || ''} onChange={e => setField('nome', e.target.value)} />
                     <input className="field" placeholder="Cognome" value={address.cognome || ''} onChange={e => setField('cognome', e.target.value)} />
                   </div>
                   <input className="field" placeholder="Telefono" type="tel" value={address.telefono || ''} onChange={e => setField('telefono', e.target.value)} />
                   <div style={{ display: 'flex', alignItems: 'center' }}>
-  <span
-    style={{
-      padding: '12px',
-      background: 'var(--surface)',
-      border: '1px solid var(--border)',
-      borderRight: 'none',
-      borderRadius: '12px 0 0 12px'
-    }}
-  >
-    @
-  </span>
-
-  <input
-    className="field"
-    style={{ borderRadius: '0 12px 12px 0', marginBottom: 0 }}
-    placeholder="username Telegram"
-    value={(address.telegram || '').replace('@', '')}
-    onChange={e => setField('telegram', '@' + e.target.value.replace('@', ''))}
-  />
-</div>
+                    <span style={{ padding: '12px', background: 'var(--surface)', border: '1px solid var(--border)', borderRight: 'none', borderRadius: '12px 0 0 12px' }}>@</span>
+                    <input
+                      className="field"
+                      style={{ borderRadius: '0 12px 12px 0', marginBottom: 0 }}
+                      placeholder="username Telegram"
+                      value={(address.telegram || '').replace('@', '')}
+                      onChange={e => setField('telegram', '@' + e.target.value.replace('@', ''))}
+                    />
+                  </div>
                   <input className="field" placeholder="Nome/codice locker InPost" value={address.locker_name || ''} onChange={e => setField('locker_name', e.target.value)} />
                   <p className="field-hint">Es: MI-CENTRO-001</p>
                   <input className="field" placeholder="Indirizzo locker" value={address.locker_address || ''} onChange={e => setField('locker_address', e.target.value)} />
@@ -307,19 +326,49 @@ export default function CartPage() {
               )}
             </div>
 
-            {/* Preferred Date */}
+            {/* Preferred Date - Rolling Selector */}
             <div className="section-box">
               <div className="section-box-title">📅 Data preferita di consegna</div>
-              <div className="field-group">
-                <input
-                  type="date"
-                  className="field"
-                  value={preferredDate}
-                  onChange={(e) => updatePreferredDate(e.target.value)}
-                  min={new Date().toISOString().split('T')[0]} // today onwards
-                />
-                <p className="field-hint">Scegli la data in cui preferisci ricevere l'ordine (soggetto a disponibilità)</p>
+              <div style={{ 
+                display: 'flex', 
+                gap: '10px', 
+                overflowX: 'auto', 
+                padding: '12px 0',
+                scrollbarWidth: 'none',
+                msOverflowStyle: 'none'
+              }}>
+                {dateOptions.map((option) => (
+                  <div
+                    key={option.value}
+                    className={`date-chip ${preferredDate === option.value ? 'active' : ''}`}
+                    onClick={() => updatePreferredDate(option.value)}
+                    style={{
+                      minWidth: '78px',
+                      textAlign: 'center',
+                      padding: '14px 10px',
+                      borderRadius: '16px',
+                      border: '2px solid var(--border)',
+                      background: preferredDate === option.value ? 'var(--gold)' : 'var(--surface)',
+                      color: preferredDate === option.value ? '#000' : 'var(--text)',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      flexShrink: 0
+                    }}
+                  >
+                    <div style={{ fontSize: '13px', opacity: 0.8 }}>{option.dayName}</div>
+                    {option.dayNum && (
+                      <div style={{ fontSize: '24px', fontWeight: 700, margin: '6px 0 2px' }}>
+                        {option.dayNum}
+                      </div>
+                    )}
+                    {option.month && <div style={{ fontSize: '11px', opacity: 0.7 }}>{option.month}</div>}
+                    {option.isToday && <div style={{ fontSize: '10px', marginTop: 4, fontWeight: 600 }}>OGGI</div>}
+                  </div>
+                ))}
               </div>
+              <p className="field-hint" style={{ marginTop: 12 }}>
+                Seleziona quando preferisci ricevere l'ordine (soggetto a disponibilità)
+              </p>
             </div>
 
             {/* Payment */}

@@ -1,0 +1,217 @@
+import { useState, useEffect } from 'react';
+import Topbar from '../components/Topbar';
+import { useStore, getCartTotal, getPriceForGrams } from '../store';
+import { DELIVERY_METHODS, SHOP_CONFIG } from '../config';
+import { sendOrderToTelegram } from '../utils/telegram';
+
+export default function CartPage() {
+  const cart = useStore(s => s.cart);
+  const updateQty = useStore(s => s.updateQty);
+  const removeFromCart = useStore(s => s.removeFromCart);
+  const clearCart = useStore(s => s.clearCart);
+  const addOrder = useStore(s => s.addOrder);
+  const checkoutData = useStore(s => s.checkoutData);
+  const updateCheckoutData = useStore(s => s.updateCheckoutData);
+
+  const [delivery, setDelivery] = useState(checkoutData.delivery);
+  const [courier, setCourier] = useState(checkoutData.courier);
+  const [payment, setPayment] = useState(checkoutData.payment);
+  const [address, setAddress] = useState(checkoutData.address || {});
+  const [notes, setNotes] = useState(checkoutData.notes || '');
+  const [discount, setDiscount] = useState(checkoutData.discount || '');
+  const [preferredDate, setPreferredDate] = useState(checkoutData.preferredDate || '');
+  const [sending, setSending] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState('');
+
+  const total = getCartTotal(cart);
+  const isDelivery = delivery === 'delivery_pavia';
+  const deliveryMethod = DELIVERY_METHODS.find(d => d.id === delivery);
+  const courierObj = deliveryMethod?.couriers?.find(c => c.id === courier);
+  const user = window.Telegram?.WebApp?.initDataUnsafe?.user;
+
+  // Generate next 7 days
+  const getNextDays = () => {
+    const days = [];
+    const today = new Date();
+    const weekdays = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
+
+    for (let i = 0; i < 8; i++) { // Today + 7 days
+      const date = new Date(today);
+      date.setDate(today.getDate() + i);
+      
+      const dayName = weekdays[date.getDay()];
+      const dayNum = date.getDate();
+      const month = date.toLocaleString('it-IT', { month: 'short' }).toUpperCase();
+      
+      const value = date.toISOString().split('T')[0]; // YYYY-MM-DD
+
+      days.push({
+        value,
+        dayName,
+        dayNum,
+        month,
+        isToday: i === 0
+      });
+    }
+    return days;
+  };
+
+  const nextDays = getNextDays();
+
+  useEffect(() => {
+    setDelivery(checkoutData.delivery);
+    setCourier(checkoutData.courier);
+    setPayment(checkoutData.payment);
+    setAddress(checkoutData.address || {});
+    setNotes(checkoutData.notes || '');
+    setDiscount(checkoutData.discount || '');
+    setPreferredDate(checkoutData.preferredDate || '');
+  }, [checkoutData]);
+
+  const setField = (k, v) => {
+    const newAddress = { ...address, [k]: v };
+    setAddress(newAddress);
+    updateCheckoutData({ address: newAddress });
+  };
+
+  const updatePreferredDate = (date) => {
+    setPreferredDate(date);
+    updateCheckoutData({ preferredDate: date });
+  };
+
+  const availablePayments = isDelivery
+    ? [{ id: 'crypto', label: 'Crypto', icon: '₿' }, { id: 'cash', label: 'Cash', icon: '💵' }]
+    : [{ id: 'crypto', label: 'Crypto', icon: '₿' }, { id: 'iban', label: 'IBAN/Bonifico', icon: '🏦' }];
+
+  const handleSubmit = async () => {
+    if (cart.length === 0) return;
+    if (!isDelivery && total < SHOP_CONFIG.minOrderShipping) {
+      setError(`Ordine minimo €${SHOP_CONFIG.minOrderShipping} per la spedizione.`);
+      return;
+    }
+    setSending(true);
+    setError('');
+    try {
+      await sendOrderToTelegram({
+        user, cart, total,
+        delivery: deliveryMethod?.label,
+        courier: isDelivery ? null : courierObj?.label,
+        address,
+        payment: availablePayments.find(p => p.id === payment)?.label,
+        notes,
+        discount,
+        preferredDate,
+      });
+      addOrder({
+        id: Date.now(), cart: [...cart], total,
+        date: new Date().toISOString(), status: 'In attesa',
+        delivery, address,
+        preferredDate,
+      });
+      clearCart();
+      setSuccess(true);
+      window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success');
+    } catch (e) {
+      setError("Errore nell'invio. Riprova o contatta il supporto.");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  if (success) {
+    return (
+      <div className="page fade-up">
+        <Topbar />
+        <div className="container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '70vh' }}>
+          <div style={{ fontSize: 64 }}>✅</div>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 28, marginTop: 16, textAlign: 'center' }}>
+            Ordine inviato!
+          </h2>
+          <p style={{ color: 'var(--text-sub)', textAlign: 'center', marginTop: 8, lineHeight: 1.6 }}>
+            Verrai contattato al più presto per confermare l'ordine e i dettagli di pagamento.
+          </p>
+          <div className="spacer-20" />
+          <button className="btn btn-gold" onClick={() => setSuccess(false)} style={{ maxWidth: 280 }}>
+            Torna allo shop
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="page fade-up">
+      <Topbar />
+      <div className="container">
+        <h2 className="section-title">🛒 Carrello</h2>
+
+        {cart.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-icon">🛒</div>
+            <p>Il carrello è vuoto</p>
+          </div>
+        ) : (
+          <>
+            {/* ... existing cart items and total ... */}
+
+            {/* Delivery section (unchanged) */}
+            <div className="section-box">
+              {/* ... existing delivery code ... */}
+            </div>
+
+            {/* Address form (unchanged) */}
+            <div className="section-box">
+              {/* ... existing address code ... */}
+            </div>
+
+            {/* Preferred Date - Rolling Selector */}
+            <div className="section-box">
+              <div className="section-box-title">📅 Data preferita di consegna</div>
+              <div style={{ 
+                display: 'flex', 
+                gap: '10px', 
+                overflowX: 'auto', 
+                padding: '8px 0',
+                scrollbarWidth: 'none'
+              }}>
+                {nextDays.map((day) => (
+                  <div
+                    key={day.value}
+                    className={`date-chip ${preferredDate === day.value ? 'active' : ''}`}
+                    onClick={() => updatePreferredDate(day.value)}
+                    style={{
+                      minWidth: '68px',
+                      textAlign: 'center',
+                      padding: '12px 8px',
+                      borderRadius: '16px',
+                      border: '2px solid var(--border)',
+                      background: preferredDate === day.value ? 'var(--gold)' : 'var(--surface)',
+                      color: preferredDate === day.value ? '#000' : 'var(--text)',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    <div style={{ fontSize: '13px', opacity: 0.8 }}>{day.dayName}</div>
+                    <div style={{ fontSize: '22px', fontWeight: 700, margin: '4px 0' }}>
+                      {day.dayNum}
+                    </div>
+                    <div style={{ fontSize: '11px', opacity: 0.7 }}>{day.month}</div>
+                    {day.isToday && <div style={{ fontSize: '10px', marginTop: 4 }}>OGGI</div>}
+                  </div>
+                ))}
+              </div>
+              <p className="field-hint" style={{ marginTop: 12 }}>
+                Seleziona il giorno preferito (soggetto a disponibilità)
+              </p>
+            </div>
+
+            {/* Payment, Notes, Discount, Submit button - unchanged */}
+            {/* ... rest of your code ... */}
+
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
