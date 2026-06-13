@@ -19,7 +19,6 @@ export default function CartPage() {
   const [address, setAddress] = useState(checkoutData.address || {});
   const [notes, setNotes] = useState(checkoutData.notes || '');
   const [discount, setDiscount] = useState(checkoutData.discount || '');
-  const [preferredDate, setPreferredDate] = useState(checkoutData.preferredDate || '');
   const [sending, setSending] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
@@ -37,18 +36,12 @@ export default function CartPage() {
     setAddress(checkoutData.address || {});
     setNotes(checkoutData.notes || '');
     setDiscount(checkoutData.discount || '');
-    setPreferredDate(checkoutData.preferredDate || '');
   }, [checkoutData]);
 
   const setField = (k, v) => {
     const newAddress = { ...address, [k]: v };
     setAddress(newAddress);
     updateCheckoutData({ address: newAddress });
-  };
-
-  const updatePreferredDate = (date) => {
-    setPreferredDate(date);
-    updateCheckoutData({ preferredDate: date });
   };
 
   const availablePayments = isDelivery
@@ -72,13 +65,11 @@ export default function CartPage() {
         payment: availablePayments.find(p => p.id === payment)?.label,
         notes,
         discount,
-        preferredDate,
       });
       addOrder({
         id: Date.now(), cart: [...cart], total,
         date: new Date().toISOString(), status: 'In attesa',
         delivery, address,
-        preferredDate,
       });
       clearCart();
       setSuccess(true);
@@ -305,21 +296,6 @@ export default function CartPage() {
                   </div>
                 </div>
               )}
-            </div>
-
-            {/* Preferred Date */}
-            <div className="section-box">
-              <div className="section-box-title">📅 Data preferita di consegna</div>
-              <div className="field-group">
-                <input
-                  type="date"
-                  className="field"
-                  value={preferredDate}
-                  onChange={(e) => updatePreferredDate(e.target.value)}
-                  min={new Date().toISOString().split('T')[0]} // today onwards
-                />
-                <p className="field-hint">Scegli la data in cui preferisci ricevere l'ordine (soggetto a disponibilità)</p>
-              </div>
             </div>
 
             {/* Payment */}
