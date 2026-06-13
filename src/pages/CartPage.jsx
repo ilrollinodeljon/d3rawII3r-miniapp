@@ -30,23 +30,12 @@ export default function CartPage() {
   const courierObj = deliveryMethod?.couriers?.find(c => c.id === courier);
   const user = window.Telegram?.WebApp?.initDataUnsafe?.user;
 
-  // Generate next 7 days + "Il prima possibile"
-  const getDateOptions = () => {
-    const options = [];
+  // Generate next 7 days (Today + 6 following days)
+  const getNextDays = () => {
+    const days = [];
     const today = new Date();
     const weekdays = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
 
-    // "Il prima possibile" option
-    options.push({
-      value: 'asap',
-      label: 'Il prima possibile',
-      dayName: '🚀',
-      dayNum: '',
-      month: '',
-      isSpecial: true
-    });
-
-    // Next 7 days
     for (let i = 0; i < 7; i++) {
       const date = new Date(today);
       date.setDate(today.getDate() + i);
@@ -56,19 +45,18 @@ export default function CartPage() {
       const month = date.toLocaleString('it-IT', { month: 'short' }).toUpperCase();
       const value = date.toISOString().split('T')[0];
 
-      options.push({
+      days.push({
         value,
         dayName,
         dayNum,
         month,
-        isToday: i === 0,
-        isSpecial: false
+        isToday: i === 0
       });
     }
-    return options;
+    return days;
   };
 
-  const dateOptions = getDateOptions();
+  const nextDays = getNextDays();
 
   useEffect(() => {
     setDelivery(checkoutData.delivery);
@@ -112,7 +100,7 @@ export default function CartPage() {
         payment: availablePayments.find(p => p.id === payment)?.label,
         notes,
         discount,
-        preferredDate: preferredDate === 'asap' ? 'Il prima possibile' : preferredDate,
+        preferredDate,
       });
       addOrder({
         id: Date.now(), cart: [...cart], total,
@@ -287,7 +275,6 @@ export default function CartPage() {
                 </div>
               ) : courier === 'inpost' ? (
                 <div className="field-group">
-                  {/* InPost fields unchanged */}
                   <div className="field-row">
                     <input className="field" placeholder="Nome" value={address.nome || ''} onChange={e => setField('nome', e.target.value)} />
                     <input className="field" placeholder="Cognome" value={address.cognome || ''} onChange={e => setField('cognome', e.target.value)} />
@@ -337,37 +324,35 @@ export default function CartPage() {
                 scrollbarWidth: 'none',
                 msOverflowStyle: 'none'
               }}>
-                {dateOptions.map((option) => (
+                {nextDays.map((day) => (
                   <div
-                    key={option.value}
-                    className={`date-chip ${preferredDate === option.value ? 'active' : ''}`}
-                    onClick={() => updatePreferredDate(option.value)}
+                    key={day.value}
+                    className={`date-chip ${preferredDate === day.value ? 'active' : ''}`}
+                    onClick={() => updatePreferredDate(day.value)}
                     style={{
                       minWidth: '78px',
                       textAlign: 'center',
                       padding: '14px 10px',
                       borderRadius: '16px',
                       border: '2px solid var(--border)',
-                      background: preferredDate === option.value ? 'var(--gold)' : 'var(--surface)',
-                      color: preferredDate === option.value ? '#000' : 'var(--text)',
+                      background: preferredDate === day.value ? 'var(--gold)' : 'var(--surface)',
+                      color: preferredDate === day.value ? '#000' : 'var(--text)',
                       cursor: 'pointer',
                       transition: 'all 0.2s',
                       flexShrink: 0
                     }}
                   >
-                    <div style={{ fontSize: '13px', opacity: 0.8 }}>{option.dayName}</div>
-                    {option.dayNum && (
-                      <div style={{ fontSize: '24px', fontWeight: 700, margin: '6px 0 2px' }}>
-                        {option.dayNum}
-                      </div>
-                    )}
-                    {option.month && <div style={{ fontSize: '11px', opacity: 0.7 }}>{option.month}</div>}
-                    {option.isToday && <div style={{ fontSize: '10px', marginTop: 4, fontWeight: 600 }}>OGGI</div>}
+                    <div style={{ fontSize: '13px', opacity: 0.8 }}>{day.dayName}</div>
+                    <div style={{ fontSize: '24px', fontWeight: 700, margin: '6px 0 2px' }}>
+                      {day.dayNum}
+                    </div>
+                    <div style={{ fontSize: '11px', opacity: 0.7 }}>{day.month}</div>
+                    {day.isToday && <div style={{ fontSize: '10px', marginTop: 4, fontWeight: 600 }}>OGGI</div>}
                   </div>
                 ))}
               </div>
               <p className="field-hint" style={{ marginTop: 12 }}>
-                Seleziona quando preferisci ricevere l'ordine (soggetto a disponibilità)
+                Seleziona il giorno preferito (soggetto a disponibilità)
               </p>
             </div>
 
