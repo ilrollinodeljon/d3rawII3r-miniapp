@@ -30,32 +30,6 @@ export default function CartPage() {
   const courierObj = deliveryMethod?.couriers?.find(c => c.id === courier);
   const user = window.Telegram?.WebApp?.initDataUnsafe?.user;
 
-  // Generate next 8 days (today + 7 days)
-  const getDateOptions = () => {
-    const options = [];
-    const today = new Date();
-    for (let i = 0; i < 8; i++) {
-      const date = new Date(today);
-      date.setDate(today.getDate() + i);
-      
-      const dayName = date.toLocaleDateString('it-IT', { weekday: 'short' });
-      const dayNum = date.getDate();
-      const monthName = date.toLocaleDateString('it-IT', { month: 'short' });
-      
-      const value = date.toISOString().split('T')[0]; // YYYY-MM-DD
-      
-      options.push({
-        value,
-        label: `${dayName.charAt(0).toUpperCase() + dayName.slice(1)} ${dayNum}`,
-        sub: monthName,
-        full: `${dayName} ${dayNum} ${monthName}`
-      });
-    }
-    return options;
-  };
-
-  const dateOptions = getDateOptions();
-
   useEffect(() => {
     setDelivery(checkoutData.delivery);
     setCourier(checkoutData.courier);
@@ -150,58 +124,260 @@ export default function CartPage() {
           </div>
         ) : (
           <>
-            {/* ... existing cart items and total ... */}
+            {/* Cart items */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {cart.map((item, i) => {
+                const itemPrice = getPriceForGrams(item.prices, item.grams);
+                const sizes = item.prices.map(p => p.grams).sort((a, b) => a - b);
+                const currentIndex = sizes.indexOf(item.grams);
+                return (
+                  <div key={i} className="cart-item">
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      onError={e => { e.target.src = 'https://placehold.co/64x64/141414/888?text=IMG'; }}
+                    />
+                    <div className="cart-item-info">
+                      <div className="cart-item-name">{item.name} {item.emoji}</div>
+                      <div className="cart-item-sub">
+                        {item.grams}g · {itemPrice ? `€${itemPrice}` : '—'}
+                        {item.strain ? ` · ${item.strain}` : ''}
+                      </div>
+                      <div className="qty-stepper" style={{ marginTop: 10 }}>
+                        <button
+                          className="qty-btn"
+                          onClick={() => {
+                            if (currentIndex <= 0) removeFromCart(item.productId, item.strain);
+                            else updateQty(item.productId, item.strain, sizes[currentIndex - 1]);
+                          }}
+                        >−</button>
+                        <span className="qty-val">{item.grams}g</span>
+                        <button
+                          className="qty-btn"
+                          onClick={() => {
+                            if (currentIndex < sizes.length - 1)
+                              updateQty(item.productId, item.strain, sizes[currentIndex + 1]);
+                          }}
+                          disabled={currentIndex >= sizes.length - 1}
+                        >+</button>
+                      </div>
+                    </div>
+                    <button className="delete-btn" onClick={() => removeFromCart(item.productId, item.strain)}>🗑️</button>
+                  </div>
+                );
+              })}
+            </div>
 
             <div className="spacer-16" />
 
-            {/* Delivery Section (unchanged) */}
-            {/* ... keep your existing delivery and address sections ... */}
+            {/* Total */}
+            <div className="total-row">
+              <span className="total-label">Totale</span>
+              <span className="total-value">{SHOP_CONFIG.currency}{total}</span>
+            </div>
 
-            {/* Preferred Date Selector */}
+            <div className="spacer-16" />
+
+            {/* Delivery */}
             <div className="section-box">
-              <div className="section-box-title">📅 Data preferita di consegna</div>
-              <div style={{ 
-                display: 'flex', 
-                gap: 8, 
-                overflowX: 'auto', 
-                paddingBottom: 12,
-                scrollbarWidth: 'none'
-              }}>
-                {dateOptions.map((date, i) => (
+              <div className="section-box-title">🚚 Tipo di consegna</div>
+              <div className="delivery-grid">
+                {DELIVERY_METHODS.map(d => (
                   <div
-                    key={i}
-                    onClick={() => updatePreferredDate(date.value)}
-                    className={`date-option ${preferredDate === date.value ? 'active' : ''}`}
-                    style={{
-                      minWidth: '68px',
-                      textAlign: 'center',
-                      padding: '12px 8px',
-                      borderRadius: '12px',
-                      border: '1px solid var(--border)',
-                      background: preferredDate === date.value ? 'var(--gold)' : 'var(--surface)',
-                      color: preferredDate === date.value ? '#000' : 'var(--text)',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s'
-                    }}
+                    key={d.id}
+                    className={`delivery-option ${delivery === d.id ? 'active' : ''}`}
+                    onClick={() => { setDelivery(d.id); updateCheckoutData({ delivery: d.id, payment: 'crypto' }); setPayment('crypto'); }}
                   >
-                    <div style={{ fontSize: '13px', opacity: 0.8 }}>{date.sub}</div>
-                    <div style={{ fontSize: '22px', fontWeight: 700, margin: '4px 0' }}>
-                      {date.label.split(' ')[1]}
-                    </div>
-                    <div style={{ fontSize: '13px', fontWeight: 600 }}>
-                      {date.label.split(' ')[0]}
-                    </div>
+                    <div style={{ fontSize: 20, marginBottom: 4 }}>{d.icon}</div>
+                    {d.label}
                   </div>
                 ))}
               </div>
-              <p className="field-hint" style={{ marginTop: 8 }}>
-                Seleziona il giorno preferito (soggetto a conferma)
-              </p>
+
+              {deliveryMethod?.note && (
+                <div className="notice" style={{ marginTop: 12 }}>
+                  ⚠️ {deliveryMethod.note}
+                </div>
+              )}
+
+              {!isDelivery && deliveryMethod?.couriers && (
+                <>
+                  <div className="spacer-12" />
+                  <div style={{ fontWeight: 600, marginBottom: 10 }}>Scegli corriere</div>
+                  <div className="courier-grid">
+                    {deliveryMethod.couriers.map(c => (
+                      <div
+                        key={c.id}
+                        className={`courier-option ${courier === c.id ? 'active' : ''}`}
+                        onClick={() => { setCourier(c.id); updateCheckoutData({ courier: c.id }); }}
+                      >
+                        <div className="courier-icon">{c.icon}</div>
+                        {c.label}
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
 
-            {/* Payment, Notes, Discount, Submit Button... */}
-            {/* ... rest of your code remains the same ... */}
+            {/* Address form */}
+            <div className="section-box">
+              <div className="section-box-title">
+                {isDelivery ? `📍 ${deliveryMethod?.label}` : `${courierObj?.icon} ${courierObj?.label}`}
+              </div>
 
+              {isDelivery ? (
+                <div className="field-group">
+                  <div className="field-row">
+                    <input className="field" placeholder="Nome e Cognome" value={address.nome || ''} onChange={e => setField('nome', e.target.value)} />
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+  <span
+    style={{
+      padding: '12px',
+      background: 'var(--surface)',
+      border: '1px solid var(--border)',
+      borderRight: 'none',
+      borderRadius: '12px 0 0 12px'
+    }}
+  >
+    @
+  </span>
+
+  <input
+    className="field"
+    style={{ borderRadius: '0 12px 12px 0', marginBottom: 0 }}
+    placeholder="username Telegram"
+    value={(address.telegram || '').replace('@', '')}
+    onChange={e => setField('telegram', '@' + e.target.value.replace('@', ''))}
+  />
+</div>
+                  </div>
+                  <input className="field" placeholder="Numero di Telefono" type="tel" value={address.telefono || ''} onChange={e => setField('telefono', e.target.value)} />
+                  <input className="field" placeholder="Via e numero civico" value={address.indirizzo || ''} onChange={e => setField('indirizzo', e.target.value)} />
+                  <input className="field" placeholder="Città" value={address.citta || ''} onChange={e => setField('citta', e.target.value)} />
+                </div>
+              ) : courier === 'inpost' ? (
+                <div className="field-group">
+                  <div className="field-row">
+                    <input className="field" placeholder="Nome" value={address.nome || ''} onChange={e => setField('nome', e.target.value)} />
+                    <input className="field" placeholder="Cognome" value={address.cognome || ''} onChange={e => setField('cognome', e.target.value)} />
+                  </div>
+                  <input className="field" placeholder="Telefono" type="tel" value={address.telefono || ''} onChange={e => setField('telefono', e.target.value)} />
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+  <span
+    style={{
+      padding: '12px',
+      background: 'var(--surface)',
+      border: '1px solid var(--border)',
+      borderRight: 'none',
+      borderRadius: '12px 0 0 12px'
+    }}
+  >
+    @
+  </span>
+
+  <input
+    className="field"
+    style={{ borderRadius: '0 12px 12px 0', marginBottom: 0 }}
+    placeholder="username Telegram"
+    value={(address.telegram || '').replace('@', '')}
+    onChange={e => setField('telegram', '@' + e.target.value.replace('@', ''))}
+  />
+</div>
+                  <input className="field" placeholder="Nome/codice locker InPost" value={address.locker_name || ''} onChange={e => setField('locker_name', e.target.value)} />
+                  <p className="field-hint">Es: MI-CENTRO-001</p>
+                  <input className="field" placeholder="Indirizzo locker" value={address.locker_address || ''} onChange={e => setField('locker_address', e.target.value)} />
+                  <p className="field-hint">Puoi trovare i locker su inpost.it/trova-locker</p>
+                  <input className="field" placeholder="Email (per ricevuta InPost)" type="email" value={address.email || ''} onChange={e => setField('email', e.target.value)} />
+                  <p className="field-hint">Necessaria per ricevere le notifiche del corriere</p>
+                </div>
+              ) : (
+                <div className="field-group">
+                  <div className="field-row">
+                    <input className="field" placeholder="Nome" value={address.nome || ''} onChange={e => setField('nome', e.target.value)} />
+                    <input className="field" placeholder="Cognome" value={address.cognome || ''} onChange={e => setField('cognome', e.target.value)} />
+                  </div>
+                  <input className="field" placeholder="Telefono" type="tel" value={address.telefono || ''} onChange={e => setField('telefono', e.target.value)} />
+                  <input className="field" placeholder="Indirizzo" value={address.indirizzo || ''} onChange={e => setField('indirizzo', e.target.value)} />
+                  <div className="field-row">
+                    <input className="field" placeholder="CAP" value={address.cap || ''} onChange={e => setField('cap', e.target.value)} />
+                    <input className="field" placeholder="Città" value={address.citta || ''} onChange={e => setField('citta', e.target.value)} />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Preferred Date */}
+            <div className="section-box">
+              <div className="section-box-title">📅 Data preferita di consegna</div>
+              <div className="field-group">
+                <input
+                  type="date"
+                  className="field"
+                  value={preferredDate}
+                  onChange={(e) => updatePreferredDate(e.target.value)}
+                  min={new Date().toISOString().split('T')[0]} // today onwards
+                />
+                <p className="field-hint">Scegli la data in cui preferisci ricevere l'ordine (soggetto a disponibilità)</p>
+              </div>
+            </div>
+
+            {/* Payment */}
+            <div className="section-box">
+              <div className="section-box-title">💳 Metodo di pagamento</div>
+              <div className="payment-grid">
+                {availablePayments.map(m => (
+                  <div
+                    key={m.id}
+                    className={`payment-option ${payment === m.id ? 'active' : ''}`}
+                    onClick={() => { setPayment(m.id); updateCheckoutData({ payment: m.id }); }}
+                  >
+                    <div className="pay-icon">{m.icon}</div>
+                    {m.label}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Total recap */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+              <span style={{ fontSize: 13 }}>💰</span>
+              <span style={{ fontWeight: 700 }}>Totale: </span>
+              <span style={{ color: 'var(--gold)', fontWeight: 800, fontSize: 18 }}>{SHOP_CONFIG.currency}{total}</span>
+            </div>
+
+            {/* Notes */}
+            <textarea
+              className="field"
+              placeholder="Note per l'ordine (opzionale)..."
+              rows={3}
+              style={{ resize: 'none', marginBottom: 12 }}
+              value={notes}
+              onChange={e => { setNotes(e.target.value); updateCheckoutData({ notes: e.target.value }); }}
+            />
+
+            {/* Discount code */}
+            <div className="discount-row" style={{ marginBottom: 16 }}>
+              <input
+                className="field"
+                placeholder="CODICE SCONTO"
+                value={discount}
+                onChange={e => { setDiscount(e.target.value); updateCheckoutData({ discount: e.target.value }); }}
+              />
+              <button className="apply-btn">Applica</button>
+            </div>
+
+            {error && <p className="error-text" style={{ marginBottom: 12 }}>⚠️ {error}</p>}
+
+            <button
+              className="btn btn-gold"
+              onClick={handleSubmit}
+              disabled={sending || cart.length === 0}
+            >
+              {sending ? '⏳ Invio in corso...' : '🛒 Invia Ordine'}
+            </button>
+
+            <div className="spacer-20" />
           </>
         )}
       </div>
