@@ -26,8 +26,17 @@ export default function CartPage() {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
 
+  // === VERIFICATION STATES ===
+  const [isVerified, setIsVerified] = useState(false);
+  const [frontImage, setFrontImage] = useState(null);
+  const [backImage, setBackImage] = useState(null);
+  const [verificationVideo, setVerificationVideo] = useState(null);
+
   const requestLocation = () => {
-    if (!navigator.geolocation) { setError('Geolocalizzazione non supportata.'); return; }
+    if (!navigator.geolocation) { 
+      setError('Geolocalizzazione non supportata.'); 
+      return; 
+    }
     setLocating(true);
     setError('');
     navigator.geolocation.getCurrentPosition(
@@ -57,7 +66,6 @@ export default function CartPage() {
   const courierObj = deliveryMethod?.couriers?.find(c => c.id === courier);
   const user = window.Telegram?.WebApp?.initDataUnsafe?.user;
 
-  // Generate next 7 days (Today + 6 following days)
   const getNextDays = () => {
     const days = [];
     const today = new Date();
@@ -66,7 +74,6 @@ export default function CartPage() {
     for (let i = 0; i < 7; i++) {
       const date = new Date(today);
       date.setDate(today.getDate() + i);
-      
       const dayName = weekdays[date.getDay()];
       const dayNum = date.getDate();
       const month = date.toLocaleString('it-IT', { month: 'short' }).toUpperCase();
@@ -110,12 +117,42 @@ export default function CartPage() {
     ? [{ id: 'cash', label: 'Cash', icon: '💵' }, { id: 'crypto', label: 'Crypto', icon: '₿' }]
     : [{ id: 'crypto', label: 'Crypto', icon: '₿' }, { id: 'iban', label: 'IBAN/Bonifico', icon: '🏦' }];
 
+  const handleFileSelect = (e, type) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const preview = URL.createObjectURL(file);
+
+    if (type === 'front') setFrontImage({ file, preview });
+    else if (type === 'back') setBackImage({ file, preview });
+    else if (type === 'video') setVerificationVideo({ file, preview });
+
+    window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('light');
+  };
+
+  const removeFile = (type) => {
+    if (type === 'front') {
+      if (frontImage?.preview) URL.revokeObjectURL(frontImage.preview);
+      setFrontImage(null);
+    } else if (type === 'back') {
+      if (backImage?.preview) URL.revokeObjectURL(backImage.preview);
+      setBackImage(null);
+    } else if (type === 'video') {
+      if (verificationVideo?.preview) URL.revokeObjectURL(verificationVideo.preview);
+      setVerificationVideo(null);
+    }
+  };
+
   const handleSubmit = async () => {
     if (cart.length === 0) return;
     if (!isDelivery && total < SHOP_CONFIG.minOrderShipping) {
       setError(`Ordine minimo €${SHOP_CONFIG.minOrderShipping} per la spedizione.`);
       return;
     }
+    if (!isVerified && (!frontImage || !backImage)) {
+      setError("Per completare l'ordine è obbligatoria la verifica documento (fronte e retro).");
+      return;
+    }
+
     setSending(true);
     setError('');
     try {
@@ -129,12 +166,17 @@ export default function CartPage() {
         notes,
         discount,
         preferredDate,
+        verification: {
+          isVerified,
+          frontImage: frontImage?.file,
+          backImage: backImage?.file,
+          verificationVideo: verificationVideo?.file,
+        }
       });
       addOrder({
         id: Date.now(), cart: [...cart], total,
         date: new Date().toISOString(), status: 'In attesa',
-        delivery, address,
-        preferredDate,
+        delivery, address, preferredDate,
       });
       clearCart();
       setSuccess(true);
@@ -188,11 +230,7 @@ export default function CartPage() {
                 const currentIndex = sizes.indexOf(item.grams);
                 return (
                   <div key={i} className="cart-item">
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      onError={e => { e.target.src = 'https://placehold.co/64x64/141414/888?text=IMG'; }}
-                    />
+                    <img src={item.image} alt={item.name} onError={e => { e.target.src = 'https://placehold.co/64x64/141414/888?text=IMG'; }} />
                     <div className="cart-item-info">
                       <div className="cart-item-name">{item.name} {item.emoji}</div>
                       <div className="cart-item-sub">
@@ -200,22 +238,14 @@ export default function CartPage() {
                         {item.strain ? ` · ${item.strain}` : ''}
                       </div>
                       <div className="qty-stepper" style={{ marginTop: 10 }}>
-                        <button
-                          className="qty-btn"
-                          onClick={() => {
-                            if (currentIndex <= 0) removeFromCart(item.productId, item.strain);
-                            else updateQty(item.productId, item.strain, sizes[currentIndex - 1]);
-                          }}
-                        >−</button>
+                        <button className="qty-btn" onClick={() => {
+                          if (currentIndex <= 0) removeFromCart(item.productId, item.strain);
+                          else updateQty(item.productId, item.strain, sizes[currentIndex - 1]);
+                        }}>−</button>
                         <span className="qty-val">{item.grams}g</span>
-                        <button
-                          className="qty-btn"
-                          onClick={() => {
-                            if (currentIndex < sizes.length - 1)
-                              updateQty(item.productId, item.strain, sizes[currentIndex + 1]);
-                          }}
-                          disabled={currentIndex >= sizes.length - 1}
-                        >+</button>
+                        <button className="qty-btn" onClick={() => {
+                          if (currentIndex < sizes.length - 1) updateQty(item.productId, item.strain, sizes[currentIndex + 1]);
+                        }} disabled={currentIndex >= sizes.length - 1}>+</button>
                       </div>
                     </div>
                     <button className="delete-btn" onClick={() => removeFromCart(item.productId, item.strain)}>🗑️</button>
@@ -226,13 +256,12 @@ export default function CartPage() {
 
             <div className="spacer-16" />
 
-            {/* Total */}
             <div className="total-row">
               <span className="total-label">Totale</span>
               <span className="total-value">{SHOP_CONFIG.currency}{total}</span>
             </div>
 
-            <div className="spacer-16" />
+            <div className="spacer-20" />
 
             {/* Delivery */}
             <div className="section-box">
@@ -242,7 +271,12 @@ export default function CartPage() {
                   <div
                     key={d.id}
                     className={`delivery-option ${delivery === d.id ? 'active' : ''}`}
-                    onClick={() => { setDelivery(d.id); const defaultPay = d.id === 'delivery_pavia' ? 'cash' : 'crypto'; updateCheckoutData({ delivery: d.id, payment: defaultPay }); setPayment(defaultPay); }}
+                    onClick={() => { 
+                      setDelivery(d.id); 
+                      const defaultPay = d.id === 'delivery_pavia' ? 'cash' : 'crypto'; 
+                      updateCheckoutData({ delivery: d.id, payment: defaultPay }); 
+                      setPayment(defaultPay); 
+                    }}
                   >
                     <div style={{ fontSize: 20, marginBottom: 4 }}>{d.icon}</div>
                     {d.label}
@@ -288,85 +322,23 @@ export default function CartPage() {
                     <input className="field" placeholder="Nome e Cognome" value={address.nome || ''} onChange={e => setField('nome', e.target.value)} />
                     <div style={{ display: 'flex', alignItems: 'center' }}>
                       <span style={{ padding: '12px', background: 'var(--surface)', border: '1px solid var(--border)', borderRight: 'none', borderRadius: '12px 0 0 12px' }}>@</span>
-                      <input
-                        className="field"
-                        style={{ borderRadius: '0 12px 12px 0', marginBottom: 0 }}
-                        placeholder="username Telegram"
-                        value={(address.telegram || '').replace('@', '')}
-                        onChange={e => setField('telegram', '@' + e.target.value.replace('@', ''))}
-                      />
+                      <input className="field" style={{ borderRadius: '0 12px 12px 0', marginBottom: 0 }} placeholder="username Telegram" value={(address.telegram || '').replace('@', '')} onChange={e => setField('telegram', '@' + e.target.value.replace('@', ''))} />
                     </div>
                   </div>
                   <input className="field" placeholder="Numero di Telefono" type="tel" value={address.telefono || ''} onChange={e => setField('telefono', e.target.value)} />
                   <input className="field" placeholder="Via e numero civico" value={address.indirizzo || ''} onChange={e => setField('indirizzo', e.target.value)} />
                   <input className="field" placeholder="Città" value={address.citta || ''} onChange={e => setField('citta', e.target.value)} />
 
-                  {/* Location share button */}
-                  <button
-                    type="button"
-                    onClick={requestLocation}
-                    disabled={locating}
-                    style={{
-                      width: '100%', marginTop: 4,
-                      padding: '14px 16px',
-                      borderRadius: 100,
-                      border: '2px solid',
-                      borderColor: location ? 'rgba(125,217,154,0.6)' : 'rgba(255,255,255,0.15)',
-                      background: location ? 'rgba(61,170,92,0.12)' : 'rgba(255,255,255,0.04)',
-                      color: '#fff', fontSize: 14, fontWeight: 700,
-                      cursor: locating ? 'wait' : 'pointer',
-                      backdropFilter: 'blur(20px)',
-                      boxShadow: location
-                        ? 'inset 0 1.5px 0 rgba(255,255,255,0.18), 0 4px 16px rgba(61,170,92,0.2)'
-                        : 'inset 0 1.5px 0 rgba(255,255,255,0.08)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                      transition: 'all 0.2s',
-                    }}
-                  >
+                  <button type="button" onClick={requestLocation} disabled={locating} style={{ width: '100%', marginTop: 4, padding: '14px 16px', borderRadius: 100, border: '2px solid', borderColor: location ? 'rgba(125,217,154,0.6)' : 'rgba(255,255,255,0.15)', background: location ? 'rgba(61,170,92,0.12)' : 'rgba(255,255,255,0.04)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: locating ? 'wait' : 'pointer', backdropFilter: 'blur(20px)', boxShadow: location ? 'inset 0 1.5px 0 rgba(255,255,255,0.18), 0 4px 16px rgba(61,170,92,0.2)' : 'inset 0 1.5px 0 rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'all 0.2s' }}>
                     {locating ? '⏳ Rilevamento...' : location ? '✅ Posizione condivisa' : '📍USA LA MIA POSIZIONE ATTUALE'}
                   </button>
 
                   {location && (
-                    <div style={{
-                      marginTop: 10, padding: '10px 14px',
-                      background: 'var(--surface2)',
-                      border: '1px solid rgba(125,217,154,0.2)',
-                      borderRadius: 12,
-                      display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8,
-                    }}>
-                      <div style={{ fontSize: 12, color: 'var(--text-sub)', lineHeight: 1.5, flex: 1 }}>
-                        📍 {location.label}
-                      </div>
-                      <button
-                        onClick={() => setLocation(null)}
-                        style={{ background: 'none', border: 'none', color: '#ff6b6b', fontSize: 12, cursor: 'pointer', flexShrink: 0, padding: 0 }}
-                      >✕</button>
+                    <div style={{ marginTop: 10, padding: '10px 14px', background: 'var(--surface2)', border: '1px solid rgba(125,217,154,0.2)', borderRadius: 12, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
+                      <div style={{ fontSize: 12, color: 'var(--text-sub)', lineHeight: 1.5, flex: 1 }}>📍 {location.label}</div>
+                      <button onClick={() => setLocation(null)} style={{ background: 'none', border: 'none', color: '#ff6b6b', fontSize: 12, cursor: 'pointer', flexShrink: 0, padding: 0 }}>✕</button>
                     </div>
                   )}
-                </div>
-              ) : courier === 'inpost' ? (
-                <div className="field-group">
-                  <div className="field-row">
-                    <input className="field" placeholder="Nome" value={address.nome || ''} onChange={e => setField('nome', e.target.value)} />
-                    <input className="field" placeholder="Cognome" value={address.cognome || ''} onChange={e => setField('cognome', e.target.value)} />
-                  </div>
-                  <input className="field" placeholder="Telefono" type="tel" value={address.telefono || ''} onChange={e => setField('telefono', e.target.value)} />
-                  <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <span style={{ padding: '12px', background: 'var(--surface)', border: '1px solid var(--border)', borderRight: 'none', borderRadius: '12px 0 0 12px' }}>@</span>
-                    <input
-                      className="field"
-                      style={{ borderRadius: '0 12px 12px 0', marginBottom: 0 }}
-                      placeholder="username Telegram"
-                      value={(address.telegram || '').replace('@', '')}
-                      onChange={e => setField('telegram', '@' + e.target.value.replace('@', ''))}
-                    />
-                  </div>
-                  <input className="field" placeholder="Nome/codice locker InPost" value={address.locker_name || ''} onChange={e => setField('locker_name', e.target.value)} />
-                  <p className="field-hint">Es: MI-CENTRO-001</p>
-                  <input className="field" placeholder="Indirizzo locker" value={address.locker_address || ''} onChange={e => setField('locker_address', e.target.value)} />
-                  <p className="field-hint">Puoi trovare i locker su inpost.it/trova-locker</p>
-                  <input className="field" placeholder="Email (per ricevuta InPost)" type="email" value={address.email || ''} onChange={e => setField('email', e.target.value)} />
-                  <p className="field-hint">Necessaria per ricevere le notifiche del corriere</p>
                 </div>
               ) : (
                 <div className="field-group">
@@ -384,47 +356,20 @@ export default function CartPage() {
               )}
             </div>
 
-            {/* Preferred Date - Rolling Selector */}
+            {/* Preferred Date */}
             <div className="section-box">
               <div className="section-box-title">📅 Data preferita di consegna</div>
-              <div style={{ 
-                display: 'flex', 
-                gap: '10px', 
-                overflowX: 'auto', 
-                padding: '12px 0',
-                scrollbarWidth: 'none',
-                msOverflowStyle: 'none'
-              }}>
+              <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', padding: '12px 0', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                 {nextDays.map((day) => (
-                  <div
-                    key={day.value}
-                    className={`date-chip ${preferredDate === day.value ? 'active' : ''}`}
-                    onClick={() => updatePreferredDate(day.value)}
-                    style={{
-                      minWidth: '78px',
-                      textAlign: 'center',
-                      padding: '14px 10px',
-                      borderRadius: '16px',
-                      border: '2px solid var(--border)',
-                      background: preferredDate === day.value ? 'var(--gold)' : 'var(--surface)',
-                      color: preferredDate === day.value ? '#000' : 'var(--text)',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s',
-                      flexShrink: 0
-                    }}
-                  >
+                  <div key={day.value} className={`date-chip ${preferredDate === day.value ? 'active' : ''}`} onClick={() => updatePreferredDate(day.value)} style={{ minWidth: '78px', textAlign: 'center', padding: '14px 10px', borderRadius: '16px', border: '2px solid var(--border)', background: preferredDate === day.value ? 'var(--gold)' : 'var(--surface)', color: preferredDate === day.value ? '#000' : 'var(--text)', cursor: 'pointer', transition: 'all 0.2s', flexShrink: 0 }}>
                     <div style={{ fontSize: '13px', opacity: 0.8 }}>{day.dayName}</div>
-                    <div style={{ fontSize: '24px', fontWeight: 700, margin: '6px 0 2px' }}>
-                      {day.dayNum}
-                    </div>
+                    <div style={{ fontSize: '24px', fontWeight: 700, margin: '6px 0 2px' }}>{day.dayNum}</div>
                     <div style={{ fontSize: '11px', opacity: 0.7 }}>{day.month}</div>
                     {day.isToday && <div style={{ fontSize: '10px', marginTop: 4, fontWeight: 600 }}>OGGI</div>}
                   </div>
                 ))}
               </div>
-              <p className="field-hint" style={{ marginTop: 12 }}>
-                Seleziona il giorno preferito (soggetto a disponibilità)
-              </p>
+              <p className="field-hint" style={{ marginTop: 12 }}>Seleziona il giorno preferito (soggetto a disponibilità)</p>
             </div>
 
             {/* Payment */}
@@ -432,72 +377,185 @@ export default function CartPage() {
               <div className="section-box-title">💳 Metodo di pagamento</div>
               <div className="payment-grid">
                 {availablePayments.map(m => (
-                  <div
-                    key={m.id}
-                    className={`payment-option ${payment === m.id ? 'active' : ''}`}
-                    onClick={() => { setPayment(m.id); updateCheckoutData({ payment: m.id }); }}
-                  >
+                  <div key={m.id} className={`payment-option ${payment === m.id ? 'active' : ''}`} onClick={() => { setPayment(m.id); updateCheckoutData({ payment: m.id }); }}>
                     <div className="pay-icon">{m.icon}</div>
                     {m.label}
                   </div>
                 ))}
               </div>
+            </div>
 
-              {payment === 'crypto' && (
-                <div style={{
-                  marginTop: 12, padding: '14px',
-                  background: 'var(--surface2)',
-                  border: '1px solid rgba(244,197,66,0.2)',
-                  borderRadius: 14,
-                }}>
-                  <div style={{ fontSize: 12, color: 'var(--text-sub)', marginBottom: 6 }}>
-                    💳 Invia a questo indirizzo ({SHOP_CONFIG.cryptoWallet?.coin} · {SHOP_CONFIG.cryptoWallet?.network}):
-                  </div>
-                  <div style={{
-                    fontFamily: 'monospace', fontSize: 12, wordBreak: 'break-all',
-                    color: 'var(--gold)', fontWeight: 700, lineHeight: 1.6,
-                  }}>
-                    {SHOP_CONFIG.cryptoWallet?.address}
-                  </div>
+            {/* === ACCOUNT VERIFICATION - VERTICALLY STACKED === */}
+            <div className="section-box" style={{ padding: '16px' }}>
+              <div className="section-box-title" style={{ marginBottom: 16 }}>📄 Verifica Account</div>
+              
+              {isVerified ? (
+                <div className="notice" style={{ background: 'rgba(0,245,255,0.12)', borderColor: 'var(--accent)', color: '#fff', padding: '12px', fontSize: '15px' }}>
+                  ✅ Account verificato
                 </div>
+              ) : (
+              <div>
+  <p
+    style={{
+      fontSize: '13.5px',
+      color: 'var(--text-sub)',
+      marginBottom: 12,
+      lineHeight: 1.4
+    }}
+  >
+    Verifica account con il documento (fronte e retro)
+  </p>
+
+  <div
+    style={{
+      display: 'flex',
+      gap: '8px',
+      alignItems: 'stretch'
+    }}
+  >
+    {/* FRONT */}
+    <div style={{ flex: 1 }}>
+      <div
+        className="glass"
+        style={{
+          height: '110px',
+          borderRadius: '18px',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          cursor: 'pointer'
+        }}
+        onClick={() => document.getElementById('front-upload').click()}
+      >
+        <input
+          id="front-upload"
+          type="file"
+          accept="image/*"
+          capture="environment"
+          onChange={(e) => handleFileSelect(e, 'front')}
+          style={{ display: 'none' }}
+        />
+
+        {frontImage ? (
+          <img
+            src={frontImage.preview}
+            alt="front"
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              borderRadius: '18px'
+            }}
+          />
+        ) : (
+          <div style={{ textAlign: 'center' }}>
+            📸<br />
+            Fronte
+          </div>
+        )}
+      </div>
+    </div>
+
+    {/* BACK */}
+    <div style={{ flex: 1 }}>
+      <div
+        className="glass"
+        style={{
+          height: '110px',
+          borderRadius: '18px',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          cursor: 'pointer'
+        }}
+        onClick={() => document.getElementById('back-upload').click()}
+      >
+        <input
+          id="back-upload"
+          type="file"
+          accept="image/*"
+          capture="environment"
+          onChange={(e) => handleFileSelect(e, 'back')}
+          style={{ display: 'none' }}
+        />
+
+        {backImage ? (
+          <img
+            src={backImage.preview}
+            alt="back"
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              borderRadius: '18px'
+            }}
+          />
+        ) : (
+          <div style={{ textAlign: 'center' }}>
+            📸<br />
+            Retro
+          </div>
+        )}
+      </div>
+    </div>
+
+    {/* VIDEO */}
+    <div style={{ flex: 1 }}>
+      <div
+        className="glass"
+        style={{
+          height: '110px',
+          borderRadius: '18px',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          cursor: 'pointer'
+        }}
+        onClick={() => document.getElementById('video-upload').click()}
+      >
+        <input
+          id="video-upload"
+          type="file"
+          accept="video/*"
+          capture="environment"
+          onChange={(e) => handleFileSelect(e, 'video')}
+          style={{ display: 'none' }}
+        />
+
+        {verificationVideo ? (
+          <div style={{ textAlign: 'center' }}>
+            🎥<br />
+            Caricato
+          </div>
+        ) : (
+          <div style={{ textAlign: 'center' }}>
+            🎥<br />
+            Video
+          </div>
+        )}
+      </div>
+    </div>
+  </div>
+</div>
               )}
             </div>
 
-            {/* Total recap */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
               <span style={{ fontSize: 13 }}>💰</span>
               <span style={{ fontWeight: 700 }}>Totale: </span>
-              <span style={{ color: 'var(--gold)', fontWeight: 800, fontSize: 18 }}>{SHOP_CONFIG.currency}{total}</span>
+              <span style={{ color: 'var(--accent)', fontWeight: 800, fontSize: 18 }}>{SHOP_CONFIG.currency}{total}</span>
             </div>
 
-            {/* Notes */}
-            <textarea
-              className="field"
-              placeholder="Note per l'ordine (opzionale)..."
-              rows={3}
-              style={{ resize: 'none', marginBottom: 12 }}
-              value={notes}
-              onChange={e => { setNotes(e.target.value); updateCheckoutData({ notes: e.target.value }); }}
-            />
+            <textarea className="field" placeholder="Note per l'ordine (opzionale)..." rows={3} style={{ resize: 'none', marginBottom: 12 }} value={notes} onChange={e => { setNotes(e.target.value); updateCheckoutData({ notes: e.target.value }); }} />
 
-            {/* Discount code */}
             <div className="discount-row" style={{ marginBottom: 16 }}>
-              <input
-                className="field"
-                placeholder="CODICE SCONTO"
-                value={discount}
-                onChange={e => { setDiscount(e.target.value); updateCheckoutData({ discount: e.target.value }); }}
-              />
+              <input className="field" placeholder="CODICE SCONTO" value={discount} onChange={e => { setDiscount(e.target.value); updateCheckoutData({ discount: e.target.value }); }} />
               <button className="apply-btn">Applica</button>
             </div>
 
             {error && <p className="error-text" style={{ marginBottom: 12 }}>⚠️ {error}</p>}
 
-            <button
-              className="btn btn-gold"
-              onClick={handleSubmit}
-              disabled={sending || cart.length === 0}
-            >
+            <button className="btn btn-gold" onClick={handleSubmit} disabled={sending || cart.length === 0}>
               {sending ? '⏳ Invio in corso...' : '🛒 Invia Ordine'}
             </button>
 
