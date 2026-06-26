@@ -148,10 +148,7 @@ export default function CartPage() {
       setError(`Ordine minimo €${SHOP_CONFIG.minOrderShipping} per la spedizione.`);
       return;
     }
-    if (!isVerified && (!frontImage || !backImage)) {
-      setError("Per completare l'ordine è obbligatoria la verifica documento (fronte e retro).");
-      return;
-    }
+
 
     setSending(true);
     setError('');
@@ -385,178 +382,66 @@ export default function CartPage() {
               </div>
             </div>
 
-            {/* === ACCOUNT VERIFICATION - VERTICALLY STACKED === */}
+           {/* OPTIONAL VERIFICATION SECTION */}
             <div className="section-box" style={{ padding: '16px' }}>
-              <div className="section-box-title" style={{ marginBottom: 16 }}>📄 Verifica Account</div>
-              
-              {isVerified ? (
-                <div className="notice" style={{ background: 'rgba(0,245,255,0.12)', borderColor: 'var(--accent)', color: '#fff', padding: '12px', fontSize: '15px' }}>
-                  ✅ Account verificato
+              <div className="section-box-title">📄 Verifica Account</div>
+
+              {(frontImage || backImage || verificationVideo) ? (
+                <div>
+                  <div className="notice" style={{ background: 'rgba(74,222,128,0.15)', borderColor: '#4ade80', color: '#4ade80', padding: '14px', borderRadius: 12, textAlign: 'center', fontWeight: 600 }}>
+                    ✅ ACCOUNT VERIFICATO
+                  </div>
+
+                  <div style={{ display: 'flex', gap: 10, marginTop: 12, flexWrap: 'wrap' }}>
+                    {frontImage && (
+                      <div style={{ position: 'relative', flex: 1 }}>
+                        <img src={frontImage.preview} alt="Fronte" style={{ width: '100%', borderRadius: 12, border: '2px solid #4ade80' }} />
+                        <button onClick={() => removeFile('front')} style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(0,0,0,0.85)', color: '#fff', border: 'none', width: 28, height: 28, borderRadius: '50%', fontSize: 14 }}>✕</button>
+                      </div>
+                    )}
+                    {backImage && (
+                      <div style={{ position: 'relative', flex: 1 }}>
+                        <img src={backImage.preview} alt="Retro" style={{ width: '100%', borderRadius: 12, border: '2px solid #4ade80' }} />
+                        <button onClick={() => removeFile('back')} style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(0,0,0,0.85)', color: '#fff', border: 'none', width: 28, height: 28, borderRadius: '50%', fontSize: 14 }}>✕</button>
+                      </div>
+                    )}
+                    {verificationVideo && (
+                      <div style={{ position: 'relative', flex: 1 }}>
+                        <div style={{ height: 110, background: '#111', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid #4ade80' }}>
+                          🎥 Video caricato
+                        </div>
+                        <button onClick={() => removeFile('video')} style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(0,0,0,0.85)', color: '#fff', border: 'none', width: 28, height: 28, borderRadius: '50%', fontSize: 14 }}>✕</button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               ) : (
-              <div>
-  <p
-    style={{
-      fontSize: '13.5px',
-      color: 'var(--text-sub)',
-      marginBottom: 12,
-      lineHeight: 1.4
-    }}
-  >
-    Verifica account con il documento (fronte e retro)
-  </p>
-
-  <div
-    style={{
-      display: 'flex',
-      gap: '8px',
-      alignItems: 'stretch'
-    }}
-  >
-    {/* FRONT */}
-    <div style={{ flex: 1 }}>
-      <div
-        className="glass"
-        style={{
-          height: '110px',
-          borderRadius: '18px',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          cursor: 'pointer'
-        }}
-        onClick={() => document.getElementById('front-upload').click()}
-      >
-        <input
-          id="front-upload"
-          type="file"
-          accept="image/*"
-          capture="environment"
-          onChange={(e) => handleFileSelect(e, 'front')}
-          style={{ display: 'none' }}
-        />
-
-        {frontImage ? (
-          <img
-            src={frontImage.preview}
-            alt="front"
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              borderRadius: '18px'
-            }}
-          />
-        ) : (
-          <div style={{ textAlign: 'center' }}>
-            📸<br />
-            Fronte
-          </div>
-        )}
-      </div>
-    </div>
-
-    {/* BACK */}
-    <div style={{ flex: 1 }}>
-      <div
-        className="glass"
-        style={{
-          height: '110px',
-          borderRadius: '18px',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          cursor: 'pointer'
-        }}
-        onClick={() => document.getElementById('back-upload').click()}
-      >
-        <input
-          id="back-upload"
-          type="file"
-          accept="image/*"
-          capture="environment"
-          onChange={(e) => handleFileSelect(e, 'back')}
-          style={{ display: 'none' }}
-        />
-
-        {backImage ? (
-          <img
-            src={backImage.preview}
-            alt="back"
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              borderRadius: '18px'
-            }}
-          />
-        ) : (
-          <div style={{ textAlign: 'center' }}>
-            📸<br />
-            Retro
-          </div>
-        )}
-      </div>
-    </div>
-
-    {/* VIDEO */}
-    <div style={{ flex: 1 }}>
-      <div
-        className="glass"
-        style={{
-          height: '110px',
-          borderRadius: '18px',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          cursor: 'pointer'
-        }}
-        onClick={() => document.getElementById('video-upload').click()}
-      >
-        <input
-          id="video-upload"
-          type="file"
-          accept="video/*"
-          capture="environment"
-          onChange={(e) => handleFileSelect(e, 'video')}
-          style={{ display: 'none' }}
-        />
-
-        {verificationVideo ? (
-          <div style={{ textAlign: 'center' }}>
-            🎥<br />
-            Caricato
-          </div>
-        ) : (
-          <div style={{ textAlign: 'center' }}>
-            🎥<br />
-            Video
-          </div>
-        )}
-      </div>
-    </div>
-  </div>
-</div>
+                <div>
+                  <p style={{ fontSize: '13.5px', color: 'var(--text-sub)', marginBottom: 12 }}>
+                    Foto fronte e retro del documento di identità di chi ritira l'ordine e video selfie con doc visibile in mano (necessari solo al primo ordine con delivery)
+                  </p>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <div style={{ flex: 1 }} onClick={() => document.getElementById('front-upload').click()}>
+                      <input id="front-upload" type="file" accept="image/*" capture="environment" onChange={(e) => handleFileSelect(e, 'front')} style={{ display: 'none' }} />
+                      <div className="glass" style={{ height: '110px', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>📸<br />Fronte</div>
+                    </div>
+                    <div style={{ flex: 1 }} onClick={() => document.getElementById('back-upload').click()}>
+                      <input id="back-upload" type="file" accept="image/*" capture="environment" onChange={(e) => handleFileSelect(e, 'back')} style={{ display: 'none' }} />
+                      <div className="glass" style={{ height: '110px', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>📸<br />Retro</div>
+                    </div>
+                    <div style={{ flex: 1 }} onClick={() => document.getElementById('video-upload').click()}>
+                      <input id="video-upload" type="file" accept="video/*" capture="environment" onChange={(e) => handleFileSelect(e, 'video')} style={{ display: 'none' }} />
+                      <div className="glass" style={{ height: '110px', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>🎥<br />Video</div>
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-              <span style={{ fontSize: 13 }}>💰</span>
-              <span style={{ fontWeight: 700 }}>Totale: </span>
-              <span style={{ color: 'var(--accent)', fontWeight: 800, fontSize: 18 }}>{SHOP_CONFIG.currency}{total}</span>
-            </div>
-
-            <textarea className="field" placeholder="Note per l'ordine (opzionale)..." rows={3} style={{ resize: 'none', marginBottom: 12 }} value={notes} onChange={e => { setNotes(e.target.value); updateCheckoutData({ notes: e.target.value }); }} />
-
-            <div className="discount-row" style={{ marginBottom: 16 }}>
-              <input className="field" placeholder="CODICE SCONTO" value={discount} onChange={e => { setDiscount(e.target.value); updateCheckoutData({ discount: e.target.value }); }} />
-              <button className="apply-btn">Applica</button>
-            </div>
-
-            {error && <p className="error-text" style={{ marginBottom: 12 }}>⚠️ {error}</p>}
+            {error && <p className="error-text" style={{ margin: '12px 0' }}>⚠️ {error}</p>}
 
             <button className="btn btn-gold" onClick={handleSubmit} disabled={sending || cart.length === 0}>
-              {sending ? '⏳ Invio in corso...' : '🛒 Invia Ordine'}
+              {sending ? '⏳ Invio in corso...' : `🛒 Invia Ordine - €${total}`}
             </button>
 
             <div className="spacer-20" />

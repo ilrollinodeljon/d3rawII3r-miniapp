@@ -1,0 +1,311 @@
+import { useState, useRef, useEffect } from 'react';
+import Topbar from '../components/Topbar';
+import { useStore, getPriceForGrams } from '../store';
+
+export default function ProductPage({ product: p, onBack }) {
+  const [qty,        setQty]        = useState(p.prices[0]?.grams ?? p.minQty);
+  const [strain,     setStrain]     = useState(p.strains?.[0] ?? null);
+  const [rating,     setRating]     = useState(5);
+  const [comment,    setComment]    = useState('');
+  const [added,      setAdded]      = useState(false);
+  const [mediaIndex, setMediaIndex] = useState(0);
+
+  const videoRef = useRef(null);
+  const swipeStartX = useRef(null);
+
+  const addToCart = useStore(s => s.addToCart);
+
+  if (!p) return null;
+
+  const price     = getPriceForGrams(p.prices, qty);
+  const mediaList = p.media ?? (p.image ? [{ type: 'image', url: p.image }] : []);
+  const current   = mediaList[mediaIndex] ?? { type: 'image', url: '' };
+
+  const goMedia = (dir) => {
+    const newIndex = (mediaIndex + dir + mediaList.length) % mediaList.length;
+    setMediaIndex(newIndex);
+  };
+
+  // Auto-play video when it becomes active
+  useEffect(() => {
+    if (current.type === 'video' && videoRef.current) {
+      videoRef.current.currentTime = 0;
+      videoRef.current.play().catch(() => {});
+    }
+  }, [mediaIndex, current.type]);
+
+  const handleAdd = () => {
+    if (p.soldOut || qty < p.minQty) return;
+    addToCart(p, qty, strain);
+    setAdded(true);
+    setTimeout(() => setAdded(false), 1800);
+    window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('medium');
+  };
+
+  /* Gallery swipe handlers */
+  const onTouchStart = (e) => { swipeStartX.current = e.touches[0].clientX; };
+  const onTouchEnd   = (e) => {
+    if (swipeStartX.current === null) return;
+    const dx = e.changedTouches[0].clientX - swipeStartX.current;
+    if (Math.abs(dx) > 36) goMedia(dx < 0 ? 1 : -1);
+    swipeStartX.current = null;
+  };
+
+  return (
+    <div className="page fade-up">
+      <Topbar onBack={onBack} />
+
+      {/* ── Main media ── */}
+      <div
+        style={{ position: 'relative', background: '#000', touchAction: 'pan-y' }}
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+      >
+        {current.type === 'video' ? (
+          <video
+            ref={videoRef}
+            key={current.url}
+            controls
+            playsInline
+            autoPlay
+            muted
+            loop
+            preload="metadata"
+            style={{ width: '100%', aspectRatio: '4/3', objectFit: 'cover', display: 'block' }}
+          >
+            <source src={current.url} type="video/mp4" />
+          </video>
+        ) : (
+          <img
+            src={current.url}
+            alt={p.name}
+            style={{ width: '100%', aspectRatio: '4/3', objectFit: 'cover', display: 'block' }}
+            onError={e => { e.target.src = 'https://placehold.co/600x450/141414/555?text=NO+IMAGE'; }}
+          />
+        )}
+
+        {/* Media counter */}
+        {mediaList.length > 1 && (
+          <div style={{
+            position: 'absolute', top: 12, right: 12,
+            background: 'rgba(0,0,0,0.75)',
+            backdropFilter: 'blur(10px)',
+            color: '#fff', fontSize: 12,
+            padding: '4px 11px', borderRadius: 12,
+            fontWeight: 600,
+          }}>
+            {mediaIndex + 1} / {mediaList.length}
+          </div>
+        )}
+
+        {/* Swipe arrows */}
+        {mediaList.length > 1 && (
+          <>
+            <button
+              onClick={() => goMedia(-1)}
+              style={{
+                position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
+                background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)',
+                border: '1px solid rgba(255,255,255,0.2)',
+                color: '#fff', width: 38, height: 38, borderRadius: '50%',
+                fontSize: 20, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                zIndex: 5,
+              }}
+            >‹</button>
+            <button
+              onClick={() => goMedia(1)}
+              style={{
+                position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
+                background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)',
+                border: '1px solid rgba(255,255,255,0.2)',
+                color: '#fff', width: 38, height: 38, borderRadius: '50%',
+                fontSize: 20, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                zIndex: 5,
+              }}
+            >›</button>
+          </>
+        )}
+      </div>
+
+      {/* Thumbnails */}
+      {mediaList.length > 1 && (
+        <div style={{
+          display: 'flex', gap: 8, padding: '10px 16px',
+          overflowX: 'auto',
+          background: 'rgba(10,10,10,0.85)',
+          backdropFilter: 'blur(16px)',
+          borderBottom: '1px solid var(--border)',
+        }}>
+          {mediaList.map((item, i) => (
+            <button
+              key={i}
+              onClick={() => setMediaIndex(i)}
+              style={{
+                width: 64, height: 64, borderRadius: 10,
+                overflow: 'hidden', flexShrink: 0,
+                border: i === mediaIndex ? '2.5px solid var(--gold-light)' : '2px solid var(--border)',
+                background: 'var(--surface2)',
+                position: 'relative', cursor: 'pointer',
+              }}
+            >
+              {item.type === 'video' ? (
+                <>
+                  <img
+                    src={item.url.replace('.mp4', '.jpg')}
+                    alt=""
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.8 }}
+                    onError={e => { e.target.style.display = 'none'; }}
+                  />
+                  <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.45)', fontSize: 24 }}>▶️</div>
+                </>
+              ) : (
+                <img src={item.url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Content */}
+      <div className="container">
+        <div className="spacer-20" />
+
+        {p.brand && (
+          <div style={{ marginBottom: 10 }}>
+            <span style={{
+              background: 'var(--surface2)',
+              border: '1px solid var(--border)',
+              borderRadius: 20, padding: '4px 14px',
+              fontSize: 11, color: 'var(--gold-light)',
+              fontWeight: 700, letterSpacing: 1.2, textTransform: 'uppercase',
+            }}>{p.brand}</span>
+          </div>
+        )}
+
+        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 30, letterSpacing: 1, lineHeight: 1.15 }}>
+          {p.name} {p.emoji ?? ''}
+        </h1>
+        <p style={{ color: 'var(--text-sub)', marginTop: 6, fontSize: 15, lineHeight: 1.55 }}>
+          {p.description}
+        </p>
+
+        <div className="spacer-20" />
+
+        {/* Strain selector */}
+        {p.strains?.length > 0 && (
+          <div className="section-box">
+            <div className="section-box-title">🌿 Scegli strain</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              {p.strains.map(s => (
+                <button
+                  key={s}
+                  onClick={() => setStrain(s)}
+                  style={{
+                    padding: '9px 16px', borderRadius: 20,
+                    border: '1.5px solid',
+                    borderColor: strain === s ? 'var(--gold-light)' : 'var(--border)',
+                    background: strain === s ? 'rgba(61,170,92,0.12)' : 'var(--surface2)',
+                    color: strain === s ? 'var(--gold-light)' : 'var(--text)',
+                    cursor: 'pointer', fontSize: 13, fontWeight: 600,
+                  }}
+                >{s}</button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Add to cart section - Dark transparent + Green text + 2x3 grid */}
+        <div className="section-box">
+          <div className="section-box-title">🛒 Aggiungi al carrello</div>
+
+          {/* Price tiers - 2 rows of 3 */}
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: '1fr 1fr 1fr', 
+            gap: 10, 
+            marginBottom: 18 
+          }}>
+            {p.prices.map(tier => {
+              const sel = qty === tier.grams;
+              return (
+                <button
+                  key={tier.grams}
+                  onClick={() => setQty(tier.grams)}
+                  style={{
+                    padding: '14px 8px',
+                    borderRadius: 14,
+                    border: '1.5px solid',
+                    borderColor: sel ? '#4ade80' : 'rgba(255,255,255,0.08)',
+                    background: sel ? 'rgba(74, 222, 128, 0.18)' : 'rgba(12, 12, 12, 0.85)',
+                    color: sel ? '#4ade80' : '#e5e5e5',
+                    fontWeight: 700,
+                    fontSize: 14.5,
+                    cursor: 'pointer',
+                    transition: 'all 0.15s',
+                    boxShadow: sel 
+                      ? '0 0 0 1px rgba(74, 222, 128, 0.4) inset' 
+                      : 'inset 0 1px 0 rgba(255,255,255,0.06)',
+                  }}
+                >
+                  {tier.grams}g<br />
+                  <span style={{ fontSize: 13, opacity: 0.9 }}>€{tier.price}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Selection summary */}
+          <div style={{
+            background: 'rgba(15,15,15,0.85)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            padding: '14px 16px',
+            borderRadius: 12,
+            marginBottom: 16,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}>
+            <span style={{ color: 'var(--text-sub)', fontSize: 14 }}>Selezionato:</span>
+            <span style={{ color: '#4ade80', fontWeight: 800, fontSize: 20 }}>
+              {qty}g — €{price}
+            </span>
+          </div>
+
+          {p.soldOut ? (
+            <div style={{
+              width: '100%', padding: '16px',
+              borderRadius: 100,
+              background: 'rgba(255,68,58,0.08)',
+              border: '1.5px solid rgba(255,68,58,0.30)',
+              color: 'var(--red)',
+              fontWeight: 700,
+              textAlign: 'center',
+            }}>
+              ✕ Prodotto esaurito
+            </div>
+          ) : (
+            <button className="btn btn-gold" onClick={handleAdd}>
+              {added ? '✓ Aggiunto!' : `🛒 Aggiungi ${qty}g al carrello`}
+            </button>
+          )}
+        </div>
+
+        {/* Reviews section (unchanged) */}
+        <div className="section-box">
+          <div className="section-box-title">⭐ Recensioni (0)</div>
+          <div style={{ fontWeight: 600, marginBottom: 10, fontSize: 14 }}>La tua recensione</div>
+          <div className="stars" style={{ marginBottom: 12 }}>
+            {[1,2,3,4,5].map(n => (
+              <span key={n} className={`star${n > rating ? ' empty' : ''}`} onClick={() => setRating(n)}>★</span>
+            ))}
+          </div>
+          <textarea className="field" placeholder="Commento..." rows={3} value={comment} onChange={e => setComment(e.target.value)} />
+          <div className="spacer-12" />
+          <button className="btn btn-gold btn-sm">Invia</button>
+        </div>
+
+        <div className="spacer-20" />
+      </div>
+    </div>
+  );
+}

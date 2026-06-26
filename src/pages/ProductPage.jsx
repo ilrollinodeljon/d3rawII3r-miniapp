@@ -1,260 +1,254 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import Topbar from '../components/Topbar';
 import { useStore, getPriceForGrams } from '../store';
 
 export default function ProductPage({ product: p, onBack }) {
-  const [qty, setQty] = useState(p.prices[0]?.grams || p.minQty);
-  const [strain, setStrain] = useState(p.strains?.[0] || null);
-  const [rating, setRating] = useState(5);
-  const [comment, setComment] = useState('');
-  const [added, setAdded] = useState(false);
-  const [mediaIndex, setMediaIndex] = useState(0);
+  const [qty,        setQty]        = useState(p.prices[0]?.grams ?? p.minQty);
+  const [strain,     setStrain]     = useState(p.strains?.[0] ?? null);
+  const [rating,     setRating]     = useState(5);
+  const [comment,    setComment]    = useState('');
+  const [added,      setAdded]      = useState(false);
+  
+  const videoRef = useRef(null);
+  const swipeStartX = useRef(null);
 
   const addToCart = useStore(s => s.addToCart);
 
   if (!p) return null;
 
-  const price = getPriceForGrams(p.prices, qty);
-  const mediaList = p.media || (p.image ? [{ type: 'image', url: p.image }] : []);
-  const currentMedia = mediaList[mediaIndex] || { type: 'image', url: '' };
+  const price     = getPriceForGrams(p.prices, qty);
+  const mediaList = p.media ?? (p.image ? [{ type: 'image', url: p.image }] : []);
+
+  // Start with the first VIDEO if available, otherwise first media
+  const initialMediaIndex = useMemo(() => {
+    const videoIndex = mediaList.findIndex(m => m.type === 'video');
+    return videoIndex !== -1 ? videoIndex : 0;
+  }, [mediaList]);
+
+  const [mediaIndex, setMediaIndex] = useState(initialMediaIndex);
+
+  const current   = mediaList[mediaIndex] ?? { type: 'image', url: '' };
+
+  const goMedia = (dir) => {
+    const newIndex = (mediaIndex + dir + mediaList.length) % mediaList.length;
+    setMediaIndex(newIndex);
+  };
+
+  // Auto-play video when opened or swiped to
+  useEffect(() => {
+    if (current.type === 'video' && videoRef.current) {
+      const video = videoRef.current;
+      video.currentTime = 0;
+      const playPromise = video.play();
+      playPromise.catch(() => {
+        console.log('Autoplay with sound was blocked by browser');
+      });
+    }
+  }, [mediaIndex, current.type]);
 
   const handleAdd = () => {
-    if (qty < p.minQty) return;
+    if (p.soldOut || qty < p.minQty) return;
     addToCart(p, qty, strain);
     setAdded(true);
     setTimeout(() => setAdded(false), 1800);
     window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('medium');
   };
 
+  /* Swipe handlers */
+  const onTouchStart = (e) => { swipeStartX.current = e.touches[0].clientX; };
+  const onTouchEnd   = (e) => {
+    if (swipeStartX.current === null) return;
+    const dx = e.changedTouches[0].clientX - swipeStartX.current;
+    if (Math.abs(dx) > 36) goMedia(dx < 0 ? 1 : -1);
+    swipeStartX.current = null;
+  };
+
   return (
     <div className="page fade-up">
       <Topbar onBack={onBack} />
 
-      <div>
-        {/* Media Gallery */}
-        <div style={{ position: 'relative', background: 'var(--surface2)' }}>
-          {currentMedia.type === 'video' ? (
-            <video
-              key={currentMedia.url}
-              controls
-              playsInline
-              autoPlay
-              muted
-              loop
-              preload="metadata"
-              style={{ width: '100%', aspectRatio: '4/3', objectFit: 'cover', background: '#000' }}
-            >
-              <source src={currentMedia.url} type="video/mp4" />
-            </video>
-          ) : (
-            <img
-              src={currentMedia.url}
-              alt={p.name}
-              style={{ width: '100%', aspectRatio: '4/3', objectFit: 'cover' }}
-              onError={e => { e.target.src = 'https://placehold.co/600x450/141414/888?text=NO+IMAGE'; }}
-            />
-          )}
+      {/* Main Media - TALLER (3:4) */}
+      <div
+        style={{ position: 'relative', background: '#000', touchAction: 'pan-y' }}
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+      >
+        {current.type === 'video' ? (
+          <video
+            ref={videoRef}
+            key={current.url}
+            controls
+            playsInline
+            autoPlay
+            loop
+            preload="metadata"
+            style={{ 
+              width: '100%', 
+              aspectRatio: '3/4',     // ← Taller now
+              objectFit: 'cover' 
+            }}
+            onLoadedMetadata={() => {
+              if (videoRef.current) {
+                videoRef.current.currentTime = 0;
+                videoRef.current.play().catch(() => {});
+              }
+            }}
+            onCanPlay={() => {
+              if (videoRef.current) videoRef.current.play().catch(() => {});
+            }}
+          >
+            <source src={current.url} type="video/mp4" />
+          </video>
+        ) : (
+          <img
+            src={current.url}
+            alt={p.name}
+            style={{ 
+              width: '100%', 
+              aspectRatio: '3/4',     // ← Taller now
+              objectFit: 'cover' 
+            }}
+            onError={e => e.target.src = 'https://placehold.co/600x450/141414/555?text=NO+IMAGE'}
+          />
+        )}
 
-          {mediaList.length > 1 && (
-            <div style={{
-              position: 'absolute', top: 12, right: 12,
-              background: 'rgba(0,0,0,0.75)', color: '#fff',
-              fontSize: 12, padding: '3px 9px', borderRadius: 12,
-            }}>
-              {mediaIndex + 1} / {mediaList.length}
-            </div>
-          )}
-        </div>
-
-        {/* Thumbnails */}
+        {/* Counter */}
         {mediaList.length > 1 && (
           <div style={{
-            display: 'flex', gap: 8, padding: '12px 16px',
-            overflowX: 'auto', background: 'var(--surface)',
-            borderBottom: '1px solid var(--border)',
+            position: 'absolute', top: 12, right: 12,
+            background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(10px)',
+            color: '#fff', fontSize: 12, padding: '4px 11px',
+            borderRadius: 12, fontWeight: 600,
           }}>
-            {mediaList.map((item, index) => (
-              <button
-                key={index}
-                onClick={() => setMediaIndex(index)}
-                style={{
-                  width: 68, height: 68, borderRadius: 10,
-                  overflow: 'hidden', flexShrink: 0,
-                  border: mediaIndex === index ? '3px solid var(--gold)' : '2px solid var(--border)',
-                  background: 'var(--surface2)', position: 'relative',
-                  cursor: 'pointer',
-                }}
-              >
-                {item.type === 'video' ? (
-                  <>
-                    <img
-                      src={item.url.replace('.mp4', '.jpg')}
-                      alt=""
-                      style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.9 }}
-                      onError={e => { e.target.style.display = 'none'; }}
-                    />
-                    <div style={{
-                      position: 'absolute', inset: 0,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      background: 'rgba(0,0,0,0.45)', fontSize: 26,
-                    }}>▶️</div>
-                  </>
-                ) : (
-                  <img
-                    src={item.url}
-                    alt=""
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                    onError={e => { e.target.src = 'https://placehold.co/68x68/222/666?text=IMG'; }}
-                  />
-                )}
-              </button>
-            ))}
+            {mediaIndex + 1} / {mediaList.length}
           </div>
         )}
 
-        <div className="container">
-          <div className="spacer-20" />
+        {/* Swipe Arrows */}
+        {mediaList.length > 1 && (
+          <>
+            <button onClick={() => goMedia(-1)} style={arrowLeftStyle}>‹</button>
+            <button onClick={() => goMedia(1)} style={arrowRightStyle}>›</button>
+          </>
+        )}
+      </div>
 
-          {/* Brand */}
-          {p.brand && (
-            <div style={{ marginBottom: 8 }}>
-              <span style={{
-                background: 'var(--surface2)', border: '1px solid var(--border)',
-                borderRadius: 20, padding: '4px 12px', fontSize: 12,
-                color: 'var(--gold)', fontWeight: 700, letterSpacing: 1,
-              }}>{p.brand}</span>
-            </div>
-          )}
-
-          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 28, letterSpacing: 1, lineHeight: 1.15 }}>
-            {p.name} {p.emoji || ''}
-          </h1>
-          <p style={{ color: 'var(--text-sub)', marginTop: 6, fontSize: 15 }}>{p.description}</p>
-
-          <div className="spacer-20" />
-
-          {/* Strain Selector */}
-          {p.strains && p.strains.length > 0 && (
-            <div className="section-box">
-              <div className="section-box-title">🌿 Scegli strain</div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                {p.strains.map(s => (
-                  <button
-                    key={s}
-                    onClick={() => setStrain(s)}
-                    style={{
-                      padding: '9px 16px', borderRadius: 20,
-                      border: '2px solid',
-                      borderColor: strain === s ? 'var(--gold)' : 'var(--border)',
-                      background: strain === s ? 'rgba(61,170,92,0.12)' : 'var(--surface2)',
-                      color: 'var(--text)', cursor: 'pointer',
-                      fontSize: 13.5, fontWeight: 600,
-                    }}
-                  >{s}</button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Add to Cart */}
-          <div className="section-box">
-            <div className="section-box-title">🛒 Aggiungi al carrello</div>
-
-            {/* Quantity Tier Selector */}
-            <div style={{ 
-              display: 'flex', 
-              flexWrap: 'wrap', 
-              gap: 10, 
-              marginBottom: 18 
-            }}>
-              {p.prices.map((tier) => {
-                const isSelected = qty === tier.grams;
-                return (
-                  <button
-                    key={tier.grams}
-                    onClick={() => setQty(tier.grams)}
-                    style={{
-                      flex: '1 1 auto',
-                      minWidth: '110px',
-                      padding: '12px 16px',
-                      borderRadius: 20,
-                      border: '2px solid',
-                      borderColor: isSelected ? 'var(--gold)' : 'var(--border)',
-                      background: isSelected ? 'rgba(61,170,92,0.15)' : 'var(--surface2)',
-                      color: isSelected ? 'var(--gold)' : 'var(--text)',
-                      fontWeight: 700,
-                      fontSize: 15,
-                      cursor: 'pointer',
-                    }}
-                  >
-                    {tier.grams}g<br />
-                    <span style={{ fontSize: 13, opacity: 0.9 }}>€{tier.price}</span>
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Current Selection */}
-            <div style={{ 
-              background: 'var(--surface2)', 
-              padding: '14px 16px', 
-              borderRadius: 'var(--radius-sm)',
-              marginBottom: 16,
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center'
-            }}>
-              <span>Selezionato:</span>
-              <span style={{ color: 'var(--gold)', fontWeight: 800, fontSize: 21 }}>
-                {qty}g — €{price}
-              </span>
-            </div>
-
+      {/* Thumbnails */}
+      {mediaList.length > 1 && (
+        <div style={{
+          display: 'flex', gap: 8, padding: '10px 16px', overflowX: 'auto',
+          background: 'rgba(10,10,10,0.9)', backdropFilter: 'blur(16px)',
+        }}>
+          {mediaList.map((item, i) => (
             <button
-              className="btn btn-gold"
-              onClick={handleAdd}
-              disabled={!qty}
-              style={{ width: '100%' }}
+              key={i}
+              onClick={() => setMediaIndex(i)}
+              style={{
+                width: 64, height: 64, borderRadius: 10, overflow: 'hidden',
+                border: i === mediaIndex ? '2.5px solid #4ade80' : '2px solid rgba(255,255,255,0.1)',
+                flexShrink: 0, position: 'relative',
+              }}
             >
+              {item.type === 'video' ? (
+                <>
+                  <img 
+                    src={item.url.replace('.mp4', '.jpg')} 
+                    alt="" 
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                    onError={e => e.target.style.display = 'none'}
+                  />
+                  <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.45)', fontSize: 22 }}>▶️</div>
+                </>
+              ) : (
+                <img src={item.url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Product Content */}
+      <div className="container">
+        <div className="spacer-20" />
+
+        {p.brand && (
+          <div style={{ marginBottom: 10 }}>
+            <span style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 20, padding: '4px 14px', fontSize: 11, color: 'var(--gold-light)', fontWeight: 700 }}>{p.brand}</span>
+          </div>
+        )}
+
+        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 30, letterSpacing: 1 }}>{p.name} {p.emoji}</h1>
+        <p style={{ color: 'var(--text-sub)', marginTop: 6 }}>{p.description}</p>
+
+        <div className="spacer-20" />
+
+        {/* Strain Selector */}
+        {p.strains?.length > 0 && (
+          <div className="section-box">
+            <div className="section-box-title">🌿 Scegli strain</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              {p.strains.map(s => (
+                <button key={s} onClick={() => setStrain(s)} style={{
+                  padding: '9px 16px', borderRadius: 20, border: strain === s ? '1.5px solid var(--gold-light)' : '1.5px solid var(--border)',
+                  background: strain === s ? 'rgba(74,222,128,0.12)' : 'var(--surface2)', color: strain === s ? '#4ade80' : 'var(--text)'
+                }}>{s}</button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Price Tiers & Add to Cart */}
+        <div className="section-box">
+          <div className="section-box-title">🛒 Aggiungi al carrello</div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 18 }}>
+            {p.prices.map(tier => {
+              const isSelected = qty === tier.grams;
+              return (
+                <button
+                  key={tier.grams}
+                  onClick={() => setQty(tier.grams)}
+                  style={{
+                    padding: '14px 8px', borderRadius: 14,
+                    border: isSelected ? '1.5px solid #4ade80' : '1.5px solid rgba(255,255,255,0.08)',
+                    background: isSelected ? 'rgba(74,222,128,0.18)' : 'rgba(12,12,12,0.85)',
+                    color: isSelected ? '#4ade80' : '#e5e5e5',
+                    fontWeight: 700, fontSize: 14.5,
+                  }}
+                >
+                  {tier.grams}g<br />
+                  <span style={{ fontSize: 13 }}>€{tier.price}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          <div style={{ background: 'rgba(15,15,15,0.85)', border: '1px solid rgba(255,255,255,0.08)', padding: '14px 16px', borderRadius: 12, marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
+            <span>Selezionato:</span>
+            <span style={{ color: '#4ade80', fontWeight: 800 }}>{qty}g — €{price}</span>
+          </div>
+
+          {p.soldOut ? (
+            <div style={{ padding: '16px', background: 'rgba(255,68,58,0.1)', border: '1px solid rgba(255,68,58,0.4)', borderRadius: 999, textAlign: 'center', color: 'var(--red)' }}>
+              Prodotto esaurito
+            </div>
+          ) : (
+            <button className="btn btn-gold" onClick={handleAdd}>
               {added ? '✓ Aggiunto!' : `🛒 Aggiungi ${qty}g al carrello`}
             </button>
-          </div>
-
-          {/* Reviews */}
-          <div className="section-box">
-            <div className="section-box-title">⭐ Recensioni (0)</div>
-            <div style={{ marginBottom: 12 }}>
-              <div style={{ fontWeight: 600, marginBottom: 8 }}>La tua recensione</div>
-              <div className="stars" style={{ marginBottom: 12 }}>
-                {[1,2,3,4,5].map(n => (
-                  <span
-                    key={n}
-                    className={`star${n > rating ? ' empty' : ''}`}
-                    onClick={() => setRating(n)}
-                  >★</span>
-                ))}
-              </div>
-              <textarea
-                className="field"
-                placeholder="Commento..."
-                rows={3}
-                value={comment}
-                onChange={e => setComment(e.target.value)}
-                style={{ resize: 'none' }}
-              />
-              <div className="spacer-12" />
-              <button className="btn btn-gold btn-sm" style={{ width: 'auto', padding: '10px 24px' }}>
-                Invia
-              </button>
-              <p style={{ color: 'var(--text-sub)', fontSize: 11, marginTop: 8 }}>
-                Le recensioni vengono pubblicate dopo approvazione
-              </p>
-            </div>
-          </div>
-
-          <div className="spacer-20" />
+          )}
         </div>
+
+        <div className="spacer-20" />
       </div>
     </div>
   );
 }
+
+const arrowLeftStyle = {
+  position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
+  background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.25)',
+  color: '#fff', width: 40, height: 40, borderRadius: '50%', fontSize: 22, zIndex: 10
+};
+
+const arrowRightStyle = { ...arrowLeftStyle, left: 'auto', right: 12 };
