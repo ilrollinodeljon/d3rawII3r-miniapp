@@ -3,7 +3,7 @@
 // ============================================================
 
 export const SHOP_CONFIG = {
-  name: "The Rawller Shop",
+  name: "",
 
   logo: "/logo.png",
   background: "/bg.jpg",

@@ -98,7 +98,7 @@ export default function HomePage({ onNavigate, onTabChange }) {
           />
           <h1 style={{
             fontFamily: 'var(--font-display)',
-            fontSize: 50,
+            fontSize: 47,
             letterSpacing: 5,
             marginTop: 10,
             marginBottom: 6,
@@ -112,7 +112,7 @@ export default function HomePage({ onNavigate, onTabChange }) {
               0 4px 12px rgba(0,0,0,0.80)
             `,
           }}>
-            {SHOP_CONFIG.name}
+            THE RAWLLER SHOP
           </h1>
           <p style={{ color: 'var(--text-sub)', fontSize: 16 }}>
             Il miglior terpene a casa tua.
