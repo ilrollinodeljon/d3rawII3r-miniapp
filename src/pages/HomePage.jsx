@@ -98,8 +98,8 @@ export default function HomePage({ onNavigate, onTabChange }) {
           />
           <h1 style={{
             fontFamily: 'var(--font-display)',
-            fontSize: 47,
-            letterSpacing: 5,
+            fontSize: 48,
+            letterSpacing: 3,
             marginTop: 10,
             marginBottom: 6,
             color: '#ffffff',
