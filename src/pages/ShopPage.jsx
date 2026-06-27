@@ -160,7 +160,7 @@ export default function ShopPage({ onNavigate }) {
   // ✅ Limited to exactly these 2 products in New Arrivals
   const newProducts = PRODUCTS
     .filter(p => 
-      ['sunshine_sherbet', 'bufalo_plein'].includes(p.id) && 
+      ['sunset_sherbet', 'bufalo_plein'].includes(p.id) && 
       p.isNew && 
       !p.soldOut
     )

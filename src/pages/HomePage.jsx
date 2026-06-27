@@ -89,7 +89,7 @@ export default function HomePage({ onNavigate, onTabChange }) {
         <div className="spacer-12" />
 
         {/* ── Hero ── */}
-        <div style={{ textAlign: 'center', padding: '16px 0 22px' }}>
+        <div style={{ textAlign: 'center', padding: '1px 0 22px' }}>
           <img
             src="/logo.png"
             alt="logo"
@@ -100,8 +100,8 @@ export default function HomePage({ onNavigate, onTabChange }) {
             fontFamily: 'var(--font-display)',
             fontSize: 48,
             letterSpacing: 3,
-            marginTop: 10,
-            marginBottom: 6,
+            marginTop: 6,
+            marginBottom: 2,
             color: '#ffffff',
             /* Subtle multi-layer neon — not harsh, just glowing */
             textShadow: `
@@ -212,7 +212,7 @@ export default function HomePage({ onNavigate, onTabChange }) {
                 `,
                 display: 'inline-block',
               }}>
-                🔥 NEW DROPS 🔥
+                🔥NEW DROPS🔥
               </h2>
             </div>
 
@@ -235,3 +235,4 @@ export default function HomePage({ onNavigate, onTabChange }) {
     </div>
   );
 }
+

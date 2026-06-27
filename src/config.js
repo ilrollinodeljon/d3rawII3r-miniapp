@@ -99,11 +99,11 @@ export const PRODUCTS = [
     id: "fresh_frozen",
     dateAdded: "2026-06-02",
     sortOrder: 2,
-    name: "Fresh frozen s.2026",
+    name: "Fresh frozen s2026❄️",
     category: "hash",
     isNew: true,
     brand: "H.C.M.",
-    emoji: "❄️",
+    emoji: "",
     description: "fresh frozen",
     media: [
       { type: "image", url: "/products/fresh_frozen.jpg" },
@@ -153,11 +153,11 @@ export const PRODUCTS = [
     id: "filtered_90u",
     dateAdded: "2026-06-10",
     sortOrder: 4,
-    name: "WT Filtrato 90u",
+    name: "WT Filtrato 90u🎁",
     category: "hash",
     isNew: false,
     brand: "Hash Angels",
-    emoji: "🎁",
+    emoji: "",
     description: "dry 90u.",
     media: [
       { type: "image", url: "/products/dry_90u.jpg" },
@@ -179,14 +179,14 @@ export const PRODUCTS = [
 
   // ── WEED ──────────────────────────────────────────────────
   {
-    id: "sunshine_sherbet",
+    id: "sunset_sherbet",
     dateAdded: "2026-06-26",
     sortOrder: 1,
-    name: "Sunshine Sherbet",
+    name: "Sunset Sherbet🌺",
     category: "weed",              // ← moved to weed
     isNew: true,
     brand: "Cali Spain",
-    emoji: "🌺",
+    emoji: "",
     description: "Premium Cali Spain Flowes",
     media: [
       { type: "image", url: "/products/cali_spa.jpg" },

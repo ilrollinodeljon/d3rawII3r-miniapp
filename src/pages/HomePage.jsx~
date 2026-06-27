@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import Topbar from '../components/Topbar';
 import { PRODUCTS, SHOP_CONFIG } from '../config';
 
-/* ─── Mini swipeable card for featured products ───────────────────────── */
+/* ─── Mini swipeable card ─────────────────────────────────────────────── */
 function FeaturedCard({ p, onNavigate }) {
   const images = (p.media ?? []).filter(m => m.type === 'image');
   const [idx, setIdx] = useState(0);
@@ -21,12 +21,7 @@ function FeaturedCard({ p, onNavigate }) {
   };
   const onMouseDown = (e) => { startX.current = e.clientX; moved.current = false; };
   const onMouseMove = (e) => { if (startX.current !== null && Math.abs(e.clientX - startX.current) > 8) moved.current = true; };
-  const onMouseUp   = (e) => {
-    if (startX.current === null) return;
-    const dx = e.clientX - startX.current;
-    if (Math.abs(dx) > 28) go(dx < 0 ? 1 : -1);
-    startX.current = null;
-  };
+  const onMouseUp   = () => { startX.current = null; };
 
   const imgSrc = images[idx]?.url ?? (p.image || 'https://placehold.co/300x375/141414/555?text=IMG');
 
@@ -45,7 +40,7 @@ function FeaturedCard({ p, onNavigate }) {
           background: 'linear-gradient(135deg,#ff2d00,#ffd000)',
           color: '#fff', fontSize: 8, fontWeight: 900,
           padding: '2px 7px', borderRadius: 20, letterSpacing: 1,
-          boxShadow: '0 2px 8px rgba(255,94,0,0.5)',
+          boxShadow: '0 2px 8px rgb(255, 0, 0)',
         }}>NEW</div>
       )}
 
@@ -83,13 +78,8 @@ function FeaturedCard({ p, onNavigate }) {
 
 /* ─── HomePage ────────────────────────────────────────────────────────── */
 export default function HomePage({ onNavigate, onTabChange }) {
-  // Show up to 3 newest products that are marked as isNew: true
   const featured = PRODUCTS
     .filter(p => p.isNew === true && !p.soldOut)
-    .sort((a, b) => {
-      // Sort by position in the array (newest at the end of PRODUCTS array)
-      return PRODUCTS.indexOf(b) - PRODUCTS.indexOf(a);
-    })
     .slice(0, 3);
 
   return (
@@ -99,81 +89,133 @@ export default function HomePage({ onNavigate, onTabChange }) {
         <div className="spacer-12" />
 
         {/* ── Hero ── */}
-        <div style={{ textAlign: 'center', padding: '4px 0 18px' }}>
+        <div style={{ textAlign: 'center', padding: '1px 0 22px' }}>
           <img
             src="/logo.png"
             alt="logo"
-            style={{ width: 120, height: 120, objectFit: 'contain' }}
+            style={{ width: 128, height: 128, objectFit: 'contain' }}
             onError={e => { e.target.style.display = 'none'; }}
           />
           <h1 style={{
             fontFamily: 'var(--font-display)',
-            fontSize: 40, letterSpacing: 4,
-            marginTop: 8, marginBottom: 6,
-            color: '#fff',
-            textShadow: '0 0 32px rgba(125,217,154,0.35)',
+            fontSize: 48,
+            letterSpacing: 3,
+            marginTop: 6,
+            marginBottom: 2,
+            color: '#ffffff',
+            /* Subtle multi-layer neon — not harsh, just glowing */
+            textShadow: `
+              0 0 10px rgba(255,255,255,0.45),
+              0 0 28px rgba(0, 37, 4, 0.33),
+              0 0 60px rgba(200,168,75,0.28),
+              0 0 90px rgba(200,168,75,0.14),
+              0 4px 12px rgba(0,0,0,0.80)
+            `,
           }}>
-            {SHOP_CONFIG.name}
+            THE RAWLLER SHOP
           </h1>
-          <p style={{ color: 'var(--text-sub)', fontSize: 14 }}>
-            Il meglio terpene, a casa tua.
+          <p style={{ color: 'var(--text-sub)', fontSize: 16 }}>
+            Il miglior terpene a casa tua.
           </p>
         </div>
 
-        {/* ── CTA buttons row 1 ── */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
+       {/* ── CTA Buttons ── */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
           <button
             className="btn btn-ghost"
-            style={{ padding: '16px', fontWeight: 700, fontSize: 14 }}
+            style={{ 
+              padding: '20px 16px',
+              fontWeight: 700, 
+              fontSize: 16,
+              borderRadius: '9999px',
+              height: '68px'
+            }}
             onClick={() => onTabChange('orders')}
           >
             📋 I miei ordini
           </button>
           <button
             className="btn btn-gold"
-            style={{ padding: '16px', fontWeight: 700, fontSize: 20 }}
+            style={{ 
+              padding: '20px 16px',
+              fontWeight: 700, 
+              fontSize: 16,
+              borderRadius: '9999px',
+              height: '68px'
+            }}
             onClick={() => onTabChange('shop')}
           >
             🛍️ SHOP
           </button>
         </div>
 
-        {/* ── CTA buttons row 2 ── */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 28 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 32 }}>
           <a
             href="https://t.me/ilrawller"
-            target="_blank" rel="noreferrer"
+            target="_blank" 
+            rel="noreferrer"
             className="btn btn-ghost"
-            style={{ padding: '16px', fontWeight: 700, fontSize: 14, textDecoration: 'none' }}
+            style={{ 
+              padding: '20px 16px',
+              fontWeight: 700, 
+              fontSize: 16,
+              borderRadius: '9999px',
+              textDecoration: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              height: '68px'
+            }}
           >
-            <span style={{ fontSize: 18 }}>✈️</span> Telegram
+            <span style={{ fontSize: 20 }}>✈️</span> Telegram
           </a>
           <a
             href="https://instagram.com/therawller"
-            target="_blank" rel="noreferrer"
+            target="_blank" 
+            rel="noreferrer"
             className="btn btn-ghost"
-            style={{ padding: '16px', fontWeight: 700, fontSize: 14, textDecoration: 'none' }}
+            style={{ 
+              padding: '20px 16px',
+              fontWeight: 700, 
+              fontSize: 16,
+              borderRadius: '9999px',
+              textDecoration: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              height: '68px'
+            }}
           >
-            <span style={{ fontSize: 18 }}>📸</span> Instagram
+            <span style={{ fontSize: 20 }}>📸</span> Instagram
           </a>
         </div>
 
-        {/* ── New Drops heading ── */}
+        {/* ── New Drops ── */}
         {featured.length > 0 && (
           <>
-            <div style={{ textAlign: 'center', marginBottom: 16 }}>
+            <div style={{ textAlign: 'center', marginBottom: 18 }}>
               <h2 style={{
                 fontFamily: 'var(--font-display)',
-                fontSize: 36, letterSpacing: 4,
+                /* Bigger than before */
+                fontSize: 48,
+                letterSpacing: 5,
                 color: '#fff',
-                textShadow: '0 0 20px rgba(125,217,154,0.5), 0 0 40px rgba(244,197,66,0.25)',
+                /* Same subtle neon treatment as title */
+                textShadow: `
+                  0 0 10px rgba(255,255,255,0.45),
+                  0 0 30px rgba(244,197,66,0.55),
+                  0 0 65px rgba(200,168,75,0.30),
+                  0 0 100px rgba(200,168,75,0.15),
+                  0 4px 12px rgba(0,0,0,0.80)
+                `,
                 display: 'inline-block',
               }}>
-                🔥 NEW DROPS 🔥
+                🔥NEW DROPS🔥
               </h2>
             </div>
 
-            {/* ── Featured product grid — 2 cols so cards aren't tiny ── */}
             <div className="product-grid-3" style={{ marginBottom: 24 }}>
               {featured.map(p => (
                 <FeaturedCard key={p.id} p={p} onNavigate={onNavigate} />
@@ -193,3 +235,4 @@ export default function HomePage({ onNavigate, onTabChange }) {
     </div>
   );
 }
+
