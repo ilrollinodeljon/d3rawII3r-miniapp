@@ -187,7 +187,7 @@ export const PRODUCTS = [
     isNew: true,
     brand: "Cali Spain",
     emoji: "",
-    description: "Premium Cali Spain Flowes",
+    description: "Premium Cali Spain Flowers",
     media: [
       { type: "image", url: "/products/cali_spa.jpg" },
       { type: "image", url: "/products/cali_spa_2.jpg" },

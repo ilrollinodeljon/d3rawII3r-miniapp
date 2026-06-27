@@ -62,9 +62,36 @@ export default function App() {
   };
 
   return (
-    <div style={{ height: '100%', position: 'relative' }}>
+    <div style={{ height: '100%', position: 'relative', overflow: 'hidden' }}>
+      
+      {/* Looping Video Background - Visible on ALL pages */}
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
+        style={{
+          position: 'fixed',
+          inset: 0,
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
+          zIndex: 0,
+          opacity: 0.55,
+          filter: 'brightness(0.78)',
+          pointerEvents: 'none',
+        }}
+      >
+        <source src="/bg.mp4" type="video/mp4" />
+        {/* Optional GIF fallback */}
+        {/* <img src="/bg.gif" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> */}
+      </video>
+
+      {/* Ambient overlay (gold glow + vignette) */}
       <div className="bg-art" />
+
       {renderPage()}
+
       <BottomNav
         active={['home','shop','cart','orders','support','profile'].includes(tab) ? tab : 'home'}
         onChange={changeTab}

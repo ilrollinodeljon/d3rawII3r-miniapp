@@ -55,7 +55,7 @@ export default function Topbar({ onBack, backLabel = '← Indietro', onSupport, 
       >
         <h2 style={{ 
           margin: 0, 
-          fontSize: 20, 
+          fontSize: 23, 
           fontWeight: 700,
           letterSpacing: 1.5,
           color: '#ffffff'
@@ -64,7 +64,7 @@ export default function Topbar({ onBack, backLabel = '← Indietro', onSupport, 
         </h2>
         <p style={{ 
           margin: 0, 
-          fontSize: 13, 
+          fontSize: 14, 
           color: 'var(--text-sub)', 
           opacity: 0.9 
         }}>
