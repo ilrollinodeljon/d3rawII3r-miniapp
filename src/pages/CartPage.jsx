@@ -263,7 +263,7 @@ export default function CartPage() {
             {/* Delivery */}
             <div className="section-box">
               <div className="section-box-title">🚚 Tipo di consegna</div>
-              <div className="delivery-grid">
+              <div className="delivery-grid" style={{ marginTop: 12 }}>
                 {DELIVERY_METHODS.map(d => (
                   <div
                     key={d.id}
@@ -314,7 +314,7 @@ export default function CartPage() {
               </div>
 
               {isDelivery ? (
-                <div className="field-group">
+                <div className="field-group" style={{ marginTop: 12 }}>
                   <div className="field-row">
                     <input className="field" placeholder="Nome e Cognome" value={address.nome || ''} onChange={e => setField('nome', e.target.value)} />
                     <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -372,7 +372,7 @@ export default function CartPage() {
             {/* Payment */}
             <div className="section-box">
               <div className="section-box-title">💳 Metodo di pagamento</div>
-              <div className="payment-grid">
+              <div className="payment-grid" style={{ marginTop: 12 }}>
                 {availablePayments.map(m => (
                   <div key={m.id} className={`payment-option ${payment === m.id ? 'active' : ''}`} onClick={() => { setPayment(m.id); updateCheckoutData({ payment: m.id }); }}>
                     <div className="pay-icon">{m.icon}</div>
@@ -383,8 +383,8 @@ export default function CartPage() {
             </div>
 
            {/* OPTIONAL VERIFICATION SECTION */}
-            <div className="section-box" style={{ padding: '16px' }}>
-              <div className="section-box-title">📄 Verifica Account</div>
+            <div className="section-box" style={{ padding: '16px', marginBottom:20}}>
+              <div className="section-box-title">📄 Verifica Account (solo per delivery)</div>
 
               {(frontImage || backImage || verificationVideo) ? (
                 <div>
@@ -417,21 +417,21 @@ export default function CartPage() {
                 </div>
               ) : (
                 <div>
-                  <p style={{ fontSize: '13.5px', color: 'var(--text-sub)', marginBottom: 12 }}>
-                    Foto fronte e retro del documento di identità di chi ritira l'ordine e video selfie con doc visibile in mano (necessari solo al primo ordine con delivery)
+                  <p style={{ fontSize: '13.5px', color: 'var(--text-sub)', marginBottom: 12 , marginTop:10}}>
+                    Foto fronte e retro del documento di identità di chi ritira l'ordine e video selfie con doc visibile in mano (obbligatori solo al primo ordine)
                   </p>
                   <div style={{ display: 'flex', gap: 8 }}>
                     <div style={{ flex: 1 }} onClick={() => document.getElementById('front-upload').click()}>
                       <input id="front-upload" type="file" accept="image/*" capture="environment" onChange={(e) => handleFileSelect(e, 'front')} style={{ display: 'none' }} />
-                      <div className="glass" style={{ height: '110px', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>📸<br />Fronte</div>
+                      <div className="glass" style={{ height: '90px', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>📸<br />Fronte</div>
                     </div>
                     <div style={{ flex: 1 }} onClick={() => document.getElementById('back-upload').click()}>
                       <input id="back-upload" type="file" accept="image/*" capture="environment" onChange={(e) => handleFileSelect(e, 'back')} style={{ display: 'none' }} />
-                      <div className="glass" style={{ height: '110px', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>📸<br />Retro</div>
+                      <div className="glass" style={{ height: '90px', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>📸<br />Retro</div>
                     </div>
                     <div style={{ flex: 1 }} onClick={() => document.getElementById('video-upload').click()}>
                       <input id="video-upload" type="file" accept="video/*" capture="environment" onChange={(e) => handleFileSelect(e, 'video')} style={{ display: 'none' }} />
-                      <div className="glass" style={{ height: '110px', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>🎥<br />Video</div>
+                      <div className="glass" style={{ height: '90px', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>🎥<br />Video</div>
                     </div>
                   </div>
                 </div>

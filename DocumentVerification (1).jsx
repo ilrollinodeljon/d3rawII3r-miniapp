@@ -309,7 +309,7 @@ export default function DocumentVerification({
 
       {verifiedStatus === 'unverified' && (
         <>
-          <p style={{ fontSize: 12, color: 'var(--text-sub)', marginTop: -6, marginBottom: 14, lineHeight: 1.5 }}>
+          <p style={{ fontSize: 12, color: 'var(--text-sub)', marginTop: -6, marginBottom: 5, lineHeight: 1.5 }}>
             Carica una foto del documento fronte/retro e un breve video selfie per completare la verifica.
           </p>
 

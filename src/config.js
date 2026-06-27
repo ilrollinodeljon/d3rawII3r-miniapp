@@ -29,7 +29,7 @@ export const CATEGORIES = [
 export const DELIVERY_METHODS = [
   {
     id: "delivery_pavia",
-    label: "DELIVERY PV-MI",
+    label: "Delivery PV-MI",
     icon: "📍",
     note: "Il servizio di delivery ha un costo aggiuntivo in base al tragitto. Dopo l'approvazione verrai contattato per il prezzo aggiornato.",
     fields: ["zone", "address"],

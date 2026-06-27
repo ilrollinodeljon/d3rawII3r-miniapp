@@ -59,9 +59,10 @@ export default function Topbar({ onBack, backLabel = '← Indietro', onSupport, 
       >
         <h2 style={{ 
           margin: 0, 
-          fontSize: 26, 
+          fontFamily: 'var(--font-display)',
+          fontSize: 28, 
           fontWeight: 700,
-          letterSpacing: 3,
+          letterSpacing: 2,
           color: '#ffffff'
         }}>
           THE RAWLLER SHOP

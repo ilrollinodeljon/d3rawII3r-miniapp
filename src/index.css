@@ -136,77 +136,81 @@ body {
 }
 
 /* ── Topbar ──────────────────────────────────────────────────────────── */
-.topbar {
-  display: flex; 
-  align-items: center; 
-  justify-content: center;
-  padding: 14px 16px;
-   position: fixed;    
-  top: 0;               
-  left: 0;              
-  right: 0;             
-  height: 60px;         
-  z-index: 100;
-  background: #000000;           /* Pure black */
-  border-bottom: 1px solid rgba(255,255,255,0.08);
-  box-shadow: 0 2px 10px rgba(0,0,0,0.6);
+/* ── Viewport root — lock overscroll so topbar never moves ── */
+html {
+  height: 100%;
+  width: 100%;
+  background-color: #000000;
+  /* prevent the entire page from rubber-banding on iOS */
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: auto;
 }
 
-.topbar-title { 
-  text-align: center; 
-  z-index: 2;
-}
-
-.topbar-title h2 {
-  font-family: var(--font-display);
-  font-size: 18px; 
-  letter-spacing: 2px;
-  color: #ffffff; 
-  font-weight: 600;
-  margin: 0;
-}
-
-.topbar-title p { 
-  font-size: 11px; 
-  color: var(--text-sub); 
-  margin-top: 1px;
-}
-
-.topbar-back {
-  position: absolute;
-  left: 16px;
-  background: none;
-  border: none;
-  color: var(--gold);
+body {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  background-color: #000000;
+  background: #000000;
+  color: var(--text);
   font-family: var(--font-body);
   font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* belt-and-suspenders: block body scroll entirely */
+  overscroll-behavior: none;
+  position: fixed;           /* iOS: this is the nuclear option that fully stops pull-to-refresh */
+  top: 0; left: 0; right: 0; bottom: 0;
+}
+
+#root {
+  height: 100%;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+  background-color: #000000;
+  background: #000000;
+}
+
+/* ── Page shell — only THIS scrolls, not body ── */
+.page {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-bottom: 88px;
+  background: transparent;
+  /* smooth scroll + lock overscroll within the container */
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.page::-webkit-scrollbar { display: none; }
+
+/* ── Topbar — fixed, always on top ── */
+.topbar {
   display: flex;
   align-items: center;
-  gap: 4px;
-}
-.topbar-menu {
-  position: absolute; 
-  right: 16px;
-  width: 36px; 
-  height: 36px; 
-  border-radius: 50%;
-  border: 1px solid rgba(255,255,255,0.1);
-  background: rgba(0,0,0,0.85);
-  color: #fff; 
-  font-size: 24px; 
-  cursor: pointer;
-  display: flex; 
-  align-items: center; 
   justify-content: center;
-  z-index: 2;
+  padding: 8px 16px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 52px;
+  z-index: 1000;           /* above everything */
+  background: #000000;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.6);
+  /* prevent topbar itself from being dragged */
+  overscroll-behavior: none;
+  touch-action: none;
 }
 
-
+/* ── Spacer pushes page content below the fixed topbar ── */
 .topbar-spacer {
-  height: 60px;
+  height: 52px;   /* must match topbar height */
   width: 100%;
+  flex-shrink: 0;
 }
 
 /* ── Bottom nav ──────────────────────────────────────────────────────── */
@@ -508,7 +512,7 @@ h1 { font-size: 40px; letter-spacing: 3px; }
   background: rgba(255,255,255,0.07);
 }
 .field::placeholder { color: var(--text-sub); }
-.field-hint { font-size: 11px; color: var(--text-sub); margin-top: 4px; }
+.field-hint { font-size: 12px; color: var(--text-sub); margin-top: 4px; }
 .field-row   { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .field-group { display: flex; flex-direction: column; gap: 8px; }
 
