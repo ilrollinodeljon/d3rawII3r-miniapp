@@ -62,7 +62,7 @@ export default function ProductPage({ product: p, onBack }) {
     <div className="page fade-up">
       <Topbar onBack={onBack} />
 
-      {/* Main Media */}
+      {/* Main Media with thumbnails overlaid at bottom */}
       <div
         style={{ position: 'relative', background: '#000', touchAction: 'pan-y' }}
         onTouchStart={onTouchStart}
@@ -107,58 +107,50 @@ export default function ProductPage({ product: p, onBack }) {
           />
         )}
 
+        {/* Thumbnails overlaid inside the media area - bottom center */}
         {mediaList.length > 1 && (
           <div style={{
-            position: 'absolute', top: 12, right: 12,
-            background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(10px)',
-            color: '#fff', fontSize: 12, padding: '4px 11px',
-            borderRadius: 12, fontWeight: 600,
+            position: 'absolute',
+            bottom: 12,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            display: 'flex',
+            gap: 8,
+            zIndex: 10,
           }}>
-            {mediaIndex + 1} / {mediaList.length}
+            {mediaList.map((item, i) => (
+              <button
+                key={i}
+                onClick={() => setMediaIndex(i)}
+                style={{
+                  width: 54,
+                  height: 54,
+                  borderRadius: 10,
+                  overflow: 'hidden',
+                  border: i === mediaIndex ? '2.5px solid #4ade80' : '2px solid rgba(255,255,255,0.25)',
+                  flexShrink: 0,
+                  position: 'relative',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.6)',
+                }}
+              >
+                {item.type === 'video' ? (
+                  <>
+                    <img 
+                      src={item.url.replace('.mp4', '.jpg')} 
+                      alt="" 
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                      onError={e => e.target.style.display = 'none'}
+                    />
+                    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.4)', fontSize: 18 }}>▶️</div>
+                  </>
+                ) : (
+                  <img src={item.url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                )}
+              </button>
+            ))}
           </div>
         )}
-
-        {mediaList.length > 1 && (
-          <>
-            <button onClick={() => goMedia(-1)} style={arrowLeftStyle}>‹</button>
-            <button onClick={() => goMedia(1)} style={arrowRightStyle}>›</button>
-          </>
-        )}
       </div>
-
-      {/* Thumbnails */}
-      {mediaList.length > 1 && (
-        <div style={{
-          display: 'flex', gap: 8, padding: '10px 16px', overflowX: 'auto',
-          background: 'rgba(10,10,10,0.9)', backdropFilter: 'blur(16px)',
-        }}>
-          {mediaList.map((item, i) => (
-            <button
-              key={i}
-              onClick={() => setMediaIndex(i)}
-              style={{
-                width: 64, height: 64, borderRadius: 10, overflow: 'hidden',
-                border: i === mediaIndex ? '2.5px solid #4ade80' : '2px solid rgba(255,255,255,0.1)',
-                flexShrink: 0, position: 'relative',
-              }}
-            >
-              {item.type === 'video' ? (
-                <>
-                  <img 
-                    src={item.url.replace('.mp4', '.jpg')} 
-                    alt="" 
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-                    onError={e => e.target.style.display = 'none'}
-                  />
-                  <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.45)', fontSize: 22 }}>▶️</div>
-                </>
-              ) : (
-                <img src={item.url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              )}
-            </button>
-          ))}
-        </div>
-      )}
 
       {/* Product Content */}
       <div className="container">
@@ -194,7 +186,6 @@ export default function ProductPage({ product: p, onBack }) {
         <div className="section-box">
           <div className="section-box-title"></div>
 
-          {/* Thinner + more rounded price buttons */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 18 }}>
             {p.prices.map(tier => {
               const isSelected = qty === tier.grams;
@@ -204,13 +195,13 @@ export default function ProductPage({ product: p, onBack }) {
                   onClick={() => setQty(tier.grams)}
                   style={{
                     padding: '8px 8px',
-                    borderRadius: 9999,           // Fully rounded like home page
+                    borderRadius: 9999,
                     border: isSelected ? '1.5px solid #4ade80' : '1.5px solid rgba(255,255,255,0.08)',
                     background: isSelected ? 'rgba(74,222,128,0.18)' : 'rgba(20,20,20,0.55)',
                     color: isSelected ? '#4ade80' : '#e5e5e5',
                     fontWeight: 700, 
                     fontSize: 14,
-                    height: '50px',
+                    height: '52px',
                     boxShadow: 'inset 0 1.5px 0 rgba(255,255,255,0.2), inset 0 -2px 0 rgba(0,0,0,0.5)'
                   }}
                 >
@@ -242,11 +233,3 @@ export default function ProductPage({ product: p, onBack }) {
     </div>
   );
 }
-
-const arrowLeftStyle = {
-  position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
-  background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.25)',
-  color: '#fff', width: 40, height: 40, borderRadius: '50%', fontSize: 22, zIndex: 10
-};
-
-const arrowRightStyle = { ...arrowLeftStyle, left: 'auto', right: 12 };
