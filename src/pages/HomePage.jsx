@@ -89,7 +89,7 @@ export default function HomePage({ onNavigate, onTabChange }) {
         <div className="spacer-12" />
 
         {/* ── Hero ── */}
-        <div style={{ textAlign: 'center', padding: '1px 0 22px' }}>
+        <div style={{ textAlign: 'center', padding: '60px 0 22px' }}>
           <img
             src="/logo.png"
             alt="logo"
@@ -103,7 +103,6 @@ export default function HomePage({ onNavigate, onTabChange }) {
             marginTop: 6,
             marginBottom: 2,
             color: '#ffffff',
-            /* Subtle multi-layer neon — not harsh, just glowing */
             textShadow: `
               0 0 10px rgba(255,255,255,0.45),
               0 0 28px rgba(0, 37, 4, 0.33),
@@ -119,7 +118,7 @@ export default function HomePage({ onNavigate, onTabChange }) {
           </p>
         </div>
 
-       {/* ── CTA Buttons ── */}
+        {/* ── CTA Buttons ── */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
           <button
             className="btn btn-ghost"
@@ -198,17 +197,13 @@ export default function HomePage({ onNavigate, onTabChange }) {
             <div style={{ textAlign: 'center', marginBottom: 18 }}>
               <h2 style={{
                 fontFamily: 'var(--font-display)',
-                /* Bigger than before */
                 fontSize: 48,
                 letterSpacing: 5,
                 color: '#fff',
-                /* Same subtle neon treatment as title */
                 textShadow: `
-                  0 0 10px rgba(255,255,255,0.45),
-                  0 0 30px rgba(244,197,66,0.55),
-                  0 0 65px rgba(200,168,75,0.30),
-                  0 0 100px rgba(200,168,75,0.15),
-                  0 4px 12px rgba(0,0,0,0.80)
+                  0 0 20px rgba(255,255,255,0.6),
+                  0 0 40px rgba(244,197,66,0.45),
+                  0 4px 12px rgba(0,0,0,0.9)
                 `,
                 display: 'inline-block',
               }}>
@@ -235,4 +230,3 @@ export default function HomePage({ onNavigate, onTabChange }) {
     </div>
   );
 }
-

@@ -157,14 +157,13 @@ function CategoryHeading({ label, accent }) {
 
 /* ─── ShopPage ─────────────────────────────────────────────────────────── */
 export default function ShopPage({ onNavigate }) {
-  // ✅ Limited to exactly these 2 products in New Arrivals
   const newProducts = PRODUCTS
     .filter(p => 
       ['sunset_sherbet', 'bufalo_plein'].includes(p.id) && 
       p.isNew && 
       !p.soldOut
     )
-    .sort((a, b) => b.dateAdded.localeCompare(a.dateAdded)); // Newest first
+    .sort((a, b) => b.dateAdded.localeCompare(a.dateAdded));
 
   return (
     <div className="page fade-up">
@@ -172,7 +171,7 @@ export default function ShopPage({ onNavigate }) {
       <div className="container">
         <h2 className="section-title">🛍️ Shop</h2>
 
-        {/* NEW ARRIVALS - Limited to 2 products */}
+        {/* NEW ARRIVALS */}
         {newProducts.length > 0 && (
           <div style={{ marginBottom: 36 }}>
             <CategoryHeading label="🔥 New Arrivals" accent />

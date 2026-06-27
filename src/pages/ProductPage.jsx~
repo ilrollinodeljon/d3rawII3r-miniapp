@@ -192,10 +192,9 @@ export default function ProductPage({ product: p, onBack }) {
 
         {/* Price Tiers & Add to Cart */}
         <div className="section-box">
-          <div className="section-box-title"></div>
+          <div className="section-box-title">🛒 Aggiungi al carrello</div>
 
-          {/* Thinner + more rounded price buttons */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 18 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 18 }}>
             {p.prices.map(tier => {
               const isSelected = qty === tier.grams;
               return (
@@ -203,15 +202,11 @@ export default function ProductPage({ product: p, onBack }) {
                   key={tier.grams}
                   onClick={() => setQty(tier.grams)}
                   style={{
-                    padding: '8px 8px',
-                    borderRadius: 9999,           // Fully rounded like home page
+                    padding: '14px 8px', borderRadius: 14,
                     border: isSelected ? '1.5px solid #4ade80' : '1.5px solid rgba(255,255,255,0.08)',
-                    background: isSelected ? 'rgba(74,222,128,0.18)' : 'rgba(20,20,20,0.55)',
+                    background: isSelected ? 'rgba(74,222,128,0.18)' : 'rgba(12,12,12,0.85)',
                     color: isSelected ? '#4ade80' : '#e5e5e5',
-                    fontWeight: 700, 
-                    fontSize: 14,
-                    height: '50px',
-                    boxShadow: 'inset 0 1.5px 0 rgba(255,255,255,0.2), inset 0 -2px 0 rgba(0,0,0,0.5)'
+                    fontWeight: 700, fontSize: 14.5,
                   }}
                 >
                   {tier.grams}g<br />
@@ -221,7 +216,7 @@ export default function ProductPage({ product: p, onBack }) {
             })}
           </div>
 
-          <div style={{ background: 'rgba(15,15,15,0.6)', border: '1px solid rgba(255,255,255,0.08)', padding: '14px 16px', borderRadius: 12, marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
+          <div style={{ background: 'rgba(15,15,15,0.85)', border: '1px solid rgba(255,255,255,0.08)', padding: '14px 16px', borderRadius: 12, marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
             <span>Selezionato:</span>
             <span style={{ color: '#4ade80', fontWeight: 800 }}>{qty}g — €{price}</span>
           </div>

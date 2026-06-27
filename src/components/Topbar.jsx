@@ -9,14 +9,18 @@ export default function Topbar({ onBack, backLabel = '← Indietro', onSupport, 
     <div 
       className="topbar" 
       style={{ 
-        position: 'relative', 
-        zIndex: 100,
-        height: 60,
-        background: 'var(--surface)', 
-        borderBottom: '1px solid var(--border)',
+        position: 'fixed',        // ← Fixed on top
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,             // High z-index
+        height: 56,
+        background: '#000000',    // Pure solid black
+        borderBottom: '1px solid rgba(255,255,255,0.08)',
         display: 'flex',
         alignItems: 'center',
         padding: '0 16px',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.6)',
       }}
     >
       {/* Back Button or Logo */}
@@ -24,7 +28,7 @@ export default function Topbar({ onBack, backLabel = '← Indietro', onSupport, 
         <button 
           className="topbar-back" 
           onClick={onBack}
-          style={{ marginRight: 12, fontSize: 16 }}
+          style={{ marginRight: 12, fontSize: 16, color: '#C8A84B' }}
         >
           {backLabel}
         </button>
@@ -33,8 +37,8 @@ export default function Topbar({ onBack, backLabel = '← Indietro', onSupport, 
           src="/logo-badge.png"
           alt="logo"
           style={{
-            width: 58,
-            height: 58,
+            width: 56,
+            height: 56,
             borderRadius: '50%',
             objectFit: 'cover',
             marginRight: 12,
@@ -44,32 +48,24 @@ export default function Topbar({ onBack, backLabel = '← Indietro', onSupport, 
         />
       )}
 
-      {/* Title Area - RAWLLER SHOP */}
+      {/* Title Area */}
       <div 
         className="topbar-title" 
         style={{ 
           flex: 1, 
           textAlign: 'center',
-          paddingRight: onBack ? 0 : 40,
+          paddingRight: onBack ? 0 : 50,
         }}
       >
         <h2 style={{ 
           margin: 0, 
-          fontSize: 23, 
+          fontSize: 26, 
           fontWeight: 700,
-          letterSpacing: 1.5,
+          letterSpacing: 3,
           color: '#ffffff'
         }}>
           THE RAWLLER SHOP
         </h2>
-        <p style={{ 
-          margin: 0, 
-          fontSize: 14, 
-          color: 'var(--text-sub)', 
-          opacity: 0.9 
-        }}>
-          Il miglior terpene a casa tua.
-        </p>
       </div>
 
       {/* Three Dots Button */}
@@ -97,13 +93,13 @@ export default function Topbar({ onBack, backLabel = '← Indietro', onSupport, 
       {menuOpen && (
         <div style={{
           position: 'absolute',
-          top: '72px',
+          top: '68px',
           right: '12px',
-          background: 'var(--surface)',
-          border: '1px solid var(--border)',
-          borderRadius: 'var(--radius)',
-          boxShadow: '0 8px 25px rgba(0,0,0,0.4)',
-          zIndex: 200,
+          background: '#0d0d0d',
+          border: '1px solid rgba(255,255,255,0.1)',
+          borderRadius: '12px',
+          boxShadow: '0 8px 25px rgba(0,0,0,0.5)',
+          zIndex: 2000,
           minWidth: '170px',
           overflow: 'hidden',
         }}>
@@ -115,10 +111,10 @@ export default function Topbar({ onBack, backLabel = '← Indietro', onSupport, 
               textAlign: 'left',
               background: 'none',
               border: 'none',
-              color: 'var(--text)',
+              color: '#fff',
               fontSize: '15px',
               cursor: 'pointer',
-              borderBottom: '1px solid var(--border)',
+              borderBottom: '1px solid rgba(255,255,255,0.08)',
               display: 'flex',
               alignItems: 'center',
               gap: '10px',
@@ -134,7 +130,7 @@ export default function Topbar({ onBack, backLabel = '← Indietro', onSupport, 
               textAlign: 'left',
               background: 'none',
               border: 'none',
-              color: 'var(--text)',
+              color: '#fff',
               fontSize: '15px',
               cursor: 'pointer',
               display: 'flex',
@@ -147,13 +143,13 @@ export default function Topbar({ onBack, backLabel = '← Indietro', onSupport, 
         </div>
       )}
 
-      {/* Overlay to close menu */}
+      {/* Overlay */}
       {menuOpen && (
         <div
           style={{
             position: 'fixed',
             inset: 0,
-            zIndex: 150,
+            zIndex: 1500,
           }}
           onClick={() => setMenuOpen(false)}
         />

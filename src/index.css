@@ -245,20 +245,37 @@ h1 { font-size: 40px; letter-spacing: 3px; }
 
 /* ── Section box (card wrapper) ──────────────────────────────────────── */
 .section-box {
-  background: #0d0d0d;
+  background: rgba(13, 13, 13, 0.65);     /* Highly transparent */
   border: 1px solid rgba(255,255,255,0.08);
   border-radius: var(--radius);
   padding: 16px;
   margin-bottom: 12px;
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.04),
-    0 4px 24px rgba(0,0,0,0.70);
+    inset 0 2px 0 rgba(255,255,255,0.12),   /* subtle top light */
+    inset 0 -3px 0 rgba(0,0,0,0.5),         /* bottom shadow */
+    0 6px 20px rgba(0,0,0,0.6);
+  backdrop-filter: saturate(1.4) blur(20px);
 }
-.section-box-title {
-  color: var(--gold-light); font-weight: 600; font-size: 13px;
-  letter-spacing: 0.8px; margin-bottom: 14px;
-  display: flex; align-items: center; gap: 6px;
-  text-transform: uppercase;
+
+/* Price Tiers Container */
+.section-box .grid-container {   /* if you have grid, or just target the div */
+  background: rgba(10,10,10,0.4);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 14px;
+  padding: 4px;
+}
+
+/* Individual price tier buttons */
+.section-box button {
+  background: rgba(20,20,20,0.6);
+  border: 1.5px solid rgba(255,255,255,0.08);
+  box-shadow: 
+    inset 0 1.5px 0 rgba(255,255,255,0.25),
+    inset 0 -2px 0 rgba(0,0,0,0.6);
+}
+
+.section-box button:hover {
+  background: rgba(30,30,30,0.7);
 }
 
 /* ── Card ────────────────────────────────────────────────────────────── */
@@ -289,7 +306,7 @@ h1 { font-size: 40px; letter-spacing: 3px; }
 
 /* ── Product card ────────────────────────────────────────────────────── */
 .product-card {
-  background: #0d0d0d;       /* solid black — no grey bleed from blur */
+  background: #000000c8;       /* solid black — no grey bleed from blur */
   border: 1px solid rgba(255,255,255,0.08);
   border-radius: var(--radius);
   overflow: hidden;
@@ -396,83 +413,71 @@ h1 { font-size: 40px; letter-spacing: 3px; }
 
 
 
-/* ── Buttons — Deep Black Transparent 3D Glass ─────────────────────── */
+/* ── Buttons — Transparent 3D Glass ─────────────────────── */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   width: 100%;
-  padding: 16px 20px;
-  border-radius: 100px;
+  padding: 18px 20px;
+  border-radius: 9999px;
   font-family: var(--font-body);
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 700;
-  letter-spacing: 0.2px;
+  letter-spacing: 0.3px;
   cursor: pointer;
   text-align: center;
   position: relative;
   overflow: hidden;
-  transition: transform 0.14s cubic-bezier(.22,.68,0,1.2), 
-              box-shadow 0.18s ease,
-              opacity 0.14s ease;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 
-  /* Very dark + highly transparent black */
-  background: rgba(10, 10, 10, 0.65);
-  border: 1px solid rgba(0, 0, 0, 0.12);
-  color: var(--text);
+  /* Highly transparent dark glass */
+  background: rgba(15, 15, 15, 0.45);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: #fff;
 
-  /* Strong 3D effect with marked lights and shadows */
+  /* Subtle 3D bevel only */
   box-shadow:
-    /* Top highlight (strong bevel) */
-    inset 0 2px 0 rgb(119, 119, 119),
-    /* Bottom inner shadow */
-    inset 0 -3px 0 rgb(0, 0, 0),
-    /* Outer depth */
-    0 8px 24px rgb(0, 0, 0),
-    0 2px 6px rgb(0, 0, 0);
+    inset 0 2px 0 rgba(255,255,255,0.25),     /* light on top */
+    inset 0 -3px 0 rgba(0,0,0,0.6),           /* shadow on bottom */
+    0 4px 12px rgba(0,0,0,0.5);
   
-  backdrop-filter: saturate(1.4) blur(24px);
-  -webkit-backdrop-filter: saturate(1.4) blur(24px);
+  backdrop-filter: saturate(1.6) blur(20px);
+  -webkit-backdrop-filter: saturate(1.6) blur(20px);
 }
 
 .btn:hover {
-  background: rgba(0, 0, 0, 0.75);
+  background: rgba(20, 20, 20, 0.55);
   box-shadow:
-    inset 0 2.5px 0 rgba(0, 0, 0, 0.42),
-    inset 0 -3px 0 rgba(0,0,0,0.60),
-    0 10px 28px rgba(0,0,0,0.80),
-    0 3px 8px rgba(0,0,0,0.55);
+    inset 0 2.5px 0 rgba(255,255,255,0.35),
+    inset 0 -3px 0 rgba(0,0,0,0.65),
+    0 6px 16px rgba(0,0,0,0.6);
   transform: translateY(-1px);
 }
 
 .btn:active {
-  transform: scale(0.97) translateY(1px);
+  transform: scale(0.96) translateY(1px);
   box-shadow:
-    inset 0 1px 0 rgba(0, 0, 0, 0.496),
-    inset 0 -2px 0 rgba(0,0,0,0.70),
-    0 4px 12px rgba(0,0,0,0.65);
+    inset 0 1px 0 rgba(255,255,255,0.15),
+    inset 0 -2px 0 rgba(0,0,0,0.7),
+    0 3px 8px rgba(0,0,0,0.5);
 }
 
-/* Gold variant (Add to Cart) */
+/* Gold variant for SHOP button */
 .btn-gold {
-  background: rgba(0, 0, 0, 0.26);
-  border-color: rgba(0, 0, 0, 0.399);
+  background: rgba(30, 20, 10, 0.45);
+  border-color: rgba(200,168,75,0.35);
   color: #fff;
   box-shadow:
-    inset 0 2px 0 rgba(179, 178, 178, 0.739),
-    inset 0 -4px 0 rgba(0,0,0,0.75),
-    0 8px 26px rgba(0,0,0,0.85),
-    0 0 20px rgba(0, 0, 0, 0.435);
+    inset 0 2px 0 rgba(255,230,140,0.4),
+    inset 0 -3px 0 rgba(0,0,0,0.65),
+    0 4px 12px rgba(0,0,0,0.5);
 }
 
 .btn-gold:hover {
-  background: rgba(0, 0, 0, 0.688);
-  box-shadow:
-    inset 0 2.5px 0 rgba(255,255,255,0.45),
-    inset 0 -4px 0 rgba(0,0,0,0.70),
-    0 10px 30px rgba(0,0,0,0.90),
-    0 0 28px rgba(0, 0, 0, 0.586);
+  background: rgba(40, 28, 15, 0.55);
+  border-color: rgba(244,197,66,0.5);
 }
 
 /* ── Input fields ────────────────────────────────────────────────────── */
