@@ -162,8 +162,24 @@ export default function ProductPage({ product: p, onBack }) {
           </div>
         )}
 
-        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 30, letterSpacing: 1 }}>{p.name} {p.emoji}</h1>
-        <p style={{ color: 'var(--text-sub)', marginTop: 6 }}>{p.description}</p>
+        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 40, letterSpacing: 1 }}>{p.name} {p.emoji}</h1>
+        {p.id === 'sunset_sherbet' ? (
+  <p style={{ color: 'var(--text-sub)', marginTop: 6 }}>
+    Premium Cali Spain Flowers —{' '}
+    <a
+      href="https://www.leafly.com/strains/sunset-sherbert"
+      target="_blank"
+      rel="noopener noreferrer"
+      style={{ color: '#4ade80' }}
+    >
+      Scopri lo strain🌿 
+    </a>
+  </p>
+) : (
+  <p style={{ color: 'var(--text-sub)', marginTop: 6 }}>
+    {p.description}
+  </p>
+)}
 
         <div className="spacer-20" />
 

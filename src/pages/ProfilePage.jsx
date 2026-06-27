@@ -20,10 +20,10 @@ export default function ProfilePage() {
         <div className="spacer-20" />
 
         {/* Avatar + name */}
-        <div style={{ textAlign: 'center', marginBottom: 20 }}>
+        <div style={{ textAlign: 'center', marginBottom: 20, marginTop: 60 }}>
           <div className="avatar">{initial}</div>
           <h2 style={{ fontWeight: 800, fontSize: 22 }}>{displayName}</h2>
-          <p style={{ color: 'var(--text-sub)', marginTop: 2 }}>@{username}</p>
+          <p style={{ color: 'var(--text-sub)', marginTop: 4}}>@{username}</p>
           <div className="spacer-12" />
           <span className="new-badge">
             <span className="dot" /> Nuovo

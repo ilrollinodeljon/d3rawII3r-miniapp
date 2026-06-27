@@ -3,7 +3,7 @@ import Topbar from '../components/Topbar';
 import { PRODUCTS, CATEGORIES } from '../config';
 
 /* ─── Swipeable image wrap ─────────────────────────────────────────────── */
-function SwipeableImages({ media }) {
+function SwipeableImages({ media }) { marginTop: 60
   const images = (media ?? []).filter(m => m.type === 'image');
   const [idx, setIdx] = useState(0);
   const startX = useRef(null);
@@ -137,7 +137,7 @@ function ProductCard({ p, onNavigate }) {
 /* ─── Category heading ─────────────────────────────────────────────────── */
 function CategoryHeading({ label, accent }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0 16px', marginBottom: 14 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0 16px', marginBottom: 14, marginTop: 30 }}>
       <h3 style={{
         fontFamily: 'var(--font-display)', fontSize: 22, letterSpacing: 2,
         color: '#fff', fontWeight: 400, flexShrink: 0,
@@ -168,12 +168,12 @@ export default function ShopPage({ onNavigate }) {
   return (
     <div className="page fade-up">
       <Topbar />
-      <div className="container">
+      <div className="container -70">
         <h2 className="section-title">🛍️ Shop</h2>
 
         {/* NEW ARRIVALS */}
         {newProducts.length > 0 && (
-          <div style={{ marginBottom: 36 }}>
+          <div style={{ marginBottom: 36, }}>
             <CategoryHeading label="🔥 New Arrivals" accent />
             <div className="product-grid">
               {newProducts.map(p => <ProductCard key={p.id} p={p} onNavigate={onNavigate} />)}

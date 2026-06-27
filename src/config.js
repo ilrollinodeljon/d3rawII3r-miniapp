@@ -177,34 +177,33 @@ export const PRODUCTS = [
     ],
   },
 
-  // ── WEED ──────────────────────────────────────────────────
-  {
-    id: "sunset_sherbet",
-    dateAdded: "2026-06-26",
-    sortOrder: 1,
-    name: "Sunset Sherbet🌺",
-    category: "weed",              // ← moved to weed
-    isNew: true,
-    brand: "Cali Spain",
-    emoji: "",
-    description: "Premium Cali Spain Flowers",
-    media: [
-      { type: "image", url: "/products/cali_spa.jpg" },
-      { type: "image", url: "/products/cali_spa_2.jpg" },
-      { type: "video", url: "/products/cali_spa.mp4" }
-    ],
-    minQty: 10,
-    unit: "g",
-    strains: null,
-    prices: [
-      { grams: 10,  price: 120  },
-      { grams: 25,  price: 240  },
-      { grams: 50,  price: 440  },
-      { grams: 100, price: 800  },
-      { grams: 250, price: 1850 },
-      { grams: 500, price: 3600 },
-    ],
-  },
+{
+  id: "sunset_sherbet",
+  dateAdded: "2026-06-26",
+  sortOrder: 1,
+  name: "Sunset Sherbet🌺",
+  category: "weed",
+  isNew: true,
+  brand: "Cali Spain",
+  emoji: "",
+  description: "Premium Cali Spain Flowers — https://www.leafly.com/strains/sunset-sherbert",
+  media: [
+    { type: "image", url: "/products/cali_spa.jpg" },
+    { type: "image", url: "/products/cali_spa_2.jpg" },
+    { type: "video", url: "/products/cali_spa.mp4" }
+  ],
+  minQty: 10,
+  unit: "g",
+  strains: null,
+  prices: [
+    { grams: 10,  price: 120  },
+    { grams: 25,  price: 240  },
+    { grams: 50,  price: 440  },
+    { grams: 100, price: 800  },
+    { grams: 250, price: 1850 },
+    { grams: 500, price: 3600 },
+  ],
+},
 ];
 
 // ============================================================
