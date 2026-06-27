@@ -173,18 +173,19 @@ body {
 }
 
 .topbar-back {
-  position: absolute; 
+  position: absolute;
   left: 16px;
-  background: none; 
-  border: none; 
+  background: none;
+  border: none;
   color: var(--gold);
-  font-family: var(--font-body); 
-  font-size: 15px; 
+  font-family: var(--font-body);
+  font-size: 15px;
   font-weight: 600;
-  cursor: pointer; 
-  display: flex; 
-  align-items: center; 
+  cursor: pointer;
+  display: flex;
+  align-items: center;
   gap: 4px;
+}
 .topbar-menu {
   position: absolute; 
   right: 16px;
@@ -202,30 +203,6 @@ body {
   z-index: 2;
 }
 
-.topbar-spacer {
-  height: 60px;
-  width: 100%;
-}
-
-  z-index: 2;
-}
-
-.topbar-menu {
-  position: absolute; 
-  right: 16px;
-  width: 36px; 
-  height: 36px; 
-  border-radius: 50%;
-  border: 1px solid rgba(255,255,255,0.1);
-  background: rgba(0,0,0,0.85);
-  color: #fff; 
-  font-size: 24px; 
-  cursor: pointer;
-  display: flex; 
-  align-items: center; 
-  justify-content: center;
-  z-index: 2;
-}
 
 .topbar-spacer {
   height: 60px;

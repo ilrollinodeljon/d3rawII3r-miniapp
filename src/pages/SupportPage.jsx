@@ -16,7 +16,7 @@ export default function SupportPage() {
       <Topbar />
       <div className="container">
         <h2 className="section-title">💬 Supporto</h2>
-        <p style={{ color: 'var(--text-sub)', marginBottom: 20, fontSize: 14, lineHeight: 1.6 }}>
+        <p style={{ color: 'var(--text-sub)', marginBottom: 30, marginTop: 50, fontSize: 16, lineHeight: 1.6 }}>
           Hai bisogno di aiuto? Scrivici un messaggio e ti risponderemo al più presto.
         </p>
 
@@ -35,7 +35,7 @@ export default function SupportPage() {
 
         <div className="section-box">
           <div className="section-box-title">📌 Info utili</div>
-          <p style={{ fontSize: 14, color: 'var(--text-sub)', lineHeight: 1.7 }}>
+          <p style={{ fontSize: 16, color: 'var(--text-sub)', marginTop: 12, lineHeight: 1.7 }}>
             Gli ordini vengono processati entro 24h.<br />
             Per urgenze scrivi direttamente su Telegram.
           </p>
