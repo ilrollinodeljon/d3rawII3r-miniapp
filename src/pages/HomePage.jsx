@@ -131,7 +131,7 @@ export default function HomePage({ onNavigate, onTabChange }) {
             }}
             onClick={() => onTabChange('orders')}S
           >
-            📋 I MIEI ORDINI
+            📋 I miei ordini
           </button>
           <button
             className="btn btn-gold"
@@ -167,7 +167,7 @@ export default function HomePage({ onNavigate, onTabChange }) {
               height: '68px'
             }}
           >
-            <span style={{ fontSize: 20 }}></span> ✈️ TELEGRAM
+            <span style={{ fontSize: 20 }}></span> ✈️ Telegram
           </a>
           <a
             href="https://instagram.com/therawller"
@@ -187,7 +187,7 @@ export default function HomePage({ onNavigate, onTabChange }) {
               height: '68px'
             }}
           >
-            <span style={{ fontSize: 20 }}></span>📸 INSTAGRAM
+            <span style={{ fontSize: 20 }}></span>📸 Instagram
           </a>
         </div>
 

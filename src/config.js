@@ -1,9 +1,9 @@
 // ============================================================
-//  therawller CONFIG — Edit everything here
+//  therawller CONFIG
 // ============================================================
 
 export const SHOP_CONFIG = {
-  name: "",
+  name: "The Rawller",
 
   logo: "/logo.png",
   background: "/bg.jpg",
@@ -21,9 +21,10 @@ export const SHOP_CONFIG = {
 //  CATEGORIES
 // ============================================================
 export const CATEGORIES = [
-  { id: "new",   label: "🔥 New Arrivals", showIfEmpty: false },
-  { id: "hash",  label: "🍫 Hash",         showIfEmpty: false },
-  { id: "weed",  label: "🌿 Weed",         showIfEmpty: false },
+  { id: "new",      label: "🔥 New Arrivals", showIfEmpty: false },
+  { id: "hash",     label: "🍫 Hash",         showIfEmpty: false },
+  { id: "weed",     label: "🌿 Weed",         showIfEmpty: false },
+  { id: "edibles",  label: "🍬 Edibles",      showIfEmpty: false },
 ];
 
 export const DELIVERY_METHODS = [
@@ -60,19 +61,19 @@ export const DELIVERY_METHODS = [
 
 export const PAYMENT_METHODS = [
   { id: "crypto", label: "Crypto", icon: "₿" },
-  { id: "cash", label: "Cash", icon: "💶" },
+  { id: "cash",   label: "Cash",   icon: "💶" },
 ];
 
 // ============================================================
 //  PRODUCTS
-//  sortOrder: lower = shown first within its category
+//  sortOrder: lower number = shown first within category
 // ============================================================
 export const PRODUCTS = [
   // ── HASH ──────────────────────────────────────────────────
   {
     id: "plasma_static",
     dateAdded: "2026-06-01",
-    sortOrder: 1,                    // priciest → first
+    sortOrder: 1,
     name: "Plasma Static",
     soldOut: true,
     category: "hash",
@@ -88,9 +89,9 @@ export const PRODUCTS = [
     unit: "g",
     strains: ["TMZ (Too Much Zkittlez)", "FF (Forbitten Fruit)"],
     prices: [
-      { grams: 10,  price: 220  },
-      { grams: 25,  price: 500  },
-      { grams: 50,  price: 950  },
+      { grams: 10,  price: 220 },
+      { grams: 25,  price: 500 },
+      { grams: 50,  price: 950 },
       { grams: 100, price: 1500 },
       { grams: 200, price: 2600 },
     ],
@@ -101,7 +102,7 @@ export const PRODUCTS = [
     sortOrder: 2,
     name: "Fresh frozen s2026❄️",
     category: "hash",
-    isNew: true,
+    isNew: false,
     brand: "H.C.M.",
     emoji: "",
     description: "fresh frozen",
@@ -114,10 +115,10 @@ export const PRODUCTS = [
     unit: "g",
     strains: ["Mimosa", "Tiramisu", "Rainbow Mints", "Papaya"],
     prices: [
-      { grams: 10,  price: 130  },
-      { grams: 25,  price: 280  },
-      { grams: 50,  price: 480  },
-      { grams: 100, price: 950  },
+      { grams: 10,  price: 130 },
+      { grams: 25,  price: 280 },
+      { grams: 50,  price: 480 },
+      { grams: 100, price: 950 },
       { grams: 250, price: 2400 },
       { grams: 500, price: 4450 },
     ],
@@ -141,10 +142,10 @@ export const PRODUCTS = [
     unit: "g",
     strains: null,
     prices: [
-      { grams: 10,  price: 100  },
-      { grams: 25,  price: 220  },
-      { grams: 50,  price: 400  },
-      { grams: 100, price: 700  },
+      { grams: 10,  price: 100 },
+      { grams: 25,  price: 220 },
+      { grams: 50,  price: 400 },
+      { grams: 100, price: 700 },
       { grams: 250, price: 1500 },
       { grams: 500, price: 2800 },
     ],
@@ -168,42 +169,72 @@ export const PRODUCTS = [
     unit: "g",
     strains: null,
     prices: [
-      { grams: 10,  price: 80   },
-      { grams: 25,  price: 180  },
-      { grams: 50,  price: 280  },
-      { grams: 100, price: 440  },
-      { grams: 500, price: 1900 },
-      { grams: 1000,price: 3200 },
+      { grams: 10,   price: 80 },
+      { grams: 25,   price: 180 },
+      { grams: 50,   price: 280 },
+      { grams: 100,  price: 440 },
+      { grams: 500,  price: 1900 },
+      { grams: 1000, price: 3200 },
     ],
   },
 
-{
-  id: "sunset_sherbet",
-  dateAdded: "2026-06-26",
-  sortOrder: 1,
-  name: "Sunset Sherbet🌺",
-  category: "weed",
-  isNew: true,
-  brand: "Cali Spain",
-  emoji: "",
-  description: "Premium Cali Spain Flowers — https://www.leafly.com/strains/sunset-sherbert",
-  media: [
-    { type: "image", url: "/products/cali_spa.jpg" },
-    { type: "image", url: "/products/cali_spa_2.jpg" },
-    { type: "video", url: "/products/cali_spa.mp4" }
-  ],
-  minQty: 10,
-  unit: "g",
-  strains: null,
-  prices: [
-    { grams: 10,  price: 120  },
-    { grams: 25,  price: 240  },
-    { grams: 50,  price: 440  },
-    { grams: 100, price: 800  },
-    { grams: 250, price: 1850 },
-    { grams: 500, price: 3600 },
-  ],
-},
+  // ── WEED ──────────────────────────────────────────────────
+  {
+    id: "sunset_sherbet",
+    dateAdded: "2026-06-26",
+    sortOrder: 1,
+    name: "Sunset Sherbet🌺",
+    category: "weed",
+    isNew: true,
+    brand: "Cali Spain Top Shelf",
+    emoji: "",
+    description: "Premium Cali Spain Flowers — https://www.leafly.com/strains/sunset-sherbert",
+    media: [
+      { type: "image", url: "/products/cali_spa.jpg" },
+      { type: "image", url: "/products/cali_spa_2.jpg" },
+      { type: "video", url: "/products/cali_spa.mp4" }
+    ],
+    minQty: 10,
+    unit: "g",
+    strains: null,
+    prices: [
+      { grams: 10,  price: 120 },
+      { grams: 25,  price: 240 },
+      { grams: 50,  price: 440 },
+      { grams: 100, price: 800 },
+      { grams: 250, price: 1850 },
+      { grams: 500, price: 3600 },
+    ],
+  },
+
+  // ── EDIBLES ───────────────────────────────────────────────
+  {
+    id: "mr_brown",
+    dateAdded: "2026-06-26",
+    sortOrder: 1,
+    name: "Mr Brown",
+    category: "edibles",
+    isNew: true,
+    brand: "THC edibles",
+    emoji: "",
+    description: "Brownie al cioccolato infuso al THC",
+    media: [
+      { type: "image", url: "/products/mr_brown.jpg" },
+      { type: "video", url: "/products/mr_brown_2.mp4" },
+      { type: "video", url: "/products/mr_brown.mp4" }
+    ],
+    minQty: 10,
+    unit: "g",
+    strains: null,
+    prices: [
+      { grams: 10,  price: 120 },
+      { grams: 25,  price: 240 },
+      { grams: 50,  price: 440 },
+      { grams: 100, price: 800 },
+      { grams: 250, price: 1850 },
+      { grams: 500, price: 3600 },
+    ],
+  }
 ];
 
 // ============================================================
@@ -219,7 +250,7 @@ export const NOTIFICATION_TYPES = [
 //  LINKS
 // ============================================================
 export const LINKS = [
-  { label: "Instagram", icon: "📸", url: "https://instagram.com/therawller" },
-  { label: "BOT aggiornato",    icon: "📢", url: "https://t.me/the_rawller_bot" },
-  { label: "Supporto",  icon: "💬", url: "https://t.me/ilrawller" },
+  { label: "Instagram",      icon: "📸", url: "https://instagram.com/therawller" },
+  { label: "BOT aggiornato", icon: "📢", url: "https://t.me/the_rawller_bot" },
+  { label: "Supporto",       icon: "💬", url: "https://t.me/ilrawller" },
 ];

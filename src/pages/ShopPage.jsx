@@ -3,11 +3,11 @@ import Topbar from '../components/Topbar';
 import { PRODUCTS, CATEGORIES } from '../config';
 
 /* ─── Swipeable image wrap ─────────────────────────────────────────────── */
-function SwipeableImages({ media }) { marginTop: 60
+function SwipeableImages({ media }) {
   const images = (media ?? []).filter(m => m.type === 'image');
   const [idx, setIdx] = useState(0);
   const startX = useRef(null);
-  const moved  = useRef(false);
+  const moved = useRef(false);
 
   const go = (dir) => setIdx(i => (i + dir + images.length) % images.length);
 
@@ -155,15 +155,18 @@ function CategoryHeading({ label, accent }) {
   );
 }
 
-/* ─── ShopPage ─────────────────────────────────────────────────────────── */
+//* ─── ShopPage ─────────────────────────────────────────────────────────── */
 export default function ShopPage({ onNavigate }) {
   const newProducts = PRODUCTS
-    .filter(p => 
-      ['sunset_sherbet', 'bufalo_plein'].includes(p.id) && 
-      p.isNew && 
-      !p.soldOut
-    )
+    .filter(p => p.isNew && !p.soldOut)
     .sort((a, b) => b.dateAdded.localeCompare(a.dateAdded));
+
+  // === DEBUG ===
+  console.log("=== SHOP DEBUG ===");
+  console.log("Total products loaded:", PRODUCTS.length);
+  console.log("New products:", newProducts.map(p => p.name));
+  console.log("Edibles products:", PRODUCTS.filter(p => p.category === "edibles").map(p => p.name));
+  console.log("All categories:", CATEGORIES.map(c => ({id: c.id, label: c.label})));
 
   return (
     <div className="page fade-up">
@@ -173,7 +176,7 @@ export default function ShopPage({ onNavigate }) {
 
         {/* NEW ARRIVALS */}
         {newProducts.length > 0 && (
-          <div style={{ marginBottom: 36, }}>
+          <div style={{ marginBottom: 36 }}>
             <CategoryHeading label="🔥 New Arrivals" accent />
             <div className="product-grid">
               {newProducts.map(p => <ProductCard key={p.id} p={p} onNavigate={onNavigate} />)}
@@ -186,6 +189,8 @@ export default function ShopPage({ onNavigate }) {
           const products = PRODUCTS
             .filter(p => p.category === cat.id)
             .sort((a, b) => (a.sortOrder ?? 99) - (b.sortOrder ?? 99));
+
+          console.log(`Category ${cat.id} → ${products.length} products`); // debug
 
           if (!products.length && !cat.showIfEmpty) return null;
 
