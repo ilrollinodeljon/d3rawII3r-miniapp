@@ -89,34 +89,45 @@ export default function HomePage({ onNavigate, onTabChange }) {
         <div className="spacer-12" />
 
         {/* ── Hero ── */}
-        <div style={{ textAlign: 'center', padding: '60px 0 22px' }}>
-          <img
-            src="/logo.png"
-            alt="logo"
-            style={{ width: 128, height: 128, objectFit: 'contain' }}
-            onError={e => { e.target.style.display = 'none'; }}
-          />
-          <h1 style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: 48,
-            letterSpacing: 3,
-            marginTop: 6,
-            marginBottom: 2,
-            color: '#ffffff',
-            textShadow: `
-              0 0 10px rgba(255,255,255,0.45),
-              0 0 28px rgba(0, 37, 4, 0.33),
-              0 0 60px rgba(200,168,75,0.28),
-              0 0 90px rgba(200,168,75,0.14),
-              0 4px 12px rgba(0,0,0,0.80)
-            `,
-          }}>
-            THE RAWLLER SHOP
-          </h1>
-          <p style={{ color: 'var(--text-sub)', fontSize: 16 }}>
-            Il miglior terpene a casa tua.
-          </p>
-        </div>
+<div style={{ textAlign: 'center', padding: '60px 0 30px' }}>
+  <img
+    src="/logo.png"
+    alt="logo"
+    style={{ width: 128, height: 128, objectFit: 'contain' }}
+    onError={e => { e.target.style.display = 'none'; }}
+  />
+  
+  <h1 style={{
+    fontFamily: 'var(--font-display)',
+    fontSize: 48,
+    letterSpacing: 3,
+    marginTop: 8,
+    marginBottom: 4,
+    color: '#ffffff',
+    textShadow: `
+      0 0 10px rgba(255,255,255,0.45),
+      0 0 28px rgba(0, 37, 4, 0.33),
+      0 0 60px rgba(200,168,75,0.28),
+      0 0 90px rgba(200,168,75,0.14),
+      0 4px 12px rgba(0,0,0,0.80)
+    `,
+  }}>
+    THE RAWLLER SHOP
+  </h1>
+
+  {/* Improved Tagline */}
+  <p style={{
+    color: '#ffffff96',
+    fontSize: 16,
+    fontWeight: 400,
+    letterSpacing: 1,
+    marginTop: 2,
+    textShadow: '0 2px 8px rgba(0,0,0,0.7)',
+    textTransform: 'none',
+  }}>
+    Il miglior terpene a casa tua.
+  </p>
+</div>
 
         {/* ── CTA Buttons ── */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>

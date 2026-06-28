@@ -7,11 +7,11 @@
 
 :root {
   /* Brand colours — gold/yellow accents only, no green UI tints */
-  --gold:        #C8A84B;   /* warm gold — primary accent                */
+  --gold:        #ffe224;   /* warm gold — primary accent                */
   --gold-dark:   #8B6F28;   /* deep gold for shadows                     */
-  --gold-light:  #F4C542;   /* bright yellow — highlights & prices       */
-  --yellow:      #F4C542;
-  --yellow-light:#FFEA80;
+  --gold-light:  #ffee04;   /* bright yellow — highlights & prices       */
+  --yellow:      #ffdd00;
+  --yellow-light:#fff714;
 
   /* Backgrounds — solid black, no grey bleed */
   --bg:          #000000;
@@ -78,28 +78,36 @@ body {
 .bg-art {
   position: fixed; 
   inset: 0;
-  z-index: 0;
+  z-index: -1;           /* Lower z-index */
   pointer-events: none;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  opacity: 0.1;
-  filter: brightness(0);
+  opacity: 0.65;         /* Increased from 0.1 */
+  filter: brightness(0.85) contrast(1.1);   /* Better visibility */
 }
 
-/* Remove the old background-image from CSS (we'll use video instead) */
+/* Overlay - Made much lighter */
 .bg-art::after {
   content: '';
   position: absolute; 
   inset: 0;
   background:
-    radial-gradient(ellipse 65% 45% at 50% 0%,   rgba(200,168,75,0.10) 0%, transparent 68%),
-    radial-gradient(ellipse 50% 35% at 90% 90%,  rgba(20,40,20,0.55)  0%, transparent 60%),
-    radial-gradient(ellipse 110% 80% at 50% 60%, rgba(0,0,0,0.75)     0%, transparent 100%);
+    radial-gradient(ellipse 70% 50% at 50% 20%,   rgba(200,168,75,0.18) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 40% at 85% 85%,   rgba(30,50,30,0.45) 0%, transparent 65%),
+    radial-gradient(ellipse 120% 90% at 50% 70%,  rgba(0,0,0,0.65) 0%, transparent 100%);
+  z-index: 1;
 }
 
-/* Legacy particles */
-.bg-particles { display: none; }
+/* Optional: Add subtle vignette */
+.bg-art::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, transparent 40%, rgba(0,0,0,0.4) 100%);
+  z-index: 2;
+  pointer-events: none;
+}
 
 /* ── Page shell ──────────────────────────────────────────────────────── */
 .page {
@@ -159,7 +167,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
   /* belt-and-suspenders: block body scroll entirely */
   overscroll-behavior: none;
-  position: fixed;           /* iOS: this is the nuclear option that fully stops pull-to-refresh */
+  position: fixed;           
   top: 0; left: 0; right: 0; bottom: 0;
 }
 
@@ -475,7 +483,7 @@ h1 { font-size: 40px; letter-spacing: 3px; }
 
 
 
-/* ── Buttons — Transparent 3D Glass ─────────────────────── */
+/* ── Buttons — More Transparent Glass ─────────────────────── */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -487,47 +495,57 @@ h1 { font-size: 40px; letter-spacing: 3px; }
   font-family: var(--font-body);
   font-size: 16px;
   font-weight: 700;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.4px;
   cursor: pointer;
   text-align: center;
   position: relative;
   overflow: hidden;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition: all 0.2s ease;
 
-  /* Highly transparent dark glass */
-  background: rgba(15, 15, 15, 0.45);
-  border: 1px solid rgba(255,255,255,0.08);
+  /* More transparent dark glass */
+  background: rgba(10, 10, 10, 0.35);
+  border: 1px solid rgba(255,255,255,0.12);
   color: #fff;
 
-  /* Subtle 3D bevel only */
+  /* Soft 3D effect */
   box-shadow:
-    inset 0 2px 0 rgba(255,255,255,0.25),     /* light on top */
-    inset 0 -3px 0 rgba(0,0,0,0.6),           /* shadow on bottom */
-    0 4px 12px rgba(0,0,0,0.5);
-  
-  backdrop-filter: saturate(1.6) blur(20px);
-  -webkit-backdrop-filter: saturate(1.6) blur(20px);
+    inset 0 2px 0 rgba(255,255,255,0.25),
+    inset 0 -4px 0 rgba(0,0,0,0.55),
+    0 6px 16px rgba(0,0,0,0.45);
+
+  backdrop-filter: saturate(1.4) blur(24px);
+  -webkit-backdrop-filter: saturate(1.4) blur(24px);
 }
 
 .btn:hover {
-  background: rgba(20, 20, 20, 0.55);
+  background: rgba(20, 20, 20, 0.45);
   box-shadow:
     inset 0 2.5px 0 rgba(255,255,255,0.35),
-    inset 0 -3px 0 rgba(0,0,0,0.65),
-    0 6px 16px rgba(0,0,0,0.6);
+    inset 0 -4px 0 rgba(0,0,0,0.6),
+    0 8px 20px rgba(0,0,0,0.5);
   transform: translateY(-1px);
 }
 
 .btn:active {
-  transform: scale(0.96) translateY(1px);
+  transform: scale(0.97) translateY(2px);
+  background: rgba(15, 15, 15, 0.55);
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.15),
-    inset 0 -2px 0 rgba(0,0,0,0.7),
-    0 3px 8px rgba(0,0,0,0.5);
+    inset 0 1px 0 rgba(255,255,255,0.2),
+    inset 0 -3px 0 rgba(0,0,0,0.7),
+    0 3px 10px rgba(0,0,0,0.6);
 }
 
-
-
+/* Extra transparency on mobile */
+@media (max-width: 768px) {
+  .btn {
+    background: rgba(8, 8, 8, 0.28);
+    backdrop-filter: saturate(1.3) blur(28px);
+  }
+  
+  .btn:hover {
+    background: rgba(18, 18, 18, 0.38);
+  }
+}
 
 
 /* ── Input fields ────────────────────────────────────────────────────── */
