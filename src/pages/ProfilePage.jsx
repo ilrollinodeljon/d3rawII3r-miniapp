@@ -1,4 +1,3 @@
-import Topbar from '../components/Topbar';
 import { useStore } from '../store';
 import { NOTIFICATION_TYPES, LINKS } from '../config';
 
@@ -14,8 +13,7 @@ export default function ProfilePage() {
   const displayName = user ? `${user.first_name} ${user.last_name || ''}`.trim() : 'Grenadier';
 
   return (
-    <div className="page fade-up">
-      <Topbar />
+    
       <div className="container">
         <div className="spacer-20" />
 
@@ -89,6 +87,6 @@ export default function ProfilePage() {
 
         <div className="spacer-20" />
       </div>
-    </div>
+    
   );
 }

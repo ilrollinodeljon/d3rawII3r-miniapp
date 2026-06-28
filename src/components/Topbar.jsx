@@ -9,19 +9,20 @@ export default function Topbar({ onBack, backLabel = '← Indietro', onSupport, 
     <div 
       className="topbar" 
       style={{ 
-        position: 'fixed',        // ← Fixed on top
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 1000,             // High z-index
-        height: 56,
-        background: '#000000',    // Pure solid black
-        borderBottom: '1px solid rgba(255,255,255,0.08)',
-        display: 'flex',
-        alignItems: 'center',
-        padding: '0 16px',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.6)',
-      }}
+  position: 'fixed',        
+  top: 0,
+  left: 0,
+  right: 0,
+  zIndex: 1000,             
+  height: 56,
+  paddingTop: 'env(safe-area-inset-top)', // Important for iOS
+  background: '#000000',
+  borderBottom: '1px solid rgba(255,255,255,0.08)',
+  display: 'flex',
+  alignItems: 'center',
+  padding: '0 16px',
+  boxShadow: '0 4px 12px rgba(0,0,0,0.6)',
+}}
     >
       {/* Back Button or Logo */}
       {onBack ? (

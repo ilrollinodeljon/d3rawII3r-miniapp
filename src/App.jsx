@@ -8,6 +8,7 @@ import OrdersPage from './pages/OrdersPage';
 import SupportPage from './pages/SupportPage';
 import ProfilePage from './pages/ProfilePage';
 import BottomNav from './components/BottomNav';
+import Topbar from './components/Topbar';
 
 export default function App() {
   const [tab, setTab] = useState('home');
@@ -15,7 +16,6 @@ export default function App() {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const cart = useStore(s => s.cart);
 
-  // Background video ref to control it globally
   const bgVideoRef = useRef(null);
 
   useEffect(() => {
@@ -26,10 +26,14 @@ export default function App() {
       tg.setHeaderColor('#000000');
       tg.setBackgroundColor('#000000');
     }
-    useStore.getState().loadAllData();
+
+    // Lock scrolling
+    document.documentElement.style.height = '100%';
+    document.body.style.height = '100%';
+    document.body.style.overflow = 'hidden';
+    document.body.style.margin = '0';
   }, []);
 
-  // Keep video playing even when tab changes
   useEffect(() => {
     if (bgVideoRef.current) {
       bgVideoRef.current.play().catch(() => {});
@@ -71,33 +75,41 @@ export default function App() {
   };
 
   return (
-    <div style={{ height: '100%', position: 'relative', overflow: 'hidden' }}>
+    <div style={{ height: '100vh', position: 'relative', overflow: 'hidden' }}>
       
-      {/* Persistent Background Video */}
+      {/* Background Video */}
       <video
         ref={bgVideoRef}
-        autoPlay
-        loop
-        muted
-        playsInline
+        autoPlay loop muted playsInline
         style={{
-          position: 'fixed',
-          inset: 0,
-          width: '100%',
-          height: '100%',
-          objectFit: 'cover',
-          zIndex: 0,
-          opacity: 0.55,
-          filter: 'brightness(0.78)',
-          pointerEvents: 'none',
+          position: 'fixed', inset: 0, width: '100%', height: '100%',
+          objectFit: 'cover', zIndex: 0, opacity: 0.55,
+          filter: 'brightness(0.78)', pointerEvents: 'none'
         }}
       >
         <source src="/bg.mp4" type="video/mp4" />
       </video>
 
-      <div className="bg-art" />
+      {/* Global Fixed Topbar */}
+      <Topbar 
+        onBack={stack.length > 0 ? goBack : null}
+        onSupport={() => changeTab('support')}
+        onProfile={() => changeTab('profile')}
+      />
 
-      {renderPage()}
+      {/* Scrollable Content Area - This handles the padding automatically */}
+      <div style={{
+        position: 'absolute',
+        top: '56px',           // Height of Topbar
+        left: 0,
+        right: 0,
+        bottom: 0,
+        overflow: 'auto',
+        WebkitOverflowScrolling: 'touch',
+        paddingBottom: '80px', // Space for BottomNav
+      }}>
+        {renderPage()}
+      </div>
 
       <BottomNav
         active={['home','shop','cart','orders','support','profile'].includes(tab) ? tab : 'home'}
@@ -107,4 +119,3 @@ export default function App() {
     </div>
   );
 }
-

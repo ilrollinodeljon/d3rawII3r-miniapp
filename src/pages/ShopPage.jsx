@@ -1,5 +1,4 @@
 import { useState, useRef } from 'react';
-import Topbar from '../components/Topbar';
 import { PRODUCTS, CATEGORIES } from '../config';
 
 /* ─── Swipeable image wrap ─────────────────────────────────────────────── */
@@ -19,6 +18,7 @@ function SwipeableImages({ media }) {
     if (Math.abs(dx) > 28) go(dx < 0 ? 1 : -1);
     startX.current = null;
   };
+
   const onMouseDown = (e) => { startX.current = e.clientX; moved.current = false; };
   const onMouseMove = (e) => { if (startX.current !== null && Math.abs(e.clientX - startX.current) > 8) moved.current = true; };
   const onMouseUp   = (e) => {
@@ -94,7 +94,6 @@ function ProductCard({ p, onNavigate }) {
       onMouseUp={onMouseUp}
       onClick={onClick}
     >
-      {/* NEW badge */}
       {p.isNew && !p.soldOut && (
         <div style={{
           position: 'absolute', top: 9, left: 9, zIndex: 3,
@@ -105,7 +104,6 @@ function ProductCard({ p, onNavigate }) {
         }}>NEW</div>
       )}
 
-      {/* SOLD OUT badge */}
       {p.soldOut && (
         <div style={{
           position: 'absolute', top: 9, left: 9, zIndex: 3,
@@ -155,23 +153,15 @@ function CategoryHeading({ label, accent }) {
   );
 }
 
-//* ─── ShopPage ─────────────────────────────────────────────────────────── */
+/* ─── ShopPage ─────────────────────────────────────────────────────────── */
 export default function ShopPage({ onNavigate }) {
   const newProducts = PRODUCTS
-  .filter(p => p.isNew && !p.soldOut)
-  .sort((a, b) => b.dateAdded.localeCompare(a.dateAdded))
-  .slice(0, 2);   // ← Limit to 2 items
-
-  // === DEBUG ===
-  console.log("=== SHOP DEBUG ===");
-  console.log("Total products loaded:", PRODUCTS.length);
-  console.log("New products:", newProducts.map(p => p.name));
-  console.log("Edibles products:", PRODUCTS.filter(p => p.category === "edibles").map(p => p.name));
-  console.log("All categories:", CATEGORIES.map(c => ({id: c.id, label: c.label})));
+    .filter(p => p.isNew && !p.soldOut)
+    .sort((a, b) => b.dateAdded.localeCompare(a.dateAdded))
+    .slice(0, 2);
 
   return (
-    <div className="page fade-up">
-      <Topbar />
+    
       <div className="container -70">
         <h2 className="section-title">🛍️ Shop</h2>
 
@@ -190,8 +180,6 @@ export default function ShopPage({ onNavigate }) {
           const products = PRODUCTS
             .filter(p => p.category === cat.id)
             .sort((a, b) => (a.sortOrder ?? 99) - (b.sortOrder ?? 99));
-
-          console.log(`Category ${cat.id} → ${products.length} products`); // debug
 
           if (!products.length && !cat.showIfEmpty) return null;
 
@@ -216,6 +204,6 @@ export default function ShopPage({ onNavigate }) {
           </p>
         )}
       </div>
-    </div>
+    
   );
 }

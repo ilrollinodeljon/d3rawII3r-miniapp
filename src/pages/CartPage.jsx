@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import Topbar from '../components/Topbar';
 import { useStore, getCartTotal, getPriceForGrams } from '../store';
 import { DELIVERY_METHODS, SHOP_CONFIG } from '../config';
 import { sendOrderToTelegram } from '../utils/telegram';
@@ -26,7 +25,6 @@ export default function CartPage() {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
 
-  // === VERIFICATION STATES ===
   const [isVerified, setIsVerified] = useState(false);
   const [frontImage, setFrontImage] = useState(null);
   const [backImage, setBackImage] = useState(null);
@@ -187,8 +185,7 @@ export default function CartPage() {
 
   if (success) {
     return (
-      <div className="page fade-up">
-        <Topbar />
+      
         <div className="container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '70vh' }}>
           <div style={{ fontSize: 64 }}>✅</div>
           <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 28, marginTop: 16, textAlign: 'center' }}>
@@ -202,16 +199,15 @@ export default function CartPage() {
             Torna allo shop
           </button>
         </div>
-      </div>
+      
     );
   }
 
   return (
-    <div className="page fade-up">
-      <Topbar />
+    
       <div className="container">
         <h2 className="section-title">🛒 Carrello</h2>
-
+        
         {cart.length === 0 ? (
           <div className="empty-state">
             <div className="empty-icon">🛒</div>
@@ -448,6 +444,6 @@ export default function CartPage() {
           </>
         )}
       </div>
-    </div>
+    
   );
 }

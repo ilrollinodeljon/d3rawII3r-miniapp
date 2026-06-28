@@ -1,19 +1,16 @@
 import { useState } from 'react';
-import Topbar from '../components/Topbar';
 
 export default function SupportPage() {
   const [msg, setMsg] = useState('');
 
   const send = () => {
     if (!msg.trim()) return;
-    // Open Telegram support chat
     window.Telegram?.WebApp?.openTelegramLink('https://t.me/your_support_username');
     setMsg('');
   };
 
   return (
-    <div className="page fade-up">
-      <Topbar />
+    
       <div className="container">
         <h2 className="section-title">💬 Supporto</h2>
         <p style={{ color: 'var(--text-sub)', marginBottom: 30, marginTop: 50, fontSize: 16, lineHeight: 1.6 }}>
@@ -41,6 +38,6 @@ export default function SupportPage() {
           </p>
         </div>
       </div>
-    </div>
+    
   );
 }

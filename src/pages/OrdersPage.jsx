@@ -1,4 +1,3 @@
-import Topbar from '../components/Topbar';
 import { useStore } from '../store';
 import { SHOP_CONFIG } from '../config';
 
@@ -6,8 +5,7 @@ export default function OrdersPage() {
   const orders = useStore(s => s.orders);
 
   return (
-    <div className="page fade-up">
-      <Topbar />
+    
       <div className="container">
         <h2 className="section-title">📋 I miei ordini</h2>
 
@@ -44,6 +42,6 @@ export default function OrdersPage() {
           </div>
         )}
       </div>
-    </div>
+    
   );
 }
