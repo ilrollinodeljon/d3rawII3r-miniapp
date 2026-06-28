@@ -50,7 +50,7 @@ export default function ProductPage({ product: p, onBack }) {
       return () => { v.removeEventListener('ended', onEnded); clearTimer(); };
     }
 
-    // Photo: auto-advance after 2.5s
+    // Photo: auto-advance after 3.5s
     if (current.type === 'image' && mediaList.length > 1) {
       timerRef.current = setTimeout(goNext, 2500);
     }

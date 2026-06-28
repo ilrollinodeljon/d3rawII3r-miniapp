@@ -94,7 +94,7 @@ export default function HomePage({ onNavigate, onTabChange }) {
         <div className="spacer-12" />
 
         {/* ── Hero ── */}
-        <div style={{ textAlign: 'center', padding: '60px 0 30px' }}>
+        <div style={{ textAlign: 'center', padding: '4px 0 16px' }}>
           <img
             src="/logo.png"
             alt="logo"
