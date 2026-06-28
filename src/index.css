@@ -187,6 +187,56 @@ body {
 .page::-webkit-scrollbar { display: none; }
 
 /* ── Topbar — fixed, always on top ── */
+html {
+  height: 100%;
+  width: 100%;
+  background-color: #000000;
+  /* prevent the entire page from rubber-banding on iOS */
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: auto;
+}
+
+body {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  background-color: #000000;
+  background: #000000;
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 15px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* belt-and-suspenders: block body scroll entirely */
+  overscroll-behavior: none;
+  position: fixed;           /* iOS: this is the nuclear option that fully stops pull-to-refresh */
+  top: 0; left: 0; right: 0; bottom: 0;
+}
+
+#root {
+  height: 100%;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+  background-color: #000000;
+  background: #000000;
+}
+
+/* ── Page shell — only THIS scrolls, not body ── */
+.page {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-bottom: 88px;
+  background: transparent;
+  /* smooth scroll + lock overscroll within the container */
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.page::-webkit-scrollbar { display: none; }
+
+/* ── Topbar — fixed, always on top ── */
 .topbar {
   display: flex;
   align-items: center;
