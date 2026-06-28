@@ -125,20 +125,20 @@ export default function HomePage({ onNavigate, onTabChange }) {
             style={{ 
               padding: '20px 16px',
               fontWeight: 700, 
-              fontSize: 16,
+              fontSize: 18,
               borderRadius: '9999px',
               height: '68px'
             }}
-            onClick={() => onTabChange('orders')}
+            onClick={() => onTabChange('orders')}S
           >
-            📋 I miei ordini
+            📋 I MIEI ORDINI
           </button>
           <button
             className="btn btn-gold"
             style={{ 
               padding: '20px 16px',
               fontWeight: 700, 
-              fontSize: 16,
+              fontSize: 18,
               borderRadius: '9999px',
               height: '68px'
             }}
@@ -157,7 +157,7 @@ export default function HomePage({ onNavigate, onTabChange }) {
             style={{ 
               padding: '20px 16px',
               fontWeight: 700, 
-              fontSize: 16,
+              fontSize: 18,
               borderRadius: '9999px',
               textDecoration: 'none',
               display: 'flex',
@@ -167,17 +167,17 @@ export default function HomePage({ onNavigate, onTabChange }) {
               height: '68px'
             }}
           >
-            <span style={{ fontSize: 20 }}>✈️</span> Telegram
+            <span style={{ fontSize: 20 }}></span> ✈️ TELEGRAM
           </a>
           <a
             href="https://instagram.com/therawller"
             target="_blank" 
-            rel="noreferrer"
+            rel="noreferrer"s
             className="btn btn-ghost"
             style={{ 
               padding: '20px 16px',
               fontWeight: 700, 
-              fontSize: 16,
+              fontSize: 18,
               borderRadius: '9999px',
               textDecoration: 'none',
               display: 'flex',
@@ -187,7 +187,7 @@ export default function HomePage({ onNavigate, onTabChange }) {
               height: '68px'
             }}
           >
-            <span style={{ fontSize: 20 }}>📸</span> Instagram
+            <span style={{ fontSize: 20 }}></span>📸 INSTAGRAM
           </a>
         </div>
 

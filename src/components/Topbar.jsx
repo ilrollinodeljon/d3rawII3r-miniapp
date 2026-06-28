@@ -60,7 +60,7 @@ export default function Topbar({ onBack, backLabel = '← Indietro', onSupport, 
         <h2 style={{ 
           margin: 0, 
           fontFamily: 'var(--font-display)',
-          fontSize: 28, 
+          fontSize: 24, 
           fontWeight: 700,
           letterSpacing: 2,
           color: '#ffffff'
