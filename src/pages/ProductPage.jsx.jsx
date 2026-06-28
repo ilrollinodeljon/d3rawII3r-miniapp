@@ -103,8 +103,8 @@ export default function ProductPage({ product: p, onBack }) {
             controlsList="nodownload nofullscreen noremoteplayback"
             style={{
               width: '100%', aspectRatio: '3/4', objectFit: 'cover', display: 'block',
-              WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 85%, transparent 100%)',
-              maskImage: 'linear-gradient(to bottom, black 0%, black 85%, transparent 100%)',
+              WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 65%, transparent 100%)',
+              maskImage: 'linear-gradient(to bottom, black 0%, black 65%, transparent 100%)',
             }}
           >
             <source src={current.url} type="video/mp4" />
@@ -115,8 +115,8 @@ export default function ProductPage({ product: p, onBack }) {
             alt={p.name}
             style={{
               width: '100%', aspectRatio: '3/4', objectFit: 'cover', display: 'block',
-              WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 85%, transparent 100%)',
-              maskImage: 'linear-gradient(to bottom, black 0%, black 85%, transparent 100%)',
+              WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 65%, transparent 100%)',
+              maskImage: 'linear-gradient(to bottom, black 0%, black 65%, transparent 100%)',
             }}
             onError={e => { e.target.src = 'https://placehold.co/600x800/141414/555?text=NO+IMAGE'; }}
           />
@@ -133,38 +133,37 @@ export default function ProductPage({ product: p, onBack }) {
           zIndex: 5,
         }} />
 
-
+        {/* Dot indicators — Instagram style */}
+        {mediaList.length > 1 && (
+          <div style={{
+            position: 'absolute',
+            bottom: 18, left: '50%', transform: 'translateX(-50%)',
+            display: 'flex', gap: 6,
+            zIndex: 10,
+            pointerEvents: 'none',
+          }}>
+            {mediaList.map((_, i) => (
+              <div
+                key={i}
+                style={{
+                  width:  i === mediaIndex ? 16 : 6,
+                  height: 6,
+                  borderRadius: 3,
+                  background: i === mediaIndex ? '#fff' : 'rgba(255,255,255,0.35)',
+                  transition: 'width 0.25s cubic-bezier(.34,1.56,.64,1), background 0.2s',
+                }}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* ── Product content ──────────────────────────────────────── */}
       <div className="container">
         <div className="spacer-20" />
 
-        {/* Dot indicators — sit just above the brand pill */}
-        {mediaList.length > 1 && (
-          <div style={{
-            display: 'flex', justifyContent: 'center', gap: 6,
-            marginBottom: 14,
-          }}>
-            {mediaList.map((_, i) => (
-              <div
-                key={i}
-                onClick={() => goMedia(i)}
-                style={{
-                  width:  i === mediaIndex ? 16 : 6,
-                  height: 6,
-                  borderRadius: 3,
-                  background: i === mediaIndex ? '#fff' : 'rgba(255,255,255,0.30)',
-                  transition: 'width 0.25s cubic-bezier(.34,1.56,.64,1), background 0.2s',
-                  cursor: 'pointer',
-                }}
-              />
-            ))}
-          </div>
-        )}
-
         {p.brand && (
-          <div style={{ marginBottom: 15 }}>
+          <div style={{ marginBottom: 10 }}>
             <span style={{
               background: 'var(--surface2)', border: '1px solid var(--border)',
               borderRadius: 20, padding: '4px 14px',

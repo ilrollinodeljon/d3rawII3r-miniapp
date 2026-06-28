@@ -213,10 +213,10 @@ export const PRODUCTS = [
     id: "mr_brown",
     dateAdded: "2026-06-26",
     sortOrder: 1,
-    name: "Mr Brown",
+    name: "Mr. Brown🧁",
     category: "edibles",
     isNew: true,
-    brand: "THC edibles",
+    brand: "THC EDIBLES",
     emoji: "",
     description: "Brownie al cioccolato infuso al THC",
     media: [
