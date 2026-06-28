@@ -159,8 +159,8 @@ function CategoryHeading({ label, accent }) {
 export default function ShopPage({ onNavigate }) {
   const newProducts = PRODUCTS
   .filter(p => p.isNew && !p.soldOut)
-  .sort((a, b) => b.dateAdded.localeCompare(a.dateAdded));
-    .sort((a, b) => b.dateAdded.localeCompare(a.dateAdded));
+  .sort((a, b) => b.dateAdded.localeCompare(a.dateAdded))
+  .slice(0, 2);   // ← Limit to 2 items
 
   return (
     <div className="page fade-up">

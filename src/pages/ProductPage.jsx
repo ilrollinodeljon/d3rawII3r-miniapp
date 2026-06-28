@@ -3,11 +3,11 @@ import Topbar from '../components/Topbar';
 import { useStore, getPriceForGrams } from '../store';
 
 export default function ProductPage({ product: p, onBack }) {
-  const [qty,        setQty]        = useState(p.prices[0]?.grams ?? p.minQty);
-  const [strain,     setStrain]     = useState(p.strains?.[0] ?? null);
-  const [rating,     setRating]     = useState(5);
-  const [comment,    setComment]    = useState('');
-  const [added,      setAdded]      = useState(false);
+  const [qty,    setQty]    = useState(p.prices[0]?.grams ?? p.prices[0]?.pcs ?? p.minQty);
+  const [strain, setStrain] = useState(p.strains?.[0] ?? null);
+  const [rating, setRating] = useState(5);
+  const [comment,setComment]= useState('');
+  const [added,  setAdded]  = useState(false);
   
   const videoRef = useRef(null);
   const swipeStartX = useRef(null);
@@ -16,7 +16,10 @@ export default function ProductPage({ product: p, onBack }) {
 
   if (!p) return null;
 
-  const price     = getPriceForGrams(p.prices, qty);
+  // Support both grams and pcs
+  const getQtyKey = (tier) => tier.pcs ?? tier.grams;
+  const price = getPriceForGrams(p.prices, qty); // keep for now
+
   const mediaList = p.media ?? (p.image ? [{ type: 'image', url: p.image }] : []);
 
   const initialMediaIndex = useMemo(() => {
@@ -25,8 +28,7 @@ export default function ProductPage({ product: p, onBack }) {
   }, [mediaList]);
 
   const [mediaIndex, setMediaIndex] = useState(initialMediaIndex);
-
-  const current   = mediaList[mediaIndex] ?? { type: 'image', url: '' };
+  const current = mediaList[mediaIndex] ?? { type: 'image', url: '' };
 
   const goMedia = (dir) => {
     const newIndex = (mediaIndex + dir + mediaList.length) % mediaList.length;
@@ -37,8 +39,7 @@ export default function ProductPage({ product: p, onBack }) {
     if (current.type === 'video' && videoRef.current) {
       const video = videoRef.current;
       video.currentTime = 0;
-      const playPromise = video.play();
-      playPromise.catch(() => {});
+      video.play().catch(() => {});
     }
   }, [mediaIndex, current.type]);
 
@@ -51,7 +52,7 @@ export default function ProductPage({ product: p, onBack }) {
   };
 
   const onTouchStart = (e) => { swipeStartX.current = e.touches[0].clientX; };
-  const onTouchEnd   = (e) => {
+  const onTouchEnd = (e) => {
     if (swipeStartX.current === null) return;
     const dx = e.changedTouches[0].clientX - swipeStartX.current;
     if (Math.abs(dx) > 36) goMedia(dx < 0 ? 1 : -1);
@@ -62,85 +63,28 @@ export default function ProductPage({ product: p, onBack }) {
     <div className="page fade-up">
       <Topbar onBack={onBack} />
 
-      {/* Main Media with thumbnails overlaid at bottom */}
-      <div
-        style={{ position: 'relative', background: '#000', touchAction: 'pan-y' }}
-        onTouchStart={onTouchStart}
-        onTouchEnd={onTouchEnd}
-      >
+      {/* Media Section */}
+      <div style={{ position: 'relative', background: '#000', touchAction: 'pan-y' }}
+           onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
         {current.type === 'video' ? (
-          <video
-            ref={videoRef}
-            key={current.url}
-            controls
-            playsInline
-            autoPlay
-            loop
-            preload="metadata"
-            style={{ 
-              width: '100%', 
-              aspectRatio: '3/4',
-              objectFit: 'cover' 
-            }}
-            onLoadedMetadata={() => {
-              if (videoRef.current) {
-                videoRef.current.currentTime = 0;
-                videoRef.current.play().catch(() => {});
-              }
-            }}
-            onCanPlay={() => {
-              if (videoRef.current) videoRef.current.play().catch(() => {});
-            }}
-          >
+          <video ref={videoRef} key={current.url} controls playsInline autoPlay loop preload="metadata"
+            style={{ width: '100%', aspectRatio: '3/4', objectFit: 'cover' }}>
             <source src={current.url} type="video/mp4" />
           </video>
         ) : (
-          <img
-            src={current.url}
-            alt={p.name}
-            style={{ 
-              width: '100%', 
-              aspectRatio: '3/4',
-              objectFit: 'cover' 
-            }}
-            onError={e => e.target.src = 'https://placehold.co/600x450/141414/555?text=NO+IMAGE'}
-          />
+          <img src={current.url} alt={p.name} style={{ width: '100%', aspectRatio: '3/4', objectFit: 'cover' }}
+               onError={e => e.target.src = 'https://placehold.co/600x450/141414/555?text=NO+IMAGE'} />
         )}
 
-        {/* Thumbnails overlaid inside the media area - bottom center */}
         {mediaList.length > 1 && (
-          <div style={{
-            position: 'absolute',
-            bottom: 12,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            display: 'flex',
-            gap: 8,
-            zIndex: 10,
-          }}>
+          <div style={{ position: 'absolute', bottom: 12, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 8, zIndex: 10 }}>
             {mediaList.map((item, i) => (
-              <button
-                key={i}
-                onClick={() => setMediaIndex(i)}
-                style={{
-                  width: 54,
-                  height: 54,
-                  borderRadius: 10,
-                  overflow: 'hidden',
-                  border: i === mediaIndex ? '2.5px solid #4ade80' : '2px solid rgba(255,255,255,0.25)',
-                  flexShrink: 0,
-                  position: 'relative',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.6)',
-                }}
-              >
+              <button key={i} onClick={() => setMediaIndex(i)}
+                style={{ width: 54, height: 54, borderRadius: 10, overflow: 'hidden', border: i === mediaIndex ? '2.5px solid #4ade80' : '2px solid rgba(255,255,255,0.25)' }}>
                 {item.type === 'video' ? (
                   <>
-                    <img 
-                      src={item.url.replace('.mp4', '.jpg')} 
-                      alt="" 
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-                      onError={e => e.target.style.display = 'none'}
-                    />
+                    <img src={item.url.replace('.mp4', '.jpg')} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                         onError={e => e.target.style.display = 'none'} />
                     <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.4)', fontSize: 18 }}>▶️</div>
                   </>
                 ) : (
@@ -156,30 +100,10 @@ export default function ProductPage({ product: p, onBack }) {
       <div className="container">
         <div className="spacer-20" />
 
-        {p.brand && (
-          <div style={{ marginBottom: 10 }}>
-            <span style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 20, padding: '4px 14px', fontSize: 11, color: 'var(--gold-light)', fontWeight: 700 }}>{p.brand}</span>
-          </div>
-        )}
+        {p.brand && <div style={{ marginBottom: 10 }}><span style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 20, padding: '4px 14px', fontSize: 11, color: 'var(--gold-light)', fontWeight: 700 }}>{p.brand}</span></div>}
 
         <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 40, letterSpacing: 1 }}>{p.name} {p.emoji}</h1>
-        {p.id === 'sunset_sherbet' ? (
-  <p style={{ color: 'var(--text-sub)', marginTop: 6 }}>
-    Premium Cali Spain Flowers —{' '}
-    <a
-      href="https://www.leafly.com/strains/sunset-sherbert"
-      target="_blank"
-      rel="noopener noreferrer"
-      style={{ color: '#4ade80' }}
-    >
-      Scopri lo strain🌿 
-    </a>
-  </p>
-) : (
-  <p style={{ color: 'var(--text-sub)', marginTop: 6 }}>
-    {p.description}
-  </p>
-)}
+        <p style={{ color: 'var(--text-sub)', marginTop: 6 }}>{p.description}</p>
 
         <div className="spacer-20" />
 
@@ -198,30 +122,22 @@ export default function ProductPage({ product: p, onBack }) {
           </div>
         )}
 
-        {/* Price Tiers & Add to Cart */}
+        {/* Price Tiers */}
         <div className="section-box">
-          <div className="section-box-title"></div>
-
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 18 }}>
             {p.prices.map(tier => {
-              const isSelected = qty === tier.grams;
+              const tierQty = getQtyKey(tier);
+              const isSelected = qty === tierQty;
               return (
-                <button
-                  key={tier.grams}
-                  onClick={() => setQty(tier.grams)}
+                <button key={tierQty} onClick={() => setQty(tierQty)}
                   style={{
-                    padding: '8px 8px',
-                    borderRadius: 9999,
+                    padding: '8px 8px', borderRadius: 9999,
                     border: isSelected ? '1.5px solid #4ade80' : '1.5px solid rgba(255,255,255,0.08)',
                     background: isSelected ? 'rgba(74,222,128,0.18)' : 'rgba(20,20,20,0.55)',
                     color: isSelected ? '#4ade80' : '#e5e5e5',
-                    fontWeight: 700, 
-                    fontSize: 14,
-                    height: '52px',
-                    boxShadow: 'inset 0 1.5px 0 rgba(255,255,255,0.2), inset 0 -2px 0 rgba(0,0,0,0.5)'
-                  }}
-                >
-                  {tier.grams}g<br />
+                    fontWeight: 700, fontSize: 14, height: '52px'
+                  }}>
+                  {tierQty}{p.unit}<br />
                   <span style={{ fontSize: 13 }}>€{tier.price}</span>
                 </button>
               );
@@ -230,7 +146,7 @@ export default function ProductPage({ product: p, onBack }) {
 
           <div style={{ background: 'rgba(15,15,15,0.6)', border: '1px solid rgba(255,255,255,0.08)', padding: '14px 16px', borderRadius: 12, marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
             <span>Selezionato:</span>
-            <span style={{ color: '#4ade80', fontWeight: 800 }}>{qty}g — €{price}</span>
+            <span style={{ color: '#4ade80', fontWeight: 800 }}>{qty} {p.unit} — €{price}</span>
           </div>
 
           {p.soldOut ? (
@@ -239,7 +155,7 @@ export default function ProductPage({ product: p, onBack }) {
             </div>
           ) : (
             <button className="btn btn-gold" onClick={handleAdd}>
-              {added ? '✓ Aggiunto!' : `🛒 Aggiungi ${qty}g al carrello`}
+              {added ? '✓ Aggiunto!' : `🛒 Aggiungi ${qty} ${p.unit} al carrello`}
             </button>
           )}
         </div>

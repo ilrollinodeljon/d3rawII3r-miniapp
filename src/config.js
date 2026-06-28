@@ -25,6 +25,7 @@ export const CATEGORIES = [
   { id: "hash",     label: "🍫 Hash",         showIfEmpty: false },
   { id: "weed",     label: "🌿 Weed",         showIfEmpty: false },
   { id: "edibles",  label: "🍬 Edibles",      showIfEmpty: false },
+  { id: "extracts",  label: "🍯 Extracts",      showIfEmpty: false },
 ];
 
 export const DELIVERY_METHODS = [
@@ -223,16 +224,16 @@ export const PRODUCTS = [
       { type: "video", url: "/products/mr_brown_2.mp4" },
       { type: "video", url: "/products/mr_brown.mp4" }
     ],
-    minQty: 10,
-    unit: "g",
-    strains: null,
-    prices: [
-      { grams: 10,  price: 120 },
-      { grams: 25,  price: 240 },
-      { grams: 50,  price: 440 },
-      { grams: 100, price: 800 },
-      { grams: 250, price: 1850 },
-      { grams: 500, price: 3600 },
+    minQty: 2,
+  unit: "pz",
+  strains: null,
+  prices: [
+    { pcs: 2,   price: 30 },
+    { pcs: 5,   price: 50 },
+    { pcs: 10,  price: 80 },
+    { pcs: 20,  price: 140 },
+    { pcs: 50,  price: 380 },
+    { pcs: 100, price: 700 },
     ],
   }
 ];

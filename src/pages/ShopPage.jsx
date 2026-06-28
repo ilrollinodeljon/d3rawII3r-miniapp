@@ -158,8 +158,9 @@ function CategoryHeading({ label, accent }) {
 //* ─── ShopPage ─────────────────────────────────────────────────────────── */
 export default function ShopPage({ onNavigate }) {
   const newProducts = PRODUCTS
-    .filter(p => p.isNew && !p.soldOut)
-    .sort((a, b) => b.dateAdded.localeCompare(a.dateAdded));
+  .filter(p => p.isNew && !p.soldOut)
+  .sort((a, b) => b.dateAdded.localeCompare(a.dateAdded))
+  .slice(0, 2);   // ← Limit to 2 items
 
   // === DEBUG ===
   console.log("=== SHOP DEBUG ===");
