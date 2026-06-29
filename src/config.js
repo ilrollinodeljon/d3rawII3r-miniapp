@@ -189,7 +189,7 @@ export const PRODUCTS = [
     isNew: true,
     brand: "Cali Spain Top Shelf",
     emoji: "",
-    description: "Premium Cali Spain Flowers — https://www.leafly.com/strains/sunset-sherbert",
+    description: "Premium Cali Spain Flowers",
     media: [
       { type: "image", url: "/products/cali_spa.jpg" },
       { type: "image", url: "/products/cali_spa_2.jpg" },

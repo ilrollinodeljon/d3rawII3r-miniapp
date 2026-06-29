@@ -82,7 +82,7 @@ useEffect(() => {
     setMediaIndex((idx + mediaList.length) % mediaList.length);
   };
 
-  /* ── Swipe ──────────────────────────────────────────────────── */
+  
  /* ── Swipe ──────────────────────────────────────────────────── */
 const onTouchStart = (e) => {
   swipeStartX.current = e.touches[0].clientX;
@@ -151,10 +151,10 @@ const onTouchEnd = (e) => {
   display: 'block',
 
   WebkitMaskImage:
-    'linear-gradient(to bottom, black 0%, black 90%, transparent 100%)',
+    'linear-gradient(to bottom, black 0%, black 85%, transparent 100%)',
 
   maskImage:
-    'linear-gradient(to bottom, black 0%, black 90%, transparent 100%)',
+    'linear-gradient(to bottom, black 0%, black 85%, transparent 100%)',
 }}
 >
   <source src={current.url} type="video/mp4" />
@@ -166,8 +166,8 @@ const onTouchEnd = (e) => {
             alt={p.name}
             style={{
               width: '100%', aspectRatio: '3/4', objectFit: 'cover', display: 'block',
-              WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 90%, transparent 100%)',
-              maskImage: 'linear-gradient(to bottom, black 0%, black 90%, transparent 100%)',
+              WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 85%, transparent 100%)',
+              maskImage: 'linear-gradient(to bottom, black 0%, black 85%, transparent 100%)',
             }}
             onError={e => { e.target.src = 'https://placehold.co/600x800/141414/555?text=NO+IMAGE'; }}
           />
@@ -198,62 +198,193 @@ const onTouchEnd = (e) => {
   {muted ? '🔈' : '🔊'}
 </button>
         {/* Bottom mask — fades media edge to transparent so bg shows through */}
-        <div style={{
-          position: 'absolute',
-          bottom: 0, left: 0, right: 0,
-          height: 160,
-          background: 'transparent',
-          WebkitMaskImage: 'none',
-          pointerEvents: 'none',
-          zIndex: 5,
-        }} />
+       <button
+  onClick={() => setMuted(m => !m)}
+  aria-label={muted ? 'Unmute' : 'Mute'}
+  style={{
+    position: 'absolute',
+    top: 18,
+    right: 18,
 
+    width: 32,
+    height: 32,
+
+    border: 'none',
+    borderRadius: '50%',
+
+    background: 'rgba(255,255,255,0.08)',
+
+    backdropFilter: 'blur(20px)',
+    WebkitBackdropFilter: 'blur(20px)',
+
+    color: 'rgba(255,255,255,0.45)',
+
+    fontSize: 14,
+    fontWeight: 300,
+
+    cursor: 'pointer',
+    zIndex: 20,
+
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+
+    transition: 'all 0.2s ease',
+  }}
+>
+  {muted ? '🔈' : '🔊'}
+</button>
+
+{/* Media dots */}
+{mediaList.length > 1 && (
+  <div
+    style={{
+      position: 'absolute',
+      left: '50%',
+      bottom: 150,
+
+      transform: 'translateX(-50%)',
+
+      display: 'flex',
+      gap: 6,
+
+      zIndex: 15,
+    }}
+  >
+    {mediaList.map((_, i) => (
+      <div
+        key={i}
+        onClick={() => goMedia(i)}
+        style={{
+          width: i === mediaIndex ? 16 : 6,
+          height: 6,
+
+          borderRadius: 999,
+
+          background:
+            i === mediaIndex
+              ? 'rgba(255,255,255,0.95)'
+              : 'rgba(255,255,255,0.35)',
+
+          transition:
+            'width 0.25s cubic-bezier(.34,1.56,.64,1)',
+
+          cursor: 'pointer',
+        }}
+      />
+    ))}
+  </div>
+)}
+
+{/* Brand pill */}
+{p.brand && (
+  <div
+    style={{
+      position: 'absolute',
+      left: 14,
+      bottom: 120,
+      zIndex: 15,
+    }}
+  >
+    <span
+      style={{
+        background: 'rgba(8,8,8,0.45)',
+
+        backdropFilter: 'blur(14px)',
+        WebkitBackdropFilter: 'blur(14px)',
+
+        border: '1px solid rgba(255,255,255,0.08)',
+        borderRadius: 999,
+
+        padding: '4px 12px',
+
+        fontSize: 11,
+        fontWeight: 700,
+
+        color: 'var(--gold-light)',
+      }}
+    >
+      {p.brand}
+    </span>
+  </div>
+)}
+
+{/* Bottom mask — fades media edge to transparent so bg shows through */}
+<div
+  style={{
+    position: 'absolute',
+    top:0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+
+    height: 160,
+
+    background: 'transparent',
+
+    pointerEvents: 'none',
+    zIndex: 5,
+  }}
+/>
 
       </div>
 
       {/* ── Product content ──────────────────────────────────────── */}
       <div className="container">
-        <div className="spacer-20" />
 
-        {/* Dot indicators — sit just above the brand pill */}
-        {mediaList.length > 1 && (
-          <div style={{
-            display: 'flex', justifyContent: 'center', gap: 6,
-            marginBottom: 14,
-          }}>
-            {mediaList.map((_, i) => (
-              <div
-                key={i}
-                onClick={() => goMedia(i)}
-                style={{
-                  width:  i === mediaIndex ? 16 : 6,
-                  height: 6,
-                  borderRadius: 3,
-                  background: i === mediaIndex ? '#fff' : 'rgba(255,255,255,0.30)',
-                  transition: 'width 0.25s cubic-bezier(.34,1.56,.64,1), background 0.2s',
-                  cursor: 'pointer',
-                }}
-              />
-            ))}
-          </div>
-        )}
+       
+        
 
-        {p.brand && (
-          <div style={{ marginBottom: 15 }}>
-            <span style={{
-              background: 'var(--surface2)', border: '1px solid var(--border)',
-              borderRadius: 20, padding: '4px 14px',
-              fontSize: 11, color: 'var(--gold-light)', fontWeight: 700,
-            }}>{p.brand}</span>
-          </div>
-        )}
+       
 
-        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 40, letterSpacing: 1 }}>
-          {p.name} {p.emoji}
-        </h1>
-        <p style={{ color: 'var(--text-sub)', marginTop: 6, lineHeight: 1.55 }}>{p.description}</p>
+        {/* Product title + description */}
+<div
+  style={{
+    position: 'absolute',
+    left: 18,
+    right: 18,
+    bottom: 325,
 
-        <div className="spacer-20" />
+    zIndex: 15,
+  }}
+>
+  <h1
+    style={{
+      margin: 0,
+
+      fontFamily: 'var(--font-display)',
+      fontSize: 42,
+      lineHeight: 0.95,
+      letterSpacing: 1,
+
+      color: '#fff',
+
+      textShadow:
+        '0 2px 16px rgba(0,0,0,0.45)',
+    }}
+  >
+    {p.name} {p.emoji}
+  </h1>
+
+  <p
+    style={{
+      marginTop: 4,
+      marginBottom: 25,
+
+      color: 'rgba(255,255,255,0.82)',
+
+      fontSize: 15,
+      lineHeight: 1.45,
+
+      maxWidth: '85%',
+
+      textShadow:
+        '0 2px 12px rgba(0,0,0,0.35)',
+    }}
+  >
+    {p.description}
+  </p>
+</div>
 
         {/* Strain selector */}
         {p.strains?.length > 0 && (
@@ -277,7 +408,7 @@ const onTouchEnd = (e) => {
 
         {/* Price tiers + add to cart */}
         <div className="section-box">
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 18 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 8, }}>
             {p.prices.map(tier => {
               const tq  = getQtyKey(tier);
               const sel = qty === tq;
