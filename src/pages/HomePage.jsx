@@ -121,11 +121,11 @@ export default function HomePage({ onNavigate, onTabChange }) {
           </h1>
 
           <p style={{
-            color: '#ffffff96',
+            color: '#ffffffbc',
             fontSize: 16,
             fontWeight: 400,
             letterSpacing: 1,
-            marginTop: 2,
+            marginTop: 0,
             textShadow: '0 2px 8px rgba(0,0,0,0.7)',
             textTransform: 'none',
           }}>
@@ -139,7 +139,7 @@ export default function HomePage({ onNavigate, onTabChange }) {
             className="btn btn-ghost"
             style={{ 
               padding: '20px 16px',
-              fontWeight: 700, 
+              fontWeight: 500, 
               fontSize: 18,
               borderRadius: '9999px',
               height: '68px'
@@ -152,7 +152,7 @@ export default function HomePage({ onNavigate, onTabChange }) {
             className="btn btn-gold"
             style={{ 
               padding: '20px 16px',
-              fontWeight: 700, 
+              fontWeight: 500, 
               fontSize: 18,
               borderRadius: '9999px',
               height: '68px'
@@ -171,7 +171,7 @@ export default function HomePage({ onNavigate, onTabChange }) {
             className="btn btn-ghost"
             style={{ 
               padding: '20px 16px',
-              fontWeight: 700, 
+              fontWeight: 500, 
               fontSize: 18,
               borderRadius: '9999px',
               textDecoration: 'none',
@@ -191,7 +191,7 @@ export default function HomePage({ onNavigate, onTabChange }) {
             className="btn btn-ghost"
             style={{ 
               padding: '20px 16px',
-              fontWeight: 700, 
+              fontWeight: 500, 
               fontSize: 18,
               borderRadius: '9999px',
               textDecoration: 'none',
