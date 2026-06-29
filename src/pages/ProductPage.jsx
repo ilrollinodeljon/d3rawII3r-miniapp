@@ -5,6 +5,7 @@ export default function ProductPage({ product: p, onBack }) {
   const [qty,    setQty]    = useState(p.prices[0]?.grams ?? p.prices[0]?.pcs ?? p.minQty);
   const [strain, setStrain] = useState(p.strains?.[0] ?? null);
   const [added,  setAdded]  = useState(false);
+  const [muted, setMuted] = useState(true);
 
   const videoRef    = useRef(null);
   const timerRef    = useRef(null);
@@ -25,6 +26,23 @@ export default function ProductPage({ product: p, onBack }) {
   const [mediaIndex, setMediaIndex] = useState(initialIndex);
   const current = mediaList[mediaIndex] ?? { type: 'image', url: '' };
 
+useEffect(() => {
+  const tg = window.Telegram?.WebApp;
+
+  if (!tg || !onBack) return;
+
+  tg.BackButton.show();
+
+  const handler = () => onBack();
+
+  tg.BackButton.onClick(handler);
+
+  return () => {
+    tg.BackButton.offClick(handler);
+    tg.BackButton.hide();
+  };
+}, [onBack]);
+
   /* ── Auto-advance logic ─────────────────────────────────────── */
   const goNext = useCallback(() => {
     setMediaIndex(i => (i + 1) % mediaList.length);
@@ -41,7 +59,8 @@ export default function ProductPage({ product: p, onBack }) {
     if (current.type === 'video' && videoRef.current) {
       const v = videoRef.current;
       v.currentTime = 0;
-      v.muted = true;           // start muted — user can unmute via controls
+      v.muted = muted;// start muted — user can unmute via controls
+      
       v.play().catch(() => {});
 
       // Advance when video ends (only if not the only media)
@@ -64,13 +83,31 @@ export default function ProductPage({ product: p, onBack }) {
   };
 
   /* ── Swipe ──────────────────────────────────────────────────── */
-  const onTouchStart = (e) => { swipeStartX.current = e.touches[0].clientX; };
-  const onTouchEnd   = (e) => {
-    if (swipeStartX.current === null) return;
-    const dx = e.changedTouches[0].clientX - swipeStartX.current;
-    if (Math.abs(dx) > 36) goMedia(mediaIndex + (dx < 0 ? 1 : -1));
+ /* ── Swipe ──────────────────────────────────────────────────── */
+const onTouchStart = (e) => {
+  swipeStartX.current = e.touches[0].clientX;
+};
+
+const onTouchEnd = (e) => {
+  if (swipeStartX.current === null) return;
+
+  const startX = swipeStartX.current;
+  const dx = e.changedTouches[0].clientX - startX;
+
+  // iOS-style back gesture
+  if (startX < 30 && dx > 50) {
+    onBack?.();
     swipeStartX.current = null;
-  };
+    return;
+  }
+
+  // Gallery navigation
+  if (Math.abs(dx) > 36) {
+    goMedia(mediaIndex + (dx < 0 ? 1 : -1));
+  }
+
+  swipeStartX.current = null;
+};
 
   /* ── Add to cart ────────────────────────────────────────────── */
   const handleAdd = () => {
@@ -92,36 +129,74 @@ export default function ProductPage({ product: p, onBack }) {
       >
         {current.type === 'video' ? (
           <video
-            ref={videoRef}
-            key={current.url}
-            playsInline
-            autoPlay
-            muted          /* start silent; user taps speaker to unmute */
-            loop={mediaList.length === 1}   /* loop only if single media */
-            preload="auto"
-            controls       /* show native controls so user can unmute */
-            controlsList="nodownload nofullscreen noremoteplayback"
-            style={{
-              width: '100%', aspectRatio: '3/4', objectFit: 'cover', display: 'block',
-              WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 85%, transparent 100%)',
-              maskImage: 'linear-gradient(to bottom, black 0%, black 85%, transparent 100%)',
-            }}
-          >
-            <source src={current.url} type="video/mp4" />
-          </video>
+  ref={videoRef}
+  key={current.url}
+  playsInline
+  autoPlay
+  muted={muted}
+  loop={mediaList.length === 1}
+  preload="auto"
+
+  controls={false}
+
+  controlsList="nodownload nofullscreen noremoteplayback noplaybackrate"
+
+  disablePictureInPicture
+  disableRemotePlayback
+
+  style={{
+  width: '100%',
+  aspectRatio: '3/4',
+  objectFit: 'cover',
+  display: 'block',
+
+  WebkitMaskImage:
+    'linear-gradient(to bottom, black 0%, black 90%, transparent 100%)',
+
+  maskImage:
+    'linear-gradient(to bottom, black 0%, black 90%, transparent 100%)',
+}}
+>
+  <source src={current.url} type="video/mp4" />
+</video>
+
         ) : (
           <img
             src={current.url}
             alt={p.name}
             style={{
               width: '100%', aspectRatio: '3/4', objectFit: 'cover', display: 'block',
-              WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 85%, transparent 100%)',
-              maskImage: 'linear-gradient(to bottom, black 0%, black 85%, transparent 100%)',
+              WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 90%, transparent 100%)',
+              maskImage: 'linear-gradient(to bottom, black 0%, black 90%, transparent 100%)',
             }}
             onError={e => { e.target.src = 'https://placehold.co/600x800/141414/555?text=NO+IMAGE'; }}
           />
         )}
+<button
+  onClick={() => setMuted(m => !m)}
+  style={{
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    width: 42,
+    height: 42,
+    borderRadius: '50%',
+    border: '1px solid rgba(255,255,255,0.15)',
+    background: 'rgba(0,0,0,0.45)',
+    backdropFilter: 'blur(12px)',
+    WebkitBackdropFilter: 'blur(12px)',
+    color: '#fff',
+    fontSize: 18,
+    cursor: 'pointer',
+    zIndex: 20,
 
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  }}
+>
+  {muted ? '🔈' : '🔊'}
+</button>
         {/* Bottom mask — fades media edge to transparent so bg shows through */}
         <div style={{
           position: 'absolute',
