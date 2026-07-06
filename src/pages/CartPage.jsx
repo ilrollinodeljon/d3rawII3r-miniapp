@@ -25,6 +25,10 @@ export default function CartPage() {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
 
+  const [isVerified, setIsVerified] = useState(false);
+  const [frontImage, setFrontImage] = useState(null);
+  const [backImage, setBackImage] = useState(null);
+  const [verificationVideo, setVerificationVideo] = useState(null);
 
   const requestLocation = () => {
     if (!navigator.geolocation) { 
@@ -109,7 +113,32 @@ export default function CartPage() {
 
   const availablePayments = isDelivery
     ? [{ id: 'cash', label: 'Cash', icon: '💵' }, { id: 'crypto', label: 'Crypto', icon: '₿' }]
-    : [{ id: 'cash', label: 'Cash', icon: '💵' }, { id: 'iban', label: 'IBAN/Bonifico', icon: '🏦' }];
+    : [{ id: 'crypto', label: 'Crypto', icon: '₿' }, { id: 'iban', label: 'IBAN/Bonifico', icon: '🏦' }];
+
+  const handleFileSelect = (e, type) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const preview = URL.createObjectURL(file);
+
+    if (type === 'front') setFrontImage({ file, preview });
+    else if (type === 'back') setBackImage({ file, preview });
+    else if (type === 'video') setVerificationVideo({ file, preview });
+
+    window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('light');
+  };
+
+  const removeFile = (type) => {
+    if (type === 'front') {
+      if (frontImage?.preview) URL.revokeObjectURL(frontImage.preview);
+      setFrontImage(null);
+    } else if (type === 'back') {
+      if (backImage?.preview) URL.revokeObjectURL(backImage.preview);
+      setBackImage(null);
+    } else if (type === 'video') {
+      if (verificationVideo?.preview) URL.revokeObjectURL(verificationVideo.preview);
+      setVerificationVideo(null);
+    }
+  };
 
   const handleSubmit = async () => {
     if (cart.length === 0) return;
@@ -132,7 +161,12 @@ export default function CartPage() {
         notes,
         discount,
         preferredDate,
-
+        verification: {
+          isVerified,
+          frontImage: frontImage?.file,
+          backImage: backImage?.file,
+          verificationVideo: verificationVideo?.file,
+        }
       });
       addOrder({
         id: Date.now(), cart: [...cart], total,
@@ -232,7 +266,7 @@ export default function CartPage() {
                     className={`delivery-option ${delivery === d.id ? 'active' : ''}`}
                     onClick={() => { 
                       setDelivery(d.id); 
-                      const defaultPay = d.id === 'delivery_pavia' ? 'cash' : 'cash'; 
+                      const defaultPay = d.id === 'delivery_pavia' ? 'cash' : 'crypto'; 
                       updateCheckoutData({ delivery: d.id, payment: defaultPay }); 
                       setPayment(defaultPay); 
                     }}
@@ -344,7 +378,63 @@ export default function CartPage() {
               </div>
             </div>
 
-           {error && <p className="error-text" style={{ margin: '12px 0' }}>⚠️ {error}</p>}
+           {/* OPTIONAL VERIFICATION SECTION */}
+            <div className="section-box" style={{ padding: '16px', marginBottom:20}}>
+              <div className="section-box-title">📄 Verifica Account (solo per delivery)</div>
+
+              {(frontImage || backImage || verificationVideo) ? (
+                <div>
+                  <div className="notice" style={{ background: 'rgba(74,222,128,0.15)', borderColor: '#4ade80', color: '#4ade80', padding: '14px', borderRadius: 12, textAlign: 'center', fontWeight: 600 }}>
+                    ✅ ACCOUNT VERIFICATO
+                  </div>
+
+                  <div style={{ display: 'flex', gap: 10, marginTop: 12, flexWrap: 'wrap' }}>
+                    {frontImage && (
+                      <div style={{ position: 'relative', flex: 1 }}>
+                        <img src={frontImage.preview} alt="Fronte" style={{ width: '100%', borderRadius: 12, border: '2px solid #4ade80' }} />
+                        <button onClick={() => removeFile('front')} style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(0,0,0,0.85)', color: '#fff', border: 'none', width: 28, height: 28, borderRadius: '50%', fontSize: 14 }}>✕</button>
+                      </div>
+                    )}
+                    {backImage && (
+                      <div style={{ position: 'relative', flex: 1 }}>
+                        <img src={backImage.preview} alt="Retro" style={{ width: '100%', borderRadius: 12, border: '2px solid #4ade80' }} />
+                        <button onClick={() => removeFile('back')} style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(0,0,0,0.85)', color: '#fff', border: 'none', width: 28, height: 28, borderRadius: '50%', fontSize: 14 }}>✕</button>
+                      </div>
+                    )}
+                    {verificationVideo && (
+                      <div style={{ position: 'relative', flex: 1 }}>
+                        <div style={{ height: 110, background: '#111', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid #4ade80' }}>
+                          🎥 Video caricato
+                        </div>
+                        <button onClick={() => removeFile('video')} style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(0,0,0,0.85)', color: '#fff', border: 'none', width: 28, height: 28, borderRadius: '50%', fontSize: 14 }}>✕</button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <p style={{ fontSize: '13.5px', color: 'var(--text-sub)', marginBottom: 12 , marginTop:10}}>
+                    Foto fronte e retro del documento di identità di chi ritira l'ordine e video selfie con doc visibile in mano (obbligatori solo al primo ordine)
+                  </p>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <div style={{ flex: 1 }} onClick={() => document.getElementById('front-upload').click()}>
+                      <input id="front-upload" type="file" accept="image/*" capture="environment" onChange={(e) => handleFileSelect(e, 'front')} style={{ display: 'none' }} />
+                      <div className="glass" style={{ height: '90px', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>📸<br />Fronte</div>
+                    </div>
+                    <div style={{ flex: 1 }} onClick={() => document.getElementById('back-upload').click()}>
+                      <input id="back-upload" type="file" accept="image/*" capture="environment" onChange={(e) => handleFileSelect(e, 'back')} style={{ display: 'none' }} />
+                      <div className="glass" style={{ height: '90px', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>📸<br />Retro</div>
+                    </div>
+                    <div style={{ flex: 1 }} onClick={() => document.getElementById('video-upload').click()}>
+                      <input id="video-upload" type="file" accept="video/*" capture="environment" onChange={(e) => handleFileSelect(e, 'video')} style={{ display: 'none' }} />
+                      <div className="glass" style={{ height: '90px', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>🎥<br />Video</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {error && <p className="error-text" style={{ margin: '12px 0' }}>⚠️ {error}</p>}
 
             <button className="btn btn-gold" onClick={handleSubmit} disabled={sending || cart.length === 0}>
               {sending ? '⏳ Invio in corso...' : `🛒 Invia Ordine - €${total}`}
