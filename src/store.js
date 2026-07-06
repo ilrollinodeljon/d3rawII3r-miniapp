@@ -4,7 +4,6 @@ export const useStore = create((set, get) => ({
   cart: [],
   orders: [],
   notifications: { new_products: true, promozioni: true, news: true },
-
   checkoutData: {
     delivery: 'delivery_pavia',
     courier: 'inpost',
@@ -39,10 +38,10 @@ export const useStore = create((set, get) => ({
   },
 
   loadAllData: () => {
-    get().loadFromCloud('cart', [], (data) => set({ cart: data }));
-    get().loadFromCloud('orders', [], (data) => set({ orders: data }));
+    get().loadFromCloud('cart',          [],                  (data) => set({ cart: data }));
+    get().loadFromCloud('orders',        [],                  (data) => set({ orders: data }));
     get().loadFromCloud('notifications', get().notifications, (data) => set({ notifications: data }));
-    get().loadFromCloud('checkoutData', get().checkoutData, (data) => set({ checkoutData: data }));
+    get().loadFromCloud('checkoutData',  get().checkoutData,  (data) => set({ checkoutData: data }));
   },
 
   updateCheckoutData: (newData) => {
@@ -50,15 +49,23 @@ export const useStore = create((set, get) => ({
     get().saveToCloud('checkoutData', get().checkoutData);
   },
 
-  addToCart: (product, grams, strain) => {
-    const existing = get().cart.find(i => i.productId === product.id && i.strain === strain);
-    const image = product.media?.find(m => m.type === 'image')?.url || product.image || '';
+  // FIX: store qty under a unified 'qty' key, keep unit info too
+  addToCart: (product, qty, strain) => {
+    const existing = get().cart.find(
+      i => i.productId === product.id && i.strain === strain
+    );
+    const image = product.media?.find(m => m.type === 'image')?.url
+               || product.image
+               || '';
+
+    // Detect whether this product uses pcs or grams
+    const unit = product.unit ?? 'g';   // 'pz' | 'g' | etc.
 
     if (existing) {
       set(state => ({
         cart: state.cart.map(i =>
           i.productId === product.id && i.strain === strain
-            ? { ...i, grams: i.grams + grams }
+            ? { ...i, qty: i.qty + qty, grams: i.qty + qty }  // keep grams alias for compat
             : i
         ),
       }));
@@ -66,10 +73,12 @@ export const useStore = create((set, get) => ({
       set(state => ({
         cart: [...state.cart, {
           productId: product.id,
-          name: product.name,
-          emoji: product.emoji,
+          name:      product.name,
+          emoji:     product.emoji,
           image,
-          grams,
+          qty,
+          grams:  qty,   // alias — CartPage reads item.grams for display
+          unit,
           strain: strain || null,
           prices: product.prices,
           minQty: product.minQty,
@@ -81,15 +90,20 @@ export const useStore = create((set, get) => ({
 
   removeFromCart: (productId, strain) => {
     set(state => ({
-      cart: state.cart.filter(i => !(i.productId === productId && i.strain === strain)),
+      cart: state.cart.filter(
+        i => !(i.productId === productId && i.strain === strain)
+      ),
     }));
     get().saveToCloud('cart', get().cart);
   },
 
-  updateQty: (productId, strain, grams) => {
+  // FIX: updateQty now writes both qty and grams so both work
+  updateQty: (productId, strain, qty) => {
     set(state => ({
       cart: state.cart.map(i =>
-        i.productId === productId && i.strain === strain ? { ...i, grams } : i
+        i.productId === productId && i.strain === strain
+          ? { ...i, qty, grams: qty }
+          : i
       ),
     }));
     get().saveToCloud('cart', get().cart);
@@ -113,18 +127,37 @@ export const useStore = create((set, get) => ({
   },
 }));
 
-export function getPriceForGrams(prices, grams) {
-  const exact = prices.find(t => t.grams === grams);
+/* ─── getPriceForGrams ───────────────────────────────────────────────────
+   Works for both { grams, price } and { pcs, price } tier shapes.
+   'qty' is whatever number was selected (grams OR pcs — both stored as qty).
+────────────────────────────────────────────────────────────────────────── */
+export function getPriceForGrams(prices, qty) {
+  if (!prices?.length || qty == null) return null;
+
+  // Normalise: treat pcs as grams internally
+  const normalised = prices.map(t => ({
+    qty:   t.grams ?? t.pcs,   // unified key
+    price: t.price,
+  }));
+
+  // Exact match first
+  const exact = normalised.find(t => t.qty === qty);
   if (exact) return exact.price;
-  const sorted = [...prices].sort((a, b) => b.grams - a.grams);
-  const tier = sorted.find(t => grams >= t.grams);
+
+  // Nearest tier below (pro-rate)
+  const sorted = [...normalised].sort((a, b) => b.qty - a.qty);
+  const tier   = sorted.find(t => qty >= t.qty);
   if (!tier) return null;
-  return Math.round((tier.price / tier.grams) * grams);
+  return Math.round((tier.price / tier.qty) * qty);
 }
 
+/* ─── getCartTotal ───────────────────────────────────────────────────────
+   Reads item.qty (with fallback to item.grams for old cart entries).
+────────────────────────────────────────────────────────────────────────── */
 export function getCartTotal(cart) {
   return cart.reduce((sum, item) => {
-    const price = getPriceForGrams(item.prices, item.grams);
+    const qty   = item.qty ?? item.grams;   // handle both old and new entries
+    const price = getPriceForGrams(item.prices, qty);
     return sum + (price || 0);
   }, 0);
 }
