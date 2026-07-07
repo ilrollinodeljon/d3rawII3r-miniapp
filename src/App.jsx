@@ -27,18 +27,49 @@ export default function App() {
       tg.setBackgroundColor('#000000');
     }
 
-    // Lock scrolling
+    // Lock root scrolling
     document.documentElement.style.height = '100%';
     document.body.style.height = '100%';
     document.body.style.overflow = 'hidden';
     document.body.style.margin = '0';
   }, []);
 
+  // Keep background video playing
   useEffect(() => {
     if (bgVideoRef.current) {
       bgVideoRef.current.play().catch(() => {});
     }
   }, [tab]);
+
+  // Pull-to-Refresh (down swipe from top)
+  useEffect(() => {
+    const scrollContainer = document.getElementById('main-scroll');
+    if (!scrollContainer) return;
+
+    let startY = 0;
+
+    const handleTouchStart = (e) => {
+      startY = e.touches[0].clientY;
+    };
+
+    const handleTouchEnd = (e) => {
+      const endY = e.changedTouches[0].clientY;
+      const scrollTop = scrollContainer.scrollTop;
+
+      // Strong pull down from the very top → refresh
+      if (scrollTop <= 0 && startY < 100 && endY - startY > 130) {
+        window.location.reload();
+      }
+    };
+
+    scrollContainer.addEventListener('touchstart', handleTouchStart, { passive: true });
+    scrollContainer.addEventListener('touchend', handleTouchEnd, { passive: true });
+
+    return () => {
+      scrollContainer.removeEventListener('touchstart', handleTouchStart);
+      scrollContainer.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, []);
 
   const navigate = (page, data) => {
     setStack(s => [...s, { tab, selectedProduct }]);
@@ -77,14 +108,23 @@ export default function App() {
   return (
     <div style={{ height: '100vh', position: 'relative', overflow: 'hidden' }}>
       
-      {/* Background Video */}
+      {/* Persistent Background Video */}
       <video
         ref={bgVideoRef}
-        autoPlay loop muted playsInline
+        autoPlay
+        loop
+        muted
+        playsInline
         style={{
-          position: 'fixed', inset: 0, width: '100%', height: '100%',
-          objectFit: 'cover', zIndex: 0, opacity: 0.55,
-          filter: 'brightness(0.78)', pointerEvents: 'none'
+          position: 'fixed',
+          inset: 0,
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
+          zIndex: 0,
+          opacity: 0.55,
+          filter: 'brightness(0.78)',
+          pointerEvents: 'none',
         }}
       >
         <source src="/bg.mp4" type="video/mp4" />
@@ -97,17 +137,22 @@ export default function App() {
         onProfile={() => changeTab('profile')}
       />
 
-      {/* Scrollable Content Area - This handles the padding automatically */}
-      <div style={{
-        position: 'absolute',
-        top: '56px',           // Height of Topbar
-        left: 0,
-        right: 0,
-        bottom: 0,
-        overflow: 'auto',
-        WebkitOverflowScrolling: 'touch',
-        paddingBottom: '80px', // Space for BottomNav
-      }}>
+      {/* Scrollable Content with Pull-to-Refresh */}
+      <div 
+        id="main-scroll"
+        style={{
+          position: 'absolute',
+          top: '56px',
+          left: 0,
+          right: 0,
+          bottom: 0,
+          overflow: 'auto',
+          WebkitOverflowScrolling: 'touch',
+          paddingBottom: '80px',
+          overscrollBehaviorY: 'auto',     // Enables pull-to-refresh feel
+          touchAction: 'pan-y',
+        }}
+      >
         {renderPage()}
       </div>
 
