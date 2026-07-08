@@ -1,9 +1,23 @@
 import { create } from 'zustand';
 
+const KNOWN_CODES = {
+  "AMICO10": { type: "percent", value: 10, description: "10% sul primo ordine" },
+  "WELCOME10": { type: "fixed", value: 10, description: "€10 di sconto benvenuto" },
+  "PRIMO10": { type: "percent", value: 10, description: "10% primo ordine" },
+  "SHARE10": { type: "fixed", value: 10, description: "€10 referral" },
+};
+
 export const useStore = create((set, get) => ({
   cart: [],
   orders: [],
   notifications: { new_products: true, promozioni: true, news: true },
+  
+  // Referral System
+  referralStats: {
+    successfulReferrals: 0,
+    totalEarned: 0,
+  },
+
   checkoutData: {
     delivery: 'delivery_pavia',
     courier: 'inpost',
@@ -12,6 +26,10 @@ export const useStore = create((set, get) => ({
     notes: '',
     discount: '',
   },
+
+  // Discount State
+  appliedDiscount: null,
+  discountError: '',
 
   saveToCloud: async (key, data) => {
     try {
@@ -42,6 +60,8 @@ export const useStore = create((set, get) => ({
     get().loadFromCloud('orders',        [],                  (data) => set({ orders: data }));
     get().loadFromCloud('notifications', get().notifications, (data) => set({ notifications: data }));
     get().loadFromCloud('checkoutData',  get().checkoutData,  (data) => set({ checkoutData: data }));
+    get().loadFromCloud('referralStats', get().referralStats, (data) => set({ referralStats: data }));
+    get().loadFromCloud('appliedDiscount', null, (data) => set({ appliedDiscount: data }));
   },
 
   updateCheckoutData: (newData) => {
@@ -49,23 +69,118 @@ export const useStore = create((set, get) => ({
     get().saveToCloud('checkoutData', get().checkoutData);
   },
 
-  // FIX: store qty under a unified 'qty' key, keep unit info too
-  addToCart: (product, qty, strain) => {
-    const existing = get().cart.find(
-      i => i.productId === product.id && i.strain === strain
-    );
-    const image = product.media?.find(m => m.type === 'image')?.url
-               || product.image
-               || '';
+  // ==================== DISCOUNT LOGIC ====================
+  validateAndApplyDiscount: (code) => {
+    if (!code) {
+      set({ discountError: "Inserisci un codice", appliedDiscount: null });
+      return false;
+    }
 
-    // Detect whether this product uses pcs or grams
-    const unit = product.unit ?? 'g';   // 'pz' | 'g' | etc.
+    const upperCode = code.toUpperCase().trim();
+    const discountInfo = KNOWN_CODES[upperCode];
+
+    if (!discountInfo) {
+      set({ discountError: "Codice non valido", appliedDiscount: null });
+      return false;
+    }
+
+    const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
+    const userId = tgUser?.id || 'guest';
+    const storageKey = `usedDiscounts_${userId}`;
+    const usedCodes = JSON.parse(localStorage.getItem(storageKey) || '[]');
+
+    if (usedCodes.includes(upperCode)) {
+      set({ discountError: "Codice già utilizzato", appliedDiscount: null });
+      return false;
+    }
+
+    set({ 
+      discountError: '',
+      appliedDiscount: {
+        code: upperCode,
+        amount: 0, // will be calculated in CartPage with subtotal
+        ...discountInfo
+      }
+    });
+
+    get().updateCheckoutData({ discount: upperCode });
+    return true;
+  },
+
+  clearDiscount: () => {
+    set({ appliedDiscount: null, discountError: '' });
+    get().updateCheckoutData({ discount: '' });
+  },
+
+  markDiscountAsUsed: (code) => {
+    const upperCode = code.toUpperCase().trim();
+    const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
+    const userId = tgUser?.id || 'guest';
+    const storageKey = `usedDiscounts_${userId}`;
+    
+    const usedCodes = JSON.parse(localStorage.getItem(storageKey) || '[]');
+    if (!usedCodes.includes(upperCode)) {
+      localStorage.setItem(storageKey, JSON.stringify([...usedCodes, upperCode]));
+    }
+  },
+
+  // ==================== REFERRAL ====================
+  incrementReferralSuccess: () => {
+    set(state => {
+      const newStats = {
+        successfulReferrals: (state.referralStats.successfulReferrals || 0) + 1,
+        totalEarned: (state.referralStats.totalEarned || 0) + 10,
+      };
+      get().saveToCloud('referralStats', newStats);
+      return { referralStats: newStats };
+    });
+  },
+
+  // ==================== CART VALIDATION ====================
+  validateCart: () => {
+    const cart = get().cart;
+    if (cart.length === 0) return { valid: false, error: "Il carrello è vuoto" };
+
+    let totalGrams = 0;
+    let hasMrBrownOnly = true;
+
+    for (const item of cart) {
+      const qty = item.qty ?? item.grams ?? 0;
+      
+      if (!item.name?.toLowerCase().includes("mr brown")) {
+        totalGrams += qty;
+        hasMrBrownOnly = false;
+      }
+    }
+
+    if (totalGrams < 10) {
+      return { 
+        valid: false, 
+        error: "Ordine minimo: 10g di hash/weed (Mr. Brown non conta da solo)" 
+      };
+    }
+
+    if (hasMrBrownOnly && cart.length === 1) {
+      return { 
+        valid: false, 
+        error: "Mr. Brown non può essere ordinato da solo. Aggiungi almeno 10g di hash o weed." 
+      };
+    }
+
+    return { valid: true, error: null };
+  },
+
+  // Cart Functions
+  addToCart: (product, qty, strain) => {
+    const existing = get().cart.find(i => i.productId === product.id && i.strain === strain);
+    const image = product.media?.find(m => m.type === 'image')?.url || product.image || '';
+    const unit = product.unit ?? 'g';
 
     if (existing) {
       set(state => ({
         cart: state.cart.map(i =>
           i.productId === product.id && i.strain === strain
-            ? { ...i, qty: i.qty + qty, grams: i.qty + qty }  // keep grams alias for compat
+            ? { ...i, qty: i.qty + qty, grams: i.qty + qty }
             : i
         ),
       }));
@@ -73,11 +188,11 @@ export const useStore = create((set, get) => ({
       set(state => ({
         cart: [...state.cart, {
           productId: product.id,
-          name:      product.name,
-          emoji:     product.emoji,
+          name: product.name,
+          emoji: product.emoji,
           image,
           qty,
-          grams:  qty,   // alias — CartPage reads item.grams for display
+          grams: qty,
           unit,
           strain: strain || null,
           prices: product.prices,
@@ -90,14 +205,11 @@ export const useStore = create((set, get) => ({
 
   removeFromCart: (productId, strain) => {
     set(state => ({
-      cart: state.cart.filter(
-        i => !(i.productId === productId && i.strain === strain)
-      ),
+      cart: state.cart.filter(i => !(i.productId === productId && i.strain === strain)),
     }));
     get().saveToCloud('cart', get().cart);
   },
 
-  // FIX: updateQty now writes both qty and grams so both work
   updateQty: (productId, strain, qty) => {
     set(state => ({
       cart: state.cart.map(i =>
@@ -127,36 +239,20 @@ export const useStore = create((set, get) => ({
   },
 }));
 
-/* ─── getPriceForGrams ───────────────────────────────────────────────────
-   Works for both { grams, price } and { pcs, price } tier shapes.
-   'qty' is whatever number was selected (grams OR pcs — both stored as qty).
-────────────────────────────────────────────────────────────────────────── */
 export function getPriceForGrams(prices, qty) {
   if (!prices?.length || qty == null) return null;
-
-  // Normalise: treat pcs as grams internally
-  const normalised = prices.map(t => ({
-    qty:   t.grams ?? t.pcs,   // unified key
-    price: t.price,
-  }));
-
-  // Exact match first
+  const normalised = prices.map(t => ({ qty: t.grams ?? t.pcs, price: t.price }));
   const exact = normalised.find(t => t.qty === qty);
   if (exact) return exact.price;
-
-  // Nearest tier below (pro-rate)
   const sorted = [...normalised].sort((a, b) => b.qty - a.qty);
-  const tier   = sorted.find(t => qty >= t.qty);
+  const tier = sorted.find(t => qty >= t.qty);
   if (!tier) return null;
   return Math.round((tier.price / tier.qty) * qty);
 }
 
-/* ─── getCartTotal ───────────────────────────────────────────────────────
-   Reads item.qty (with fallback to item.grams for old cart entries).
-────────────────────────────────────────────────────────────────────────── */
 export function getCartTotal(cart) {
   return cart.reduce((sum, item) => {
-    const qty   = item.qty ?? item.grams;   // handle both old and new entries
+    const qty = item.qty ?? item.grams;
     const price = getPriceForGrams(item.prices, qty);
     return sum + (price || 0);
   }, 0);

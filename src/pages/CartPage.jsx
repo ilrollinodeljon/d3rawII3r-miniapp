@@ -11,10 +11,18 @@ export default function CartPage() {
   const addOrder = useStore(s => s.addOrder);
   const checkoutData = useStore(s => s.checkoutData);
   const updateCheckoutData = useStore(s => s.updateCheckoutData);
+  
+  // New discount & validation from store
+  const appliedDiscount = useStore(s => s.appliedDiscount);
+  const discountError = useStore(s => s.discountError);
+  const validateAndApplyDiscount = useStore(s => s.validateAndApplyDiscount);
+  const clearDiscount = useStore(s => s.clearDiscount);
+  const validateCart = useStore(s => s.validateCart);
+  const markDiscountAsUsed = useStore(s => s.markDiscountAsUsed);
 
   const [delivery, setDelivery] = useState(checkoutData.delivery);
   const [courier, setCourier] = useState(checkoutData.courier);
-  const [payment, setPayment] = useState(checkoutData.payment || 'cash'); // Default to CASH
+  const [payment, setPayment] = useState(checkoutData.payment || 'cash');
   const [address, setAddress] = useState(checkoutData.address || {});
   const [notes, setNotes] = useState(checkoutData.notes || '');
   const [discount, setDiscount] = useState(checkoutData.discount || '');
@@ -24,6 +32,23 @@ export default function CartPage() {
   const [sending, setSending] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
+
+  const subtotal = getCartTotal(cart);
+  const isDelivery = delivery === 'delivery_pavia';
+  const deliveryMethod = DELIVERY_METHODS.find(d => d.id === delivery);
+  const courierObj = deliveryMethod?.couriers?.find(c => c.id === courier);
+  const user = window.Telegram?.WebApp?.initDataUnsafe?.user;
+
+  const cartValidation = validateCart();
+
+  // Calculate real discount amount
+  const discountAmount = appliedDiscount ? 
+    (appliedDiscount.type === "percent" 
+      ? Math.round(subtotal * (appliedDiscount.value / 100)) 
+      : appliedDiscount.value) 
+    : 0;
+
+  const finalTotal = Math.max(0, subtotal - discountAmount);
 
   const requestLocation = () => {
     if (!navigator.geolocation) { 
@@ -53,18 +78,11 @@ export default function CartPage() {
     );
   };
 
-  const total = getCartTotal(cart);
-  const isDelivery = delivery === 'delivery_pavia';
-  const deliveryMethod = DELIVERY_METHODS.find(d => d.id === delivery);
-  const courierObj = deliveryMethod?.couriers?.find(c => c.id === courier);
-  const user = window.Telegram?.WebApp?.initDataUnsafe?.user;
-
   const getNextDays = () => {
     const days = [];
     const today = new Date();
     const weekdays = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
 
-    // Start from tomorrow
     for (let i = 1; i < 8; i++) {
       const date = new Date(today);
       date.setDate(today.getDate() + i);
@@ -73,13 +91,7 @@ export default function CartPage() {
       const month = date.toLocaleString('it-IT', { month: 'short' }).toUpperCase();
       const value = date.toISOString().split('T')[0];
 
-      days.push({
-        value,
-        dayName,
-        dayNum,
-        month,
-        isToday: false
-      });
+      days.push({ value, dayName, dayNum, month });
     }
     return days;
   };
@@ -107,24 +119,22 @@ export default function CartPage() {
     updateCheckoutData({ preferredDate: date });
   };
 
-  // CASH is now the default payment method
   const availablePayments = [
     { id: 'cash', label: 'Cash', icon: '💵' },
     { id: 'crypto', label: 'Crypto', icon: '₿' },
     ...(isDelivery ? [] : [{ id: 'iban', label: 'IBAN/Bonifico', icon: '🏦' }])
   ];
 
-  const handleFileSelect = (e, type) => {
-    // Removed - verification section deleted
-  };
-
-  const removeFile = (type) => {
-    // Removed
-  };
-
   const handleSubmit = async () => {
     if (cart.length === 0) return;
-    if (!isDelivery && total < SHOP_CONFIG.minOrderShipping) {
+
+    // Cart validation (10g minimum + Mr. Brown rule)
+    if (!cartValidation.valid) {
+      setError(cartValidation.error);
+      return;
+    }
+
+    if (!isDelivery && subtotal < SHOP_CONFIG.minOrderShipping) {
       setError(`Ordine minimo €${SHOP_CONFIG.minOrderShipping} per la spedizione.`);
       return;
     }
@@ -133,21 +143,28 @@ export default function CartPage() {
     setError('');
     try {
       await sendOrderToTelegram({
-        user, cart, total,
+        user, cart, total: finalTotal,
         delivery: deliveryMethod?.label,
         courier: isDelivery ? null : courierObj?.label,
         address,
         location,
         payment: availablePayments.find(p => p.id === payment)?.label,
         notes,
-        discount,
+        discount: appliedDiscount?.code || discount,
         preferredDate,
       });
+
+      // Mark discount as used
+      if (appliedDiscount) {
+        markDiscountAsUsed(appliedDiscount.code);
+      }
+
       addOrder({
-        id: Date.now(), cart: [...cart], total,
+        id: Date.now(), cart: [...cart], total: finalTotal,
         date: new Date().toISOString(), status: 'In attesa',
         delivery, address, preferredDate,
       });
+
       clearCart();
       setSuccess(true);
       window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success');
@@ -193,16 +210,16 @@ export default function CartPage() {
             {/* Cart items */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {cart.map((item, i) => {
-                const itemPrice = getPriceForGrams(item.prices, item.grams);
-                const sizes = item.prices.map(p => p.grams).sort((a, b) => a - b);
-                const currentIndex = sizes.indexOf(item.grams);
+                const itemPrice = getPriceForGrams(item.prices, item.qty || item.grams);
+                const sizes = item.prices.map(p => p.grams ?? p.pcs).sort((a, b) => a - b);
+                const currentIndex = sizes.indexOf(item.qty || item.grams);
                 return (
                   <div key={i} className="cart-item">
                     <img src={item.image} alt={item.name} onError={e => { e.target.src = 'https://placehold.co/64x64/141414/888?text=IMG'; }} />
                     <div className="cart-item-info">
                       <div className="cart-item-name">{item.name} {item.emoji}</div>
                       <div className="cart-item-sub">
-                        {item.grams}g · {itemPrice ? `€${itemPrice}` : '—'}
+                        {item.qty || item.grams}{item.unit} · {itemPrice ? `€${itemPrice}` : '—'}
                         {item.strain ? ` · ${item.strain}` : ''}
                       </div>
                       <div className="qty-stepper" style={{ marginTop: 10 }}>
@@ -210,7 +227,7 @@ export default function CartPage() {
                           if (currentIndex <= 0) removeFromCart(item.productId, item.strain);
                           else updateQty(item.productId, item.strain, sizes[currentIndex - 1]);
                         }}>−</button>
-                        <span className="qty-val">{item.grams}g</span>
+                        <span className="qty-val">{item.qty || item.grams}{item.unit}</span>
                         <button className="qty-btn" onClick={() => {
                           if (currentIndex < sizes.length - 1) updateQty(item.productId, item.strain, sizes[currentIndex + 1]);
                         }} disabled={currentIndex >= sizes.length - 1}>+</button>
@@ -224,9 +241,36 @@ export default function CartPage() {
 
             <div className="spacer-16" />
 
+            {/* Validation Error */}
+            {!cartValidation.valid && (
+              <div style={{ 
+                background: 'rgba(255,68,58,0.1)', 
+                border: '1px solid rgba(255,68,58,0.4)', 
+                color: '#ff6b6b', 
+                padding: '12px 16px', 
+                borderRadius: 12, 
+                marginBottom: 16 
+              }}>
+                ⚠️ {cartValidation.error}
+              </div>
+            )}
+
+            {/* Totals */}
             <div className="total-row">
-              <span className="total-label">Totale</span>
-              <span className="total-value">{SHOP_CONFIG.currency}{total}</span>
+              <span className="total-label">Subtotale</span>
+              <span className="total-value">€{subtotal}</span>
+            </div>
+
+            {appliedDiscount && (
+              <div className="total-row" style={{ color: 'var(--gold-light)' }}>
+                <span className="total-label">Sconto ({appliedDiscount.code})</span>
+                <span>-€{discountAmount}</span>
+              </div>
+            )}
+
+            <div className="total-row" style={{ fontSize: 20, fontWeight: 800, marginTop: 8 }}>
+              <span className="total-label">Totale finale</span>
+              <span>€{finalTotal}</span>
             </div>
 
             <div className="spacer-20" />
@@ -277,7 +321,7 @@ export default function CartPage() {
               )}
             </div>
 
-            {/* Address form */}
+            {/* Address form - unchanged */}
             <div className="section-box">
               <div className="section-box-title">
                 {isDelivery ? `📍 ${deliveryMethod?.label}` : `${courierObj?.icon} ${courierObj?.label}`}
@@ -354,10 +398,67 @@ export default function CartPage() {
               </div>
             </div>
 
+            {/* Discount Code Section */}
+            <div className="section-box">
+              <div className="section-box-title">🎟️ Codice Sconto</div>
+              
+              <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
+                <input
+                  type="text"
+                  placeholder="Inserisci codice"
+                  value={discount}
+                  onChange={(e) => {
+                    setDiscount(e.target.value.toUpperCase());
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '14px 16px',
+                    borderRadius: 12,
+                    border: '1px solid var(--border)',
+                    background: 'var(--surface2)',
+                    color: '#fff',
+                    fontSize: 15
+                  }}
+                />
+                <button 
+                  onClick={() => validateAndApplyDiscount(discount)}
+                  style={{
+                    padding: '0 28px',
+                    borderRadius: 12,
+                    background: discount.length > 3 ? 'var(--gold-light)' : 'var(--surface)',
+                    color: discount.length > 3 ? '#000' : 'var(--text-sub)',
+                    fontWeight: 700,
+                  }}
+                  disabled={discount.length < 4}
+                >
+                  Applica
+                </button>
+              </div>
+
+              {discountError && <p style={{ color: '#ff6b6b', marginTop: 8, fontSize: 14 }}>{discountError}</p>}
+              
+              {appliedDiscount && (
+                <div style={{ 
+                  marginTop: 12, 
+                  padding: '12px 14px', 
+                  background: 'rgba(200,168,75,0.15)', 
+                  border: '1px solid rgba(200,168,75,0.4)', 
+                  borderRadius: 12 
+                }}>
+                  ✅ <strong>{appliedDiscount.code}</strong> — {appliedDiscount.description}<br />
+                  <strong>-€{discountAmount}</strong> applicati
+                </div>
+              )}
+            </div>
+
             {error && <p className="error-text" style={{ margin: '12px 0' }}>⚠️ {error}</p>}
 
-            <button className="btn btn-gold" onClick={handleSubmit} disabled={sending || cart.length === 0}>
-              {sending ? '⏳ Invio in corso...' : `🛒 Invia Ordine - €${total}`}
+            <button 
+              className="btn btn-gold" 
+              onClick={handleSubmit} 
+              disabled={sending || cart.length === 0 || !cartValidation.valid}
+            >
+              {sending ? '⏳ Invio in corso...' : `🛒 Invia Ordine - €${finalTotal}`}
             </button>
 
             <div className="spacer-20" />

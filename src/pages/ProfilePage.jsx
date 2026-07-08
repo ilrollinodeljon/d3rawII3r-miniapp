@@ -12,81 +12,134 @@ export default function ProfilePage() {
   const username = user?.username || 'colewayne';
   const displayName = user ? `${user.first_name} ${user.last_name || ''}`.trim() : 'Grenadier';
 
-  return (
-    
-      <div className="container">
-        <div className="spacer-20" />
+  // Auto-generated referral code (persistent per user)
+  const referralCode = user 
+    ? `RAW${user.id.toString().slice(-6)}` 
+    : 'RAW000000';
 
-        {/* Avatar + name */}
-        <div style={{ textAlign: 'center', marginBottom: 20, marginTop: 60 }}>
-          <div className="avatar">{initial}</div>
-          <h2 style={{ fontWeight: 800, fontSize: 22 }}>{displayName}</h2>
-          <p style={{ color: 'var(--text-sub)', marginTop: 4}}>@{username}</p>
-          <div className="spacer-12" />
-          <span className="new-badge">
-            <span className="dot" /> Nuovo
-          </span>
-          <p style={{ color: 'var(--text-sub)', fontSize: 12, marginTop: 8 }}>
-            Iscritto dal 14 maggio 2026
+  const copyReferralCode = () => {
+    navigator.clipboard.writeText(referralCode);
+    window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('light');
+    
+    // Visual feedback
+    const btn = document.getElementById('copy-btn');
+    if (btn) {
+      const original = btn.textContent;
+      btn.textContent = '✅ Copiato!';
+      setTimeout(() => { btn.textContent = original; }, 2000);
+    }
+  };
+
+  return (
+    <div className="container">
+      <div className="spacer-20" />
+
+      {/* Avatar + name */}
+      <div style={{ textAlign: 'center', marginBottom: 20, marginTop: 60 }}>
+        <div className="avatar">{initial}</div>
+        <h2 style={{ fontWeight: 800, fontSize: 22 }}>{displayName}</h2>
+        <p style={{ color: 'var(--text-sub)', marginTop: 4 }}>@{username}</p>
+        <div className="spacer-12" />
+        <span className="new-badge">
+          <span className="dot" /> Nuovo
+        </span>
+        <p style={{ color: 'var(--text-sub)', fontSize: 12, marginTop: 8 }}>
+          Iscritto dal 14 maggio 2026
+        </p>
+      </div>
+
+      {/* Referral Code Section */}
+      <div className="section-box" style={{ marginBottom: 16 }}>
+        <div className="section-box-title">🎟️ Il tuo Codice Referral</div>
+        <div style={{ 
+          background: 'rgba(200,168,75,0.12)', 
+          border: '1px solid rgba(200,168,75,0.3)', 
+          borderRadius: 12, 
+          padding: '16px',
+          textAlign: 'center',
+          marginTop: 12
+        }}>
+          <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: 2, color: 'var(--gold-light)' }}>
+            {referralCode}
+          </div>
+          <button 
+            id="copy-btn"
+            onClick={copyReferralCode}
+            style={{
+              marginTop: 12,
+              padding: '10px 24px',
+              background: 'var(--gold-light)',
+              color: '#000',
+              border: 'none',
+              borderRadius: 999,
+              fontWeight: 700,
+              fontSize: 14
+            }}
+          >
+            📋 Copia Codice
+          </button>
+          <p style={{ fontSize: 13, color: 'var(--text-sub)', marginTop: 12 }}>
+            Condividi questo codice e ricevi <strong>€10</strong> di credito quando un amico completa il primo ordine!
+            10% di sconto per ogni nuovo utente che ordina con il tuo codice referral.
           </p>
         </div>
-
-        {/* Stats */}
-        <div className="card" style={{ marginBottom: 16 }}>
-          <div className="stats-grid">
-            <div className="stat-box">
-              <div className="stat-num">6</div>
-              <div className="stat-label">PRODOTTI VISTI</div>
-            </div>
-            <div className="stat-box">
-              <div className="stat-num red">{orders.length}</div>
-              <div className="stat-label">PREFERITI</div>
-            </div>
-            <div className="stat-box">
-              <div className="stat-num">0</div>
-              <div className="stat-label">RECENSIONI</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Links */}
-        <div className="section-box" style={{ marginBottom: 16 }}>
-          <div style={{ color: 'var(--gold)', fontWeight: 700, fontSize: 13, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-            🔗 Links
-          </div>
-          {LINKS.map(link => (
-            <a
-              key={link.label}
-              href={link.url}
-              className="link-row"
-              target="_blank"
-              rel="noreferrer"
-            >
-              <span className="link-icon">{link.icon}</span>
-              <span className="link-label">{link.label}</span>
-            </a>
-          ))}
-        </div>
-
-        {/* Notifications */}
-        <div className="section-box">
-          <div className="section-box-title">🔔 Notifiche</div>
-          {NOTIFICATION_TYPES.map(n => (
-            <div key={n.id} className="toggle-row">
-              <div className="toggle-info">
-                <div className="toggle-label">{n.label}</div>
-                <div className="toggle-sub">{n.sub}</div>
-              </div>
-              <div
-                className={`toggle ${notifications[n.id] ? 'on' : ''}`}
-                onClick={() => toggleNotification(n.id)}
-              />
-            </div>
-          ))}
-        </div>
-
-        <div className="spacer-20" />
       </div>
-    
+
+      {/* Stats */}
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div className="stats-grid">
+          <div className="stat-box">
+            <div className="stat-num">6</div>
+            <div className="stat-label">PRODOTTI VISTI</div>
+          </div>
+          <div className="stat-box">
+            <div className="stat-num red">{orders.length}</div>
+            <div className="stat-label">PREFERITI</div>
+          </div>
+          <div className="stat-box">
+            <div className="stat-num">0</div>
+            <div className="stat-label">RECENSIONI</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Links */}
+      <div className="section-box" style={{ marginBottom: 16 }}>
+        <div style={{ color: 'var(--gold)', fontWeight: 700, fontSize: 13, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+          🔗 Links
+        </div>
+        {LINKS.map(link => (
+          <a
+            key={link.label}
+            href={link.url}
+            className="link-row"
+            target="_blank"
+            rel="noreferrer"
+          >
+            <span className="link-icon">{link.icon}</span>
+            <span className="link-label">{link.label}</span>
+          </a>
+        ))}
+      </div>
+
+      {/* Notifications */}
+      <div className="section-box">
+        <div className="section-box-title">🔔 Notifiche</div>
+        {NOTIFICATION_TYPES.map(n => (
+          <div key={n.id} className="toggle-row">
+            <div className="toggle-info">
+              <div className="toggle-label">{n.label}</div>
+              <div className="toggle-sub">{n.sub}</div>
+            </div>
+            <div
+              className={`toggle ${notifications[n.id] ? 'on' : ''}`}
+              onClick={() => toggleNotification(n.id)}
+            />
+          </div>
+        ))}
+      </div>
+
+      <div className="spacer-20" />
+    </div>
   );
 }
