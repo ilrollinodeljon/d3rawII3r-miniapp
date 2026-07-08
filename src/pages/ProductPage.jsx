@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { useStore, getPriceForGrams } from '../store';
+
 export default function ProductPage({ product: p, onBack }) {
   const [qty, setQty] = useState(p.prices[0]?.grams ?? p.prices[0]?.pcs ?? p.minQty);
   const [strain, setStrain] = useState(p.strains?.[0] ?? null);
@@ -9,7 +10,9 @@ export default function ProductPage({ product: p, onBack }) {
   const timerRef = useRef(null);
   const swipeStartX = useRef(null);
   const addToCart = useStore(s => s.addToCart);
+
   if (!p) return null;
+
   const getQtyKey = (tier) => tier.pcs ?? tier.grams;
   const price = getPriceForGrams(p.prices, qty);
   const mediaList = p.media ?? (p.image ? [{ type: 'image', url: p.image }] : []);
@@ -18,8 +21,10 @@ export default function ProductPage({ product: p, onBack }) {
     const vi = mediaList.findIndex(m => m.type === 'video');
     return vi !== -1 ? vi : 0;
   }, [mediaList]);
+
   const [mediaIndex, setMediaIndex] = useState(initialIndex);
   const current = mediaList[mediaIndex] ?? { type: 'image', url: '' };
+
   // Telegram Back Button
   useEffect(() => {
     const tg = window.Telegram?.WebApp;
@@ -32,16 +37,18 @@ export default function ProductPage({ product: p, onBack }) {
       tg.BackButton.hide();
     };
   }, [onBack]);
-  /* ── Auto-advance logic ─────────────────────────────────────── */
+
   const goNext = useCallback(() => {
     setMediaIndex(i => (i + 1) % mediaList.length);
   }, [mediaList.length]);
+
   const clearTimer = () => {
     if (timerRef.current) {
       clearTimeout(timerRef.current);
       timerRef.current = null;
     }
   };
+
   useEffect(() => {
     clearTimer();
     if (current.type === 'video' && videoRef.current) {
@@ -58,12 +65,12 @@ export default function ProductPage({ product: p, onBack }) {
     }
     return () => clearTimer();
   }, [mediaIndex, current.type, goNext, mediaList.length, muted]);
-  /* ── Manual navigation ──────────────────────────────────────── */
+
   const goMedia = (idx) => {
     clearTimer();
     setMediaIndex((idx + mediaList.length) % mediaList.length);
   };
-  /* ── Swipe ──────────────────────────────────────────────────── */
+
   const onTouchStart = (e) => {
     swipeStartX.current = e.touches[0].clientX;
   };
@@ -75,7 +82,7 @@ export default function ProductPage({ product: p, onBack }) {
     }
     swipeStartX.current = null;
   };
-  /* ── Add to cart ────────────────────────────────────────────── */
+
   const handleAdd = () => {
     if (p.soldOut || qty < p.minQty) return;
     addToCart(p, qty, strain);
@@ -83,281 +90,137 @@ export default function ProductPage({ product: p, onBack }) {
     setTimeout(() => setAdded(false), 1800);
     window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('medium');
   };
+
   return (
     <div className="page fade-up">
-      {/* ── Media Gallery ───────────────────────────────────────── */}
-      <div
-        style={{ position: 'relative', background: 'transparent', touchAction: 'pan-y' }}
-        onTouchStart={onTouchStart}
-        onTouchEnd={onTouchEnd}
-      >
+      {/* Media Gallery */}
+      <div style={{ position: 'relative', background: 'transparent', touchAction: 'pan-y' }}
+           onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+
         {current.type === 'video' ? (
-          <video
-            ref={videoRef}
-            key={current.url}
-            playsInline
-            autoPlay
-            muted={muted}
-            loop={mediaList.length === 1}
-            preload="auto"
-            controls={false}
-            style={{
-              width: '100%',
-              aspectRatio: '3/4',
-              objectFit: 'cover',
-              display: 'block',
-              WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 85%, transparent 100%)',
-              maskImage: 'linear-gradient(to bottom, black 0%, black 85%, transparent 100%)',
-            }}
-          >
+          <video ref={videoRef} key={current.url} playsInline autoPlay muted={muted} loop={mediaList.length === 1}
+            style={{ width: '100%', aspectRatio: '3/4', objectFit: 'cover', display: 'block',
+              WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 88%, transparent 100%)',
+              maskImage: 'linear-gradient(to bottom, black 0%, black 88%, transparent 100%)' }}>
             <source src={current.url} type="video/mp4" />
           </video>
         ) : (
-          <img
-            src={current.url}
-            alt={p.name}
-            style={{
-              width: '100%',
-              aspectRatio: '3/4',
-              objectFit: 'cover',
-              display: 'block',
-              WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 85%, transparent 100%)',
-              maskImage: 'linear-gradient(to bottom, black 0%, black 85%, transparent 100%)',
-            }}
-            onError={e => { e.target.src = 'https://placehold.co/600x800/141414/555?text=NO+IMAGE'; }}
-          />
+          <img src={current.url} alt={p.name}
+            style={{ width: '100%', aspectRatio: '3/4', objectFit: 'cover', display: 'block',
+              WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 88%, transparent 100%)',
+              maskImage: 'linear-gradient(to bottom, black 0%, black 88%, transparent 100%)' }}
+            onError={e => { e.target.src = 'https://placehold.co/600x800/141414/555?text=NO+IMAGE'; }} />
         )}
+
         {/* Mute Button */}
-        <button
-          onClick={() => setMuted(m => !m)}
-          style={{
-            position: 'absolute',
-            top: 16,
-            right: 16,
-            width: 42,
-            height: 42,
-            borderRadius: '50%',
-            border: '1px solid rgba(255,255,255,0.15)',
-            background: 'rgba(0,0,0,0.45)',
-            backdropFilter: 'blur(12px)',
-            color: '#fff',
-            fontSize: 18,
-            zIndex: 30,
-          }}
-        >
+        <button onClick={() => setMuted(m => !m)}
+          style={{ position: 'absolute', top: 6, right: 16, width: 42, height: 42, borderRadius: '50%',
+            border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(12px)',
+            color: '#fff', fontSize: 18, zIndex: 30 }}>
           {muted ? '🔈' : '🔊'}
         </button>
-        {/* Brand + Title + Description - Now together under the image */}
-        <div style={{
-          position: 'absolute',
-          left: 14,
-          right: 14,
-          bottom: 65,
-          zIndex: 20,
-        }}>
-          {/* Brand pill */}
+
+        {/* Compact Info Overlay */}
+        <div style={{ position: 'absolute', left: 14, right: 14, bottom: 10, zIndex: 20 }}>
           {p.brand && (
-            <div style={{ marginBottom: 8 }}>
-              <span style={{
-                background: 'rgba(8,8,8,0.45)',
-                backdropFilter: 'blur(14px)',
-                border: '1px solid rgba(255,255,255,0.08)',
-                borderRadius: 999,
-                padding: '4px 12px',
-                fontSize: 11,
-                fontWeight: 700,
-                color: 'var(--gold-light)',
-              }}>
+            <div style={{ marginBottom: 20 }}>
+              <span style={{ background: 'rgba(8,8,8,0.55)', backdropFilter: 'blur(14px)',
+                border: '1px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '3px 11px',
+                fontSize: 11, fontWeight: 700, color: 'var(--gold-light)' }}>
                 {p.brand}
               </span>
             </div>
           )}
-          {/* Title */}
-          <h1 style={{
-            margin: 2,
-            marginTop: 20,
-            fontFamily: 'var(--font-display)',
-            fontSize: 38,
-            lineHeight: 0.95,
-            letterSpacing: 1,
-            color: '#fff',
-            textShadow: '0 2px 16px rgba(0,0,0,0.6)',
-          }}>
+
+          <h1 style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: 34, lineHeight: 0.96,
+            letterSpacing: 0.5, color: '#fff', textShadow: '0 2px 12px rgba(0,0,0,0.7)' }}>
             {p.name} {p.emoji}
           </h1>
-          {/* Description */}
-          <p style={{
-            margin: 2,
-            marginTop: 8,
-            color: 'rgba(255,255,255,0.85)',
-            fontSize: 15,
-            lineHeight: 1.4,
-          }}>
+
+          <p style={{ margin: 2, marginTop: 10, color: 'rgba(255,255,255,0.88)', fontSize: 14.5, lineHeight: 1.35 }}>
             {p.description}
           </p>
+
+          {/* Media Dots */}
+          {mediaList.length > 1 && (
+            <div style={{ display: 'flex', gap: 6, justifyContent: 'center', marginTop: 12 }}>
+              {mediaList.map((_, i) => (
+                <div key={i} onClick={() => goMedia(i)}
+                  style={{ width: i === mediaIndex ? 16 : 6, height: 6, borderRadius: 999,
+                    background: i === mediaIndex ? '#fff' : 'rgba(255,255,255,0.4)', cursor: 'pointer' }} />
+              ))}
+            </div>
+          )}
         </div>
+
         {/* Navigation Arrows */}
         {mediaList.length > 1 && (
           <>
-            <button
-              onClick={() => goMedia(mediaIndex - 1)}
-              style={{
-                position: 'absolute',
-                left: 12,
-                top: '50%',
-                transform: 'translateY(-50%)',
-                width: 44,
-                height: 44,
-                borderRadius: '50%',
-                background: 'rgba(0,0,0,0.55)',
-                backdropFilter: 'blur(20px)',
-                border: 'none',
-                color: '#fff',
-                fontSize: 24,
-                zIndex: 25,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
+            <button onClick={() => goMedia(mediaIndex - 1)}
+              style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
+                width: 44, height: 44, borderRadius: '50%', background: 'rgba(0,0,0,0.55)',
+                backdropFilter: 'blur(20px)', color: '#fff', fontSize: 24, zIndex: 25 }}>
               ←
             </button>
-            <button
-              onClick={() => goMedia(mediaIndex + 1)}
-              style={{
-                position: 'absolute',
-                right: 12,
-                top: '50%',
-                transform: 'translateY(-50%)',
-                width: 44,
-                height: 44,
-                borderRadius: '50%',
-                background: 'rgba(0,0,0,0.55)',
-                backdropFilter: 'blur(20px)',
-                border: 'none',
-                color: '#fff',
-                fontSize: 24,
-                zIndex: 25,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
+            <button onClick={() => goMedia(mediaIndex + 1)}
+              style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
+                width: 44, height: 44, borderRadius: '50%', background: 'rgba(0,0,0,0.55)',
+                backdropFilter: 'blur(20px)', color: '#fff', fontSize: 24, zIndex: 25 }}>
               →
             </button>
           </>
         )}
-        {/* Media Dots */}
-        {mediaList.length > 1 && (
-          <div
-            style={{
-              position: 'absolute',
-              left: '50%',
-              bottom: 60,
-              transform: 'translateX(-50%)',
-              display: 'flex',
-              gap: 6,
-              zIndex: 20,
-            }}
-          >
-            {mediaList.map((_, i) => (
-              <div
-                key={i}
-                onClick={() => goMedia(i)}
-                style={{
-                  width: i === mediaIndex ? 16 : 6,
-                  height: 6,
-                  borderRadius: 999,
-                  background: i === mediaIndex ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.35)',
-                  transition: 'width 0.25s cubic-bezier(.34,1.56,.64,1)',
-                  cursor: 'pointer',
-                }}
-              />
-            ))}
-          </div>
-        )}
       </div>
-      {/* ── Product Content (Price tiers + Add to cart) ──────────────────────────────────────── */}
-      <div className="container" style={{ marginTop: 20 }}>
-        {/* Strain selector */}
+
+      {/* Price & Add to Cart - Very close to the image */}
+      <div className="container" style={{ marginTop: 8 }}>
         {p.strains?.length > 0 && (
           <div className="section-box">
             <div className="section-box-title">🌿 Scegli strain</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
               {p.strains.map(s => (
-                <button
-                  key={s}
-                  onClick={() => setStrain(s)}
-                  style={{
-                    padding: '9px 16px',
-                    borderRadius: 20,
+                <button key={s} onClick={() => setStrain(s)}
+                  style={{ padding: '9px 16px', borderRadius: 20,
                     border: strain === s ? '1.5px solid var(--gold-light)' : '1.5px solid var(--border)',
                     background: strain === s ? 'rgba(200,168,75,0.14)' : 'var(--surface2)',
-                    color: strain === s ? 'var(--gold-light)' : 'var(--text)',
-                    cursor: 'pointer',
-                    fontSize: 13,
-                    fontWeight: 600,
-                  }}
-                >
+                    color: strain === s ? 'var(--gold-light)' : 'var(--text)', fontSize: 13, fontWeight: 600 }}>
                   {s}
                 </button>
               ))}
             </div>
           </div>
         )}
-        {/* Price tiers + Add to cart */}
+
         <div className="section-box">
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 12 }}>
             {p.prices.map(tier => {
               const tq = getQtyKey(tier);
               const sel = qty === tq;
               return (
-                <button
-                  key={tq}
-                  onClick={() => setQty(tq)}
-                  style={{
-                    padding: '8px 8px',
-                    borderRadius: 9999,
-                    height: 52,
+                <button key={tq} onClick={() => setQty(tq)}
+                  style={{ padding: '8px 8px', borderRadius: 9999, height: 52,
                     border: sel ? '1.5px solid var(--gold-light)' : '1.5px solid rgba(255,255,255,0.08)',
                     background: sel ? 'rgba(200,168,75,0.16)' : 'rgba(20,20,20,0.55)',
-                    color: sel ? 'var(--gold-light)' : '#e5e5e5',
-                    fontWeight: 700,
-                    fontSize: 14,
-                    cursor: 'pointer',
-                  }}
-                >
+                    color: sel ? 'var(--gold-light)' : '#e5e5e5', fontWeight: 700, fontSize: 14 }}>
                   {tq}{p.unit}<br />
                   <span style={{ fontSize: 13 }}>€{tier.price}</span>
                 </button>
               );
             })}
           </div>
-          <div style={{
-            background: 'rgba(15,15,15,0.6)',
-            border: '1px solid rgba(255,255,255,0.08)',
-            padding: '14px 16px',
-            borderRadius: 12,
-            marginBottom: 16,
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}>
+
+          <div style={{ background: 'rgba(15,15,15,0.6)', border: '1px solid rgba(255,255,255,0.08)',
+            padding: '14px 16px', borderRadius: 12, marginBottom: 16, display: 'flex',
+            justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ color: 'var(--text-sub)', fontSize: 14 }}>Selezionato:</span>
             <span style={{ color: 'var(--gold-light)', fontWeight: 800, fontSize: 18 }}>
               {qty} {p.unit} — €{price}
             </span>
           </div>
+
           {p.soldOut ? (
-            <div style={{
-              padding: 16,
-              textAlign: 'center',
-              background: 'rgba(255,68,58,0.08)',
-              border: '1px solid rgba(255,68,58,0.30)',
-              borderRadius: 999,
-              color: 'var(--red)',
-              fontWeight: 700,
-            }}>
+            <div style={{ padding: 16, textAlign: 'center', background: 'rgba(255,68,58,0.08)',
+              border: '1px solid rgba(255,68,58,0.30)', borderRadius: 999, color: 'var(--red)', fontWeight: 700 }}>
               ✕ Prodotto esaurito
             </div>
           ) : (
@@ -366,9 +229,7 @@ export default function ProductPage({ product: p, onBack }) {
             </button>
           )}
         </div>
-        <div className="spacer-20" />
       </div>
     </div>
   );
 }
- 
