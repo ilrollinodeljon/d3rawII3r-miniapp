@@ -5,14 +5,15 @@ export default function ProfilePage() {
   const notifications = useStore(s => s.notifications);
   const toggleNotification = useStore(s => s.toggleNotification);
   const orders = useStore(s => s.orders);
-  const cart = useStore(s => s.cart);
+  const referralStats = useStore(s => s.referralStats);
 
   const user = window.Telegram?.WebApp?.initDataUnsafe?.user;
+  
   const initial = user?.first_name?.[0]?.toUpperCase() || 'G';
   const username = user?.username || 'colewayne';
   const displayName = user ? `${user.first_name} ${user.last_name || ''}`.trim() : 'Grenadier';
 
-  // Auto-generated referral code (persistent per user)
+  // Auto-generated referral code
   const referralCode = user 
     ? `RAW${user.id.toString().slice(-6)}` 
     : 'RAW000000';
@@ -21,7 +22,6 @@ export default function ProfilePage() {
     navigator.clipboard.writeText(referralCode);
     window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('light');
     
-    // Visual feedback
     const btn = document.getElementById('copy-btn');
     if (btn) {
       const original = btn.textContent;
@@ -30,15 +30,38 @@ export default function ProfilePage() {
     }
   };
 
+  const earned = (referralStats?.successfulReferrals || 0) * 10;
+
   return (
     <div className="container">
       <div className="spacer-20" />
 
-      {/* Avatar + name */}
+      {/* Avatar + name - Now with real Telegram photo */}
       <div style={{ textAlign: 'center', marginBottom: 20, marginTop: 60 }}>
-        <div className="avatar">{initial}</div>
-        <h2 style={{ fontWeight: 800, fontSize: 22 }}>{displayName}</h2>
-        <p style={{ color: 'var(--text-sub)', marginTop: 4 }}>@{username}</p>
+        {user?.photo_url ? (
+          <img 
+            src={user.photo_url} 
+            alt={displayName}
+            style={{
+              width: 110,
+              height: 110,
+              borderRadius: '50%',
+              objectFit: 'cover',
+              border: '3px solid var(--gold-light)',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.4)'
+            }}
+            onError={(e) => {
+              e.target.style.display = 'none';
+              e.target.nextSibling.style.display = 'flex'; // fallback to initial
+            }}
+          />
+        ) : (
+          <div className="avatar">{initial}</div>
+        )}
+
+        <h2 style={{ fontWeight: 800, fontSize: 22, marginTop: 12 }}>{displayName}</h2>
+        <p style={{ color: 'var(--text-sub)', marginTop: 4}}>@{username}</p>
+        
         <div className="spacer-12" />
         <span className="new-badge">
           <span className="dot" /> Nuovo
@@ -48,9 +71,10 @@ export default function ProfilePage() {
         </p>
       </div>
 
-      {/* Referral Code Section */}
+      {/* Referral Code + Stats */}
       <div className="section-box" style={{ marginBottom: 16 }}>
         <div className="section-box-title">🎟️ Il tuo Codice Referral</div>
+        
         <div style={{ 
           background: 'rgba(200,168,75,0.12)', 
           border: '1px solid rgba(200,168,75,0.3)', 
@@ -62,6 +86,7 @@ export default function ProfilePage() {
           <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: 2, color: 'var(--gold-light)' }}>
             {referralCode}
           </div>
+          
           <button 
             id="copy-btn"
             onClick={copyReferralCode}
@@ -78,9 +103,27 @@ export default function ProfilePage() {
           >
             📋 Copia Codice
           </button>
+
+          {/* Referral Stats */}
+          <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-around' }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: 26, fontWeight: 800, color: '#4ade80' }}>
+                  {referralStats?.successfulReferrals || 0}
+                </div>
+                <div style={{ fontSize: 12, color: 'var(--text-sub)' }}>Amici</div>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: 26, fontWeight: 800, color: 'var(--gold-light)' }}>
+                  €{earned}
+                </div>
+                <div style={{ fontSize: 12, color: 'var(--text-sub)' }}>Guadagnati</div>
+              </div>
+            </div>
+          </div>
+
           <p style={{ fontSize: 13, color: 'var(--text-sub)', marginTop: 12 }}>
-            Condividi questo codice e ricevi <strong>€10</strong> di credito quando un amico completa il primo ordine!
-            10% di sconto per ogni nuovo utente che ordina con il tuo codice referral.
+            €10 di credito per ogni amico che completa il primo ordine
           </p>
         </div>
       </div>
