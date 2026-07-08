@@ -1,80 +1,103 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { useStore, getPriceForGrams } from '../store';
+
 export default function ProductPage({ product: p, onBack }) {
   const [qty, setQty] = useState(p.prices[0]?.grams ?? p.prices[0]?.pcs ?? p.minQty);
   const [strain, setStrain] = useState(p.strains?.[0] ?? null);
   const [added, setAdded] = useState(false);
   const [muted, setMuted] = useState(true);
+
   const videoRef = useRef(null);
   const timerRef = useRef(null);
   const swipeStartX = useRef(null);
   const addToCart = useStore(s => s.addToCart);
+
   if (!p) return null;
+
   const getQtyKey = (tier) => tier.pcs ?? tier.grams;
   const price = getPriceForGrams(p.prices, qty);
   const mediaList = p.media ?? (p.image ? [{ type: 'image', url: p.image }] : []);
- 
+
   const initialIndex = useMemo(() => {
     const vi = mediaList.findIndex(m => m.type === 'video');
     return vi !== -1 ? vi : 0;
   }, [mediaList]);
+
   const [mediaIndex, setMediaIndex] = useState(initialIndex);
   const current = mediaList[mediaIndex] ?? { type: 'image', url: '' };
+
   // Telegram Back Button
   useEffect(() => {
     const tg = window.Telegram?.WebApp;
     if (!tg || !onBack) return;
+
     tg.BackButton.show();
     const handler = () => onBack();
     tg.BackButton.onClick(handler);
+
     return () => {
       tg.BackButton.offClick(handler);
       tg.BackButton.hide();
     };
   }, [onBack]);
+
   /* ── Auto-advance logic ─────────────────────────────────────── */
   const goNext = useCallback(() => {
     setMediaIndex(i => (i + 1) % mediaList.length);
   }, [mediaList.length]);
+
   const clearTimer = () => {
     if (timerRef.current) {
       clearTimeout(timerRef.current);
       timerRef.current = null;
     }
   };
+
   useEffect(() => {
     clearTimer();
+
     if (current.type === 'video' && videoRef.current) {
       const v = videoRef.current;
       v.currentTime = 0;
       v.muted = muted;
       v.play().catch(() => {});
+
       const onEnded = () => { if (mediaList.length > 1) goNext(); };
       v.addEventListener('ended', onEnded);
       return () => v.removeEventListener('ended', onEnded);
     }
+
     if (current.type === 'image' && mediaList.length > 1) {
       timerRef.current = setTimeout(goNext, 2500);
     }
+
     return () => clearTimer();
   }, [mediaIndex, current.type, goNext, mediaList.length, muted]);
+
   /* ── Manual navigation ──────────────────────────────────────── */
   const goMedia = (idx) => {
     clearTimer();
     setMediaIndex((idx + mediaList.length) % mediaList.length);
   };
+
   /* ── Swipe ──────────────────────────────────────────────────── */
   const onTouchStart = (e) => {
     swipeStartX.current = e.touches[0].clientX;
   };
+
   const onTouchEnd = (e) => {
     if (swipeStartX.current === null) return;
     const dx = e.changedTouches[0].clientX - swipeStartX.current;
-    if (Math.abs(dx) > 36) {
+
+    if (startX < 30 && dx > 50) {
+      onBack?.();
+    } else if (Math.abs(dx) > 36) {
       goMedia(mediaIndex + (dx < 0 ? 1 : -1));
     }
+
     swipeStartX.current = null;
   };
+
   /* ── Add to cart ────────────────────────────────────────────── */
   const handleAdd = () => {
     if (p.soldOut || qty < p.minQty) return;
@@ -83,6 +106,7 @@ export default function ProductPage({ product: p, onBack }) {
     setTimeout(() => setAdded(false), 1800);
     window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('medium');
   };
+
   return (
     <div className="page fade-up">
       {/* ── Media Gallery ───────────────────────────────────────── */}
@@ -127,6 +151,7 @@ export default function ProductPage({ product: p, onBack }) {
             onError={e => { e.target.src = 'https://placehold.co/600x800/141414/555?text=NO+IMAGE'; }}
           />
         )}
+
         {/* Mute Button */}
         <button
           onClick={() => setMuted(m => !m)}
@@ -147,55 +172,7 @@ export default function ProductPage({ product: p, onBack }) {
         >
           {muted ? '🔈' : '🔊'}
         </button>
-        {/* Brand + Title + Description - Now together under the image */}
-        <div style={{
-          position: 'absolute',
-          left: 14,
-          right: 14,
-          bottom: 65,
-          zIndex: 20,
-        }}>
-          {/* Brand pill */}
-          {p.brand && (
-            <div style={{ marginBottom: 8 }}>
-              <span style={{
-                background: 'rgba(8,8,8,0.45)',
-                backdropFilter: 'blur(14px)',
-                border: '1px solid rgba(255,255,255,0.08)',
-                borderRadius: 999,
-                padding: '4px 12px',
-                fontSize: 11,
-                fontWeight: 700,
-                color: 'var(--gold-light)',
-              }}>
-                {p.brand}
-              </span>
-            </div>
-          )}
-          {/* Title */}
-          <h1 style={{
-            margin: 2,
-            marginTop: 20,
-            fontFamily: 'var(--font-display)',
-            fontSize: 38,
-            lineHeight: 0.95,
-            letterSpacing: 1,
-            color: '#fff',
-            textShadow: '0 2px 16px rgba(0,0,0,0.6)',
-          }}>
-            {p.name} {p.emoji}
-          </h1>
-          {/* Description */}
-          <p style={{
-            margin: 2,
-            marginTop: 8,
-            color: 'rgba(255,255,255,0.85)',
-            fontSize: 15,
-            lineHeight: 1.4,
-          }}>
-            {p.description}
-          </p>
-        </div>
+
         {/* Navigation Arrows */}
         {mediaList.length > 1 && (
           <>
@@ -222,6 +199,7 @@ export default function ProductPage({ product: p, onBack }) {
             >
               ←
             </button>
+
             <button
               onClick={() => goMedia(mediaIndex + 1)}
               style={{
@@ -247,13 +225,14 @@ export default function ProductPage({ product: p, onBack }) {
             </button>
           </>
         )}
+
         {/* Media Dots */}
         {mediaList.length > 1 && (
           <div
             style={{
               position: 'absolute',
               left: '50%',
-              bottom: 60,
+              bottom: 140,
               transform: 'translateX(-50%)',
               display: 'flex',
               gap: 6,
@@ -276,9 +255,56 @@ export default function ProductPage({ product: p, onBack }) {
             ))}
           </div>
         )}
+
+        {/* Brand pill */}
+        {p.brand && (
+          <div style={{ position: 'absolute', left: 14, bottom: 120, zIndex: 20 }}>
+            <span style={{
+              background: 'rgba(8,8,8,0.45)',
+              backdropFilter: 'blur(14px)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: 999,
+              padding: '4px 12px',
+              fontSize: 11,
+              fontWeight: 700,
+              color: 'var(--gold-light)',
+            }}>
+              {p.brand}
+            </span>
+          </div>
+        )}
       </div>
-      {/* ── Product Content (Price tiers + Add to cart) ──────────────────────────────────────── */}
-      <div className="container" style={{ marginTop: 20 }}>
+
+      {/* ── Product Content ──────────────────────────────────────── */}
+      <div className="container">
+        {/* Title + Description */}
+        <div style={{
+          marginTop: 20,
+          marginBottom: 30,
+        }}>
+          <h1 style={{
+            margin: 0,
+            fontFamily: 'var(--font-display)',
+            fontSize: 42,
+            lineHeight: 0.95,
+            letterSpacing: 1,
+            color: '#fff',
+            textShadow: '0 2px 16px rgba(0,0,0,0.45)',
+          }}>
+            {p.name} {p.emoji}
+          </h1>
+
+          <p style={{
+            marginTop: 8,
+            color: 'rgba(255,255,255,0.82)',
+            fontSize: 15,
+            lineHeight: 1.45,
+            maxWidth: '90%',
+          }}>
+            {p.description}
+          </p>
+        </div>
+
         {/* Strain selector */}
         {p.strains?.length > 0 && (
           <div className="section-box">
@@ -305,6 +331,7 @@ export default function ProductPage({ product: p, onBack }) {
             </div>
           </div>
         )}
+
         {/* Price tiers + Add to cart */}
         <div className="section-box">
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 12 }}>
@@ -333,6 +360,7 @@ export default function ProductPage({ product: p, onBack }) {
               );
             })}
           </div>
+
           <div style={{
             background: 'rgba(15,15,15,0.6)',
             border: '1px solid rgba(255,255,255,0.08)',
@@ -348,6 +376,7 @@ export default function ProductPage({ product: p, onBack }) {
               {qty} {p.unit} — €{price}
             </span>
           </div>
+
           {p.soldOut ? (
             <div style={{
               padding: 16,
@@ -366,9 +395,9 @@ export default function ProductPage({ product: p, onBack }) {
             </button>
           )}
         </div>
+
         <div className="spacer-20" />
       </div>
     </div>
   );
 }
- 
