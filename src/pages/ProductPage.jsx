@@ -285,11 +285,18 @@ export default function ProductPage({ product: p, onBack }) {
       </div>
 
       {/* Price & Add to Cart - Very close to the image */}
-      <div className="container" style={{ marginTop: 8 }}>
-        {p.strains?.length > 0 && (
+      <div className="container" style={{ marginTop: 10 }}>
+                {p.strains?.length > 0 && (
           <div className="section-box">
             <div className="section-box-title">🌿 Scegli strain</div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            
+            {/* Added spacing here */}
+            <div style={{ 
+              display: 'flex', 
+              flexWrap: 'wrap', 
+              gap: 8,
+              marginTop: 12   // ← Added space between title and buttons
+            }}>
               {p.strains.map(s => (
                 <button 
                   key={s} 
