@@ -12,11 +12,10 @@ export default function CartPage() {
   const checkoutData = useStore(s => s.checkoutData);
   const updateCheckoutData = useStore(s => s.updateCheckoutData);
   
-  // New discount & validation from store
+  // Discount & validation from store
   const appliedDiscount = useStore(s => s.appliedDiscount);
   const discountError = useStore(s => s.discountError);
   const validateAndApplyDiscount = useStore(s => s.validateAndApplyDiscount);
-  const clearDiscount = useStore(s => s.clearDiscount);
   const validateCart = useStore(s => s.validateCart);
   const markDiscountAsUsed = useStore(s => s.markDiscountAsUsed);
 
@@ -128,7 +127,6 @@ export default function CartPage() {
   const handleSubmit = async () => {
     if (cart.length === 0) return;
 
-    // Cart validation (10g minimum + Mr. Brown rule)
     if (!cartValidation.valid) {
       setError(cartValidation.error);
       return;
@@ -154,15 +152,19 @@ export default function CartPage() {
         preferredDate,
       });
 
-      // Mark discount as used
       if (appliedDiscount) {
         markDiscountAsUsed(appliedDiscount.code);
       }
 
       addOrder({
-        id: Date.now(), cart: [...cart], total: finalTotal,
-        date: new Date().toISOString(), status: 'In attesa',
-        delivery, address, preferredDate,
+        id: Date.now(), 
+        cart: [...cart], 
+        total: finalTotal,
+        date: new Date().toISOString(), 
+        status: 'In attesa',
+        delivery, 
+        address, 
+        preferredDate,
       });
 
       clearCart();
@@ -321,7 +323,7 @@ export default function CartPage() {
               )}
             </div>
 
-            {/* Address form - unchanged */}
+            {/* Address form */}
             <div className="section-box">
               <div className="section-box-title">
                 {isDelivery ? `📍 ${deliveryMethod?.label}` : `${courierObj?.icon} ${courierObj?.label}`}
@@ -407,9 +409,7 @@ export default function CartPage() {
                   type="text"
                   placeholder="Inserisci codice"
                   value={discount}
-                  onChange={(e) => {
-                    setDiscount(e.target.value.toUpperCase());
-                  }}
+                  onChange={(e) => setDiscount(e.target.value.toUpperCase())}
                   style={{
                     flex: 1,
                     padding: '14px 16px',
