@@ -78,15 +78,15 @@ export const useStore = create((set, get) => ({
 
     const upperCode = code.toUpperCase().trim();
 
-    // Support for Referral Codes (RAWxxxxxx)
+    // === REFERRAL CODE (RAWxxxxxx) → 10% OFF for the user entering it ===
     if (upperCode.startsWith("RAW")) {
       set({ 
         discountError: '',
         appliedDiscount: {
           code: upperCode,
-          type: "fixed",
+          type: "percent",     // Changed to 10%
           value: 10,
-          description: "€10 di Referral"
+          description: "10% di sconto Referral"
         }
       });
       get().updateCheckoutData({ discount: upperCode });
@@ -101,7 +101,6 @@ export const useStore = create((set, get) => ({
       return false;
     }
 
-    // Check if already used
     const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
     const userId = tgUser?.id || 'guest';
     const storageKey = `usedDiscounts_${userId}`;
@@ -142,7 +141,7 @@ export const useStore = create((set, get) => ({
     }
   },
 
-  // ==================== REFERRAL ====================
+  // ==================== REFERRAL REWARD ====================
   incrementReferralSuccess: () => {
     set(state => {
       const newStats = {
@@ -188,7 +187,7 @@ export const useStore = create((set, get) => ({
     return { valid: true, error: null };
   },
 
-  // Cart Functions
+  // Cart Functions (unchanged)
   addToCart: (product, qty, strain) => {
     const existing = get().cart.find(i => i.productId === product.id && i.strain === strain);
     const image = product.media?.find(m => m.type === 'image')?.url || product.image || '';

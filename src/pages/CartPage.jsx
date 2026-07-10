@@ -445,8 +445,13 @@ export default function CartPage() {
                   border: '1px solid rgba(200,168,75,0.4)', 
                   borderRadius: 12 
                 }}>
-                  ✅ <strong>{appliedDiscount.code}</strong> — {appliedDiscount.description}<br />
-                  <strong>-€{discountAmount}</strong> applicati
+                  ✅ <strong>{appliedDiscount.code}</strong> — {
+  appliedDiscount.type === "percent"
+    ? `${appliedDiscount.value}% di sconto`
+    : `€${appliedDiscount.value} di sconto`
+}
+<br />
+<strong>-€{discountAmount}</strong> applicati
                 </div>
               )}
             </div>
