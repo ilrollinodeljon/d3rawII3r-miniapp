@@ -7,7 +7,7 @@ const bot = new Telegraf(process.env.BOT_TOKEN);
 
 // Inline keyboard shown UNDER the welcome photo/message
 const welcomeKeyboard = Markup.inlineKeyboard([
-  [Markup.button.webApp("🛍️ APRI SHOP", process.env.MINIAPP_URL)],
+  [Markup.button.webApp("🛍️ OPEN SHOP", process.env.MINIAPP_URL)],
   [
     Markup.button.callback("👤 Profile", "profile"),
     Markup.button.callback("📦 Orders", "orders"),
@@ -22,11 +22,11 @@ bot.start(async (ctx) => {
       caption:
 `👋 Benvenuto sul TR BOT!
 
-Troverai tutto ciò che cerichi all'interno della nostra Mini App.
+Everything is available inside our Telegram Mini App.
 
-🛍️ Cerca Prodotti
-📦 Traccia i tuoi ordini
-🎁 Offerte esclusive
+🛍️ Browse products
+📦 Track your orders
+🎁 Telegram-exclusive offers
 
 Tap the button below to start shopping.`,
       ...welcomeKeyboard,
