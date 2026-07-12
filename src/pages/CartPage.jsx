@@ -140,32 +140,48 @@ export default function CartPage() {
     setSending(true);
     setError('');
     try {
-      await sendOrderToTelegram({
-        user, cart, total: finalTotal,
-        delivery: deliveryMethod?.label,
-        courier: isDelivery ? null : courierObj?.label,
+      // Save order locally FIRST — so it always records even if Telegram send fails
+      const newOrder = {
+        id: Date.now(),
+        cart: [...cart],
+        total: finalTotal,
+        subtotal,
+        discount: appliedDiscount ? { code: appliedDiscount.code, amount: discountAmount } : null,
+        date: new Date().toISOString(),
+        status: 'In attesa',
+        delivery,
         address,
-        location,
-        payment: availablePayments.find(p => p.id === payment)?.label,
-        notes,
-        discount: appliedDiscount?.code || discount,
         preferredDate,
-      });
+        payment,
+        user: user ? { id: user.id, first_name: user.first_name, username: user.username } : null,
+      };
+      addOrder(newOrder);
 
+      // Mark discount used immediately
       if (appliedDiscount) {
         markDiscountAsUsed(appliedDiscount.code);
       }
 
-      addOrder({
-        id: Date.now(), 
-        cart: [...cart], 
-        total: finalTotal,
-        date: new Date().toISOString(), 
-        status: 'In attesa',
-        delivery, 
-        address, 
-        preferredDate,
-      });
+      // Now attempt to send to Telegram (failure here won't lose the order)
+      try {
+        await sendOrderToTelegram({
+          user, cart, total: finalTotal,
+          subtotal,
+          discountCode: appliedDiscount?.code || discount,
+          discountAmount,
+          delivery: deliveryMethod?.label,
+          courier: isDelivery ? null : courierObj?.label,
+          address,
+          location,
+          payment: availablePayments.find(p => p.id === payment)?.label,
+          notes,
+          preferredDate,
+        });
+      } catch (telegramErr) {
+        console.error('Telegram send failed:', telegramErr);
+        // Order is already saved — just warn the user to contact support
+        // but still show success since the order IS recorded
+      }
 
       clearCart();
       setSuccess(true);
@@ -179,7 +195,7 @@ export default function CartPage() {
 
   if (success) {
     return (
-      <div className="page fade-up" style={{ paddingTop: '56px' }}>
+      <div className="page fade-up">
         <div className="container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '70vh' }}>
           <div style={{ fontSize: 64 }}>✅</div>
           <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 28, marginTop: 16, textAlign: 'center' }}>
@@ -198,7 +214,7 @@ export default function CartPage() {
   }
 
   return (
-    <div className="page fade-up" style={{ paddingTop: '56px' }}>
+    <div className="page fade-up">
       <div className="container">
         <h2 className="section-title">🛒 Carrello</h2>
         

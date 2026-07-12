@@ -2,7 +2,7 @@
 // Bot token and chat ID come from environment variables
 
 const BOT_TOKEN = import.meta.env.VITE_BOT_TOKEN;
-const CHAT_ID = import.meta.env.VITE_ORDER_CHAT_ID;
+const CHAT_ID   = import.meta.env.VITE_ORDER_CHAT_ID;
 
 async function tgPost(method, body) {
   const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/${method}`, {
@@ -11,62 +11,107 @@ async function tgPost(method, body) {
     body: JSON.stringify(body),
   });
   if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err.description || `Telegram ${method} error`);
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.description || `Telegram ${method} failed (${res.status})`);
   }
   return res.json();
 }
 
 export async function sendOrderToTelegram(orderData) {
-  const { user, cart, delivery, courier, address, location, payment, notes, discount, total, preferredDate } = orderData;
+  const {
+    user,
+    cart,
+    total,
+    subtotal,
+    delivery,
+    courier,
+    address,
+    location,
+    payment,
+    notes,
+    preferredDate,
+    // discount fields — support both old and new key names
+    discount,        // old: plain code string
+    discountCode,    // new
+    discountAmount,  // new
+  } = orderData;
 
-  const cartLines = cart.map(item =>
-    `  • ${item.name}${item.emoji ? ' ' + item.emoji : ''}${item.strain ? ` [${item.strain}]` : ''} — ${item.grams}g`
-  ).join('\n');
+  // ── Resolve discount display ────────────────────────────────────────
+  const code   = discountCode || discount || null;
+  const saving = discountAmount != null ? discountAmount : null;
 
-  const addressLines = address
-    ? Object.entries(address).filter(([, v]) => v).map(([k, v]) => `  ${k}: ${v}`).join('\n')
+  // ── Cart lines ──────────────────────────────────────────────────────
+  // Support both old (item.grams) and new (item.qty) quantity keys
+  const cartLines = cart.map(item => {
+    const qty    = item.qty ?? item.grams ?? '?';
+    const unit   = item.unit ?? 'g';
+    const strain = item.strain ? ` [${item.strain}]` : '';
+    const emoji  = item.emoji  ? ` ${item.emoji}`    : '';
+    return `  • ${item.name}${emoji}${strain} — ${qty}${unit}`;
+  }).join('\n');
+
+  // ── Address block ───────────────────────────────────────────────────
+  const addressLines = address && Object.keys(address).length
+    ? Object.entries(address)
+        .filter(([, v]) => v)
+        .map(([k, v]) => `  ${k}: ${v}`)
+        .join('\n')
     : null;
 
-  const message = `
-🛒 <b>NUOVO ORDINE — therawller</b>
+  // ── Discount block ──────────────────────────────────────────────────
+  let discountBlock = '';
+  if (code) {
+    discountBlock = `🏷️ <b>Codice sconto:</b> <code>${code}</code>`;
+    if (saving != null && saving > 0) {
+      discountBlock += ` (-€${saving})`;
+      if (subtotal) discountBlock += ` — Subtotale: €${subtotal}`;
+    }
+  }
 
-👤 <b>Cliente:</b>
-  Nome: ${user?.first_name || ''} ${user?.last_name || ''}
-  Username: @${user?.username || 'N/A'}
-  ID: <code>${user?.id || 'N/A'}</code>
+  // ── Build message ───────────────────────────────────────────────────
+  const parts = [
+    `🛒 <b>NUOVO ORDINE — therawller</b>`,
+    ``,
+    `👤 <b>Cliente:</b>`,
+    `  Nome: ${user?.first_name || ''} ${user?.last_name || ''}`.trimEnd(),
+    `  Username: @${user?.username || 'N/A'}`,
+    `  ID: <code>${user?.id || 'N/A'}</code>`,
+    ``,
+    `📦 <b>Prodotti:</b>`,
+    cartLines,
+    ``,
+    `🚚 <b>Consegna:</b> ${delivery}${courier ? ` (${courier})` : ''}`,
+    location
+      ? `📍 <b>GPS:</b> <a href="https://maps.google.com/?q=${location.lat},${location.lng}">Apri su Google Maps</a>`
+      : null,
+    addressLines ? `📍 <b>Indirizzo:</b>\n${addressLines}` : null,
+    preferredDate ? `📅 <b>Data preferita:</b> ${preferredDate}` : null,
+    ``,
+    `💳 <b>Pagamento:</b> ${payment || 'N/A'}`,
+    discountBlock || null,
+    notes ? `📝 <b>Note:</b> ${notes}` : null,
+    ``,
+    `💰 <b>TOTALE: €${total}</b>`,
+  ]
+    .filter(line => line !== null)   // remove null/skipped lines
+    .join('\n');
 
-📦 <b>Prodotti:</b>
-${cartLines}
-
-🚚 <b>Consegna:</b> ${delivery}${courier ? ` (${courier})` : ''}
-${location ? `📍 <b>Posizione GPS:</b> <a href="https://maps.google.com/?q=${location.lat},${location.lng}">Apri su Google Maps</a>` : ''}
-${addressLines ? `📍 <b>Indirizzo:</b>\n${addressLines}` : ''}
-${preferredDate ? `📅 <b>Data preferita:</b> ${preferredDate}` : ''}
-
-💳 <b>Pagamento:</b> ${payment}
-${discount ? `🏷️ <b>Codice sconto:</b> ${discount}` : ''}
-${notes ? `📝 <b>Note:</b> ${notes}` : ''}
-
-💰 <b>TOTALE: €${total}</b>
-`.trim();
-
-  // 1. Send text order summary
+  // ── Send text message ───────────────────────────────────────────────
   await tgPost('sendMessage', {
-    chat_id: CHAT_ID,
-    text: message,
+    chat_id:    CHAT_ID,
+    text:       parts,
     parse_mode: 'HTML',
+    disable_web_page_preview: true,
   });
 
-  // 2. If delivery with GPS — send native Telegram map pin right after
+  // ── Send GPS pin if delivery with location ──────────────────────────
   if (location?.lat && location?.lng) {
     await tgPost('sendLocation', {
-      chat_id: CHAT_ID,
-      latitude: location.lat,
+      chat_id:   CHAT_ID,
+      latitude:  location.lat,
       longitude: location.lng,
     });
   }
 
   return true;
 }
-

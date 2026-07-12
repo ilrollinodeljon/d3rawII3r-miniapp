@@ -1,18 +1,21 @@
 import { create } from 'zustand';
 
-const KNOWN_CODES = {
-  "AMICO10": { type: "percent", value: 10, description: "10% sul primo ordine" },
-  "WELCOME10": { type: "fixed", value: 10, description: "€10 di sconto benvenuto" },
-  "PRIMO10": { type: "percent", value: 10, description: "10% primo ordine" },
-  "SHARE10": { type: "fixed", value: 10, description: "€10 referral" },
+// ── Hardcoded promo codes (non-referral) ──────────────────────────────
+const PROMO_CODES = {
+  "AMICO10":   { type: "percent", value: 10, description: "10% di sconto" },
+  "WELCOME10": { type: "percent", value: 10, description: "10% di sconto benvenuto" },
+  "PRIMO10":   { type: "percent", value: 10, description: "10% primo ordine" },
 };
 
 export const useStore = create((set, get) => ({
   cart: [],
   orders: [],
   notifications: { new_products: true, promozioni: true, news: true },
-  
-  // Referral System
+
+  // ── Referral / balance ──────────────────────────────────────────────
+  // balance:   €credits earned by THIS user from others using their code
+  // referralStats: count of successful referrals
+  balance: 0,
   referralStats: {
     successfulReferrals: 0,
     totalEarned: 0,
@@ -27,10 +30,10 @@ export const useStore = create((set, get) => ({
     discount: '',
   },
 
-  // Discount State
   appliedDiscount: null,
   discountError: '',
 
+  // ── Cloud helpers ───────────────────────────────────────────────────
   saveToCloud: async (key, data) => {
     try {
       const tg = window.Telegram?.WebApp;
@@ -56,12 +59,12 @@ export const useStore = create((set, get) => ({
   },
 
   loadAllData: () => {
-    get().loadFromCloud('cart',          [],                  (data) => set({ cart: data }));
-    get().loadFromCloud('orders',        [],                  (data) => set({ orders: data }));
-    get().loadFromCloud('notifications', get().notifications, (data) => set({ notifications: data }));
-    get().loadFromCloud('checkoutData',  get().checkoutData,  (data) => set({ checkoutData: data }));
-    get().loadFromCloud('referralStats', get().referralStats, (data) => set({ referralStats: data }));
-    get().loadFromCloud('appliedDiscount', null, (data) => set({ appliedDiscount: data }));
+    get().loadFromCloud('cart',           [],                   (d) => set({ cart: d }));
+    get().loadFromCloud('orders',         [],                   (d) => set({ orders: d }));
+    get().loadFromCloud('notifications',  get().notifications,  (d) => set({ notifications: d }));
+    get().loadFromCloud('checkoutData',   get().checkoutData,   (d) => set({ checkoutData: d }));
+    get().loadFromCloud('referralStats',  get().referralStats,  (d) => set({ referralStats: d }));
+    get().loadFromCloud('balance',        0,                    (d) => set({ balance: d }));
   },
 
   updateCheckoutData: (newData) => {
@@ -69,58 +72,69 @@ export const useStore = create((set, get) => ({
     get().saveToCloud('checkoutData', get().checkoutData);
   },
 
-  // ==================== IMPROVED DISCOUNT LOGIC ====================
+  // ── Discount logic ──────────────────────────────────────────────────
+  // RAW codes = referral codes generated from user IDs
+  // Promo codes = PROMO_CODES above
+  // Both give 10% — shown as "10% di sconto"
   validateAndApplyDiscount: (code) => {
-    if (!code) {
-      set({ discountError: "Inserisci un codice", appliedDiscount: null });
+    const raw = (code ?? '').toUpperCase().trim();
+
+    if (!raw) {
+      set({ discountError: 'Inserisci un codice', appliedDiscount: null });
       return false;
     }
 
-    const upperCode = code.toUpperCase().trim();
+    // ── Referral code (RAWxxxxxx) ──
+    if (raw.startsWith('RAW')) {
+      // Prevent using your own code
+      const myUserId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
+      const myCode   = myUserId ? `RAW${String(myUserId).slice(-6)}` : null;
+      if (myCode && raw === myCode) {
+        set({ discountError: 'Non puoi usare il tuo stesso codice', appliedDiscount: null });
+        return false;
+      }
 
-    // === REFERRAL CODE (RAWxxxxxx) → 10% OFF for the user entering it ===
-    if (upperCode.startsWith("RAW")) {
-      set({ 
+      set({
         discountError: '',
         appliedDiscount: {
-          code: upperCode,
-          type: "percent",     // Changed to 10%
+          code: raw,
+          type: 'percent',
           value: 10,
-          description: "10% di sconto Referral"
-        }
+          description: '10% di sconto',   // ← updated label
+          isReferral: true,               // flag so we know to credit the owner
+        },
       });
-      get().updateCheckoutData({ discount: upperCode });
+      get().updateCheckoutData({ discount: raw });
       return true;
     }
 
-    // Regular hardcoded codes
-    const discountInfo = KNOWN_CODES[upperCode];
-
-    if (!discountInfo) {
-      set({ discountError: "Codice non valido", appliedDiscount: null });
+    // ── Promo code ──
+    const info = PROMO_CODES[raw];
+    if (!info) {
+      set({ discountError: 'Codice non valido', appliedDiscount: null });
       return false;
     }
 
-    const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
-    const userId = tgUser?.id || 'guest';
+    // One-time use check (localStorage per user)
+    const userId     = window.Telegram?.WebApp?.initDataUnsafe?.user?.id ?? 'guest';
     const storageKey = `usedDiscounts_${userId}`;
-    const usedCodes = JSON.parse(localStorage.getItem(storageKey) || '[]');
-
-    if (usedCodes.includes(upperCode)) {
-      set({ discountError: "Codice già utilizzato", appliedDiscount: null });
+    const used       = JSON.parse(localStorage.getItem(storageKey) || '[]');
+    if (used.includes(raw)) {
+      set({ discountError: 'Codice già utilizzato', appliedDiscount: null });
       return false;
     }
 
-    set({ 
+    set({
       discountError: '',
       appliedDiscount: {
-        code: upperCode,
-        amount: 0,
-        ...discountInfo
-      }
+        code: raw,
+        type: info.type,
+        value: info.value,
+        description: '10% di sconto',     // ← always show this label
+        isReferral: false,
+      },
     });
-
-    get().updateCheckoutData({ discount: upperCode });
+    get().updateCheckoutData({ discount: raw });
     return true;
   },
 
@@ -129,69 +143,75 @@ export const useStore = create((set, get) => ({
     get().updateCheckoutData({ discount: '' });
   },
 
+  // Called after order is successfully sent
   markDiscountAsUsed: (code) => {
-    const upperCode = code.toUpperCase().trim();
-    const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
-    const userId = tgUser?.id || 'guest';
+    const raw        = (code ?? '').toUpperCase().trim();
+    const userId     = window.Telegram?.WebApp?.initDataUnsafe?.user?.id ?? 'guest';
     const storageKey = `usedDiscounts_${userId}`;
-    
-    const usedCodes = JSON.parse(localStorage.getItem(storageKey) || '[]');
-    if (!usedCodes.includes(upperCode)) {
-      localStorage.setItem(storageKey, JSON.stringify([...usedCodes, upperCode]));
+    const used       = JSON.parse(localStorage.getItem(storageKey) || '[]');
+    if (!used.includes(raw)) {
+      localStorage.setItem(storageKey, JSON.stringify([...used, raw]));
     }
   },
 
-  // ==================== REFERRAL REWARD ====================
+  // ── Balance: credit THIS user €10 (called by bot webhook or /credit command) ──
+  // In practice your Telegram bot sends a message to the Mini App via
+  // sendData / answerWebAppQuery with { action: 'credit', amount: 10 }
+  // and the Mini App calls this. Or you call it manually from the bot.
+  addBalance: (amount) => {
+    set(state => {
+      const newBalance = (state.balance || 0) + amount;
+      get().saveToCloud('balance', newBalance);
+      return { balance: newBalance };
+    });
+  },
+
+  // ── Increment referral counter for THIS user (code owner) ──────────
+  // This is called when your bot confirms a referral order completed.
   incrementReferralSuccess: () => {
     set(state => {
       const newStats = {
         successfulReferrals: (state.referralStats.successfulReferrals || 0) + 1,
-        totalEarned: (state.referralStats.totalEarned || 0) + 10,
+        totalEarned:         (state.referralStats.totalEarned         || 0) + 10,
       };
+      const newBalance = (state.balance || 0) + 10;
       get().saveToCloud('referralStats', newStats);
-      return { referralStats: newStats };
+      get().saveToCloud('balance', newBalance);
+      return { referralStats: newStats, balance: newBalance };
     });
   },
 
-  // ==================== CART VALIDATION ====================
+  // ── Cart validation ─────────────────────────────────────────────────
   validateCart: () => {
     const cart = get().cart;
-    if (cart.length === 0) return { valid: false, error: "Il carrello è vuoto" };
+    if (cart.length === 0) return { valid: false, error: 'Il carrello è vuoto' };
 
-    let totalGrams = 0;
+    let totalGrams    = 0;
     let hasMrBrownOnly = true;
 
     for (const item of cart) {
       const qty = item.qty ?? item.grams ?? 0;
-      
-      if (!item.name?.toLowerCase().includes("mr brown")) {
+      if (!item.name?.toLowerCase().includes('mr brown')) {
         totalGrams += qty;
         hasMrBrownOnly = false;
       }
     }
 
-    if (totalGrams < 10) {
-      return { 
-        valid: false, 
-        error: "Ordine minimo: 10g di hash/weed (Mr. Brown non conta da solo)" 
-      };
-    }
-
     if (hasMrBrownOnly && cart.length === 1) {
-      return { 
-        valid: false, 
-        error: "Mr. Brown non può essere ordinato da solo. Aggiungi almeno 10g di hash o weed." 
-      };
+      return { valid: false, error: 'Mr. Brown non può essere ordinato da solo. Aggiungi almeno 10g di hash o weed.' };
+    }
+    if (totalGrams < 10 && !hasMrBrownOnly) {
+      return { valid: false, error: 'Ordine minimo: 10g di hash/weed.' };
     }
 
     return { valid: true, error: null };
   },
 
-  // Cart Functions (unchanged)
+  // ── Cart CRUD ───────────────────────────────────────────────────────
   addToCart: (product, qty, strain) => {
     const existing = get().cart.find(i => i.productId === product.id && i.strain === strain);
-    const image = product.media?.find(m => m.type === 'image')?.url || product.image || '';
-    const unit = product.unit ?? 'g';
+    const image    = product.media?.find(m => m.type === 'image')?.url || product.image || '';
+    const unit     = product.unit ?? 'g';
 
     if (existing) {
       set(state => ({
@@ -205,11 +225,11 @@ export const useStore = create((set, get) => ({
       set(state => ({
         cart: [...state.cart, {
           productId: product.id,
-          name: product.name,
-          emoji: product.emoji,
+          name:      product.name,
+          emoji:     product.emoji,
           image,
           qty,
-          grams: qty,
+          grams:  qty,
           unit,
           strain: strain || null,
           prices: product.prices,
@@ -230,9 +250,7 @@ export const useStore = create((set, get) => ({
   updateQty: (productId, strain, qty) => {
     set(state => ({
       cart: state.cart.map(i =>
-        i.productId === productId && i.strain === strain
-          ? { ...i, qty, grams: qty }
-          : i
+        i.productId === productId && i.strain === strain ? { ...i, qty, grams: qty } : i
       ),
     }));
     get().saveToCloud('cart', get().cart);
@@ -249,28 +267,40 @@ export const useStore = create((set, get) => ({
   },
 
   toggleNotification: (id) => {
-    set(state => ({
-      notifications: { ...state.notifications, [id]: !state.notifications[id] },
-    }));
+    set(state => ({ notifications: { ...state.notifications, [id]: !state.notifications[id] } }));
     get().saveToCloud('notifications', get().notifications);
   },
 }));
 
+// ── Price helpers ─────────────────────────────────────────────────────
 export function getPriceForGrams(prices, qty) {
   if (!prices?.length || qty == null) return null;
-  const normalised = prices.map(t => ({ qty: t.grams ?? t.pcs, price: t.price }));
-  const exact = normalised.find(t => t.qty === qty);
+  const norm    = prices.map(t => ({ qty: t.grams ?? t.pcs, price: t.price }));
+  const exact   = norm.find(t => t.qty === qty);
   if (exact) return exact.price;
-  const sorted = [...normalised].sort((a, b) => b.qty - a.qty);
-  const tier = sorted.find(t => qty >= t.qty);
+  const sorted  = [...norm].sort((a, b) => b.qty - a.qty);
+  const tier    = sorted.find(t => qty >= t.qty);
   if (!tier) return null;
   return Math.round((tier.price / tier.qty) * qty);
 }
 
 export function getCartTotal(cart) {
   return cart.reduce((sum, item) => {
-    const qty = item.qty ?? item.grams;
+    const qty   = item.qty ?? item.grams;
     const price = getPriceForGrams(item.prices, qty);
     return sum + (price || 0);
   }, 0);
+}
+
+// ── Apply discount to a subtotal ─────────────────────────────────────
+// Use this wherever you compute the final price
+export function applyDiscount(subtotal, discount) {
+  if (!discount || !subtotal) return subtotal;
+  if (discount.type === 'percent') {
+    return Math.round(subtotal * (1 - discount.value / 100));
+  }
+  if (discount.type === 'fixed') {
+    return Math.max(0, subtotal - discount.value);
+  }
+  return subtotal;
 }
