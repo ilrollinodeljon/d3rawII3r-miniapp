@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useStore, getCartTotal, getPriceForGrams } from '../store';
 import { DELIVERY_METHODS, SHOP_CONFIG } from '../config';
 import { sendOrderToTelegram } from '../utils/telegram';
+import AddressPicker from '../components/AddressPicker';
 
 export default function CartPage() {
   const cart = useStore(s => s.cart);
@@ -12,9 +13,10 @@ export default function CartPage() {
   const checkoutData = useStore(s => s.checkoutData);
   const updateCheckoutData = useStore(s => s.updateCheckoutData);
   
+  // Discount & validation from store
   const appliedDiscount = useStore(s => s.appliedDiscount);
   const discountError = useStore(s => s.discountError);
-  const validateAndApplyDiscount = useStore(s => s.validateAndApplyDiscount);
+  const validateAndApplyDiscount = useStorae(s => s.validateAndApplyDiscount);
   const validateCart = useStore(s => s.validateCart);
   const markDiscountAsUsed = useStore(s => s.markDiscountAsUsed);
 
@@ -40,22 +42,25 @@ export default function CartPage() {
 
   const cartValidation = validateCart();
 
-  // FIXED VALIDATION - No more "Nome e Cognome" check for Delivery
+  // Nome e cognome, username Telegram, and a resolved delivery address
+  // are mandatory before an order can be submitted (delivery flow only —
+  // the shipping flow has its own field set and isn't touched here).
   const validateRequiredFields = () => {
     if (!isDelivery) return { valid: true };
-
-    // Only Delivery requirements
-    if (!address.indirizzo?.trim()) {
-      return { valid: false, error: 'Inserisci l\'indirizzo di consegna.' };
+    if (!address.nome?.trim()) {
+      return { valid: false, error: 'Inserisci nome e cognome per completare l\'ordine.' };
     }
     if (!address.telegram || address.telegram.replace('@', '').trim().length === 0) {
       return { valid: false, error: 'Inserisci il tuo username Telegram per completare l\'ordine.' };
     }
+    if (!address.indirizzo?.trim()) {
+      return { valid: false, error: 'Seleziona un indirizzo di consegna per completare l\'ordine.' };
+    }
     return { valid: true };
   };
-
   const requiredFieldsValidation = validateRequiredFields();
 
+  // Calculate real discount amount
   const discountAmount = appliedDiscount ? 
     (appliedDiscount.type === "percent" 
       ? Math.round(subtotal * (appliedDiscount.value / 100)) 
@@ -128,6 +133,22 @@ export default function CartPage() {
     updateCheckoutData({ address: newAddress });
   };
 
+  // AddressPicker returns { fullAddress, street, houseNumber, city, postcode, lat, lng }.
+  // Keep writing address.indirizzo / address.citta so sendOrderToTelegram and any
+  // other downstream code reading those keys keeps working unchanged.
+  const handleAddressPick = (data) => {
+    const newAddress = {
+      ...address,
+      indirizzo: [data.street, data.houseNumber].filter(Boolean).join(' ') || data.fullAddress,
+      citta: data.city || '',
+      fullAddress: data.fullAddress,
+      lat: data.lat,
+      lng: data.lng,
+    };
+    setAddress(newAddress);
+    updateCheckoutData({ address: newAddress });
+  };
+
   const updatePreferredDate = (date) => {
     setPreferredDate(date);
     updateCheckoutData({ preferredDate: date });
@@ -161,6 +182,7 @@ export default function CartPage() {
     setSending(true);
     setError('');
     try {
+      // Save order locally FIRST — so it always records even if Telegram send fails
       const newOrder = {
         id: Date.now(),
         cart: [...cart],
@@ -177,10 +199,12 @@ export default function CartPage() {
       };
       addOrder(newOrder);
 
+      // Mark discount used immediately
       if (appliedDiscount) {
         markDiscountAsUsed(appliedDiscount.code);
       }
 
+      // Now attempt to send to Telegram (failure here won't lose the order)
       try {
         await sendOrderToTelegram({
           user, cart, total: finalTotal,
@@ -197,6 +221,8 @@ export default function CartPage() {
         });
       } catch (telegramErr) {
         console.error('Telegram send failed:', telegramErr);
+        // Order is already saved — just warn the user to contact support
+        // but still show success since the order IS recorded
       }
 
       clearCart();
@@ -275,6 +301,7 @@ export default function CartPage() {
 
             <div className="spacer-16" />
 
+            {/* Validation Error */}
             {!cartValidation.valid && (
               <div style={{ 
                 background: 'rgba(255,68,58,0.1)', 
@@ -288,6 +315,7 @@ export default function CartPage() {
               </div>
             )}
 
+            {/* Totals */}
             <div className="total-row">
               <span className="total-label">Subtotale</span>
               <span className="total-value">€{subtotal}</span>
@@ -307,7 +335,7 @@ export default function CartPage() {
 
             <div className="spacer-20" />
 
-            {/* Delivery Method */}
+            {/* Delivery */}
             <div className="section-box">
               <div className="section-box-title">🚚 Tipo di consegna</div>
               <div className="delivery-grid" style={{ marginTop: 12 }}>
@@ -353,73 +381,69 @@ export default function CartPage() {
               )}
             </div>
 
-            {/* Address Section */}
-            <div className="section-box" style={{ marginTop: 16 }}>
+            {/* Address form */}
+            <div className="section-box">
               <div className="section-box-title">
                 {isDelivery ? `📍 ${deliveryMethod?.label}` : `${courierObj?.icon} ${courierObj?.label}`}
               </div>
 
-              <div className="field-group" style={{ marginTop: 8 }}>
-                {/* Shipping only - Nome e Cognome */}
-                {!isDelivery && (
+              {isDelivery ? (
+                <div className="field-group" style={{ marginTop: 12 }}>
                   <div className="field-row">
-                    <input className="field" placeholder="Nome" value={address.nome || ''} onChange={e => setField('nome', e.target.value)} />
-                    <input className="field" placeholder="Cognome" value={address.cognome || ''} onChange={e => setField('cognome', e.target.value)} />
-                  </div>
-                )}
-
-                <input 
-                  className="field" 
-                  placeholder="Indirizzo completo" 
-                  value={address.indirizzo || ''} 
-                  onChange={e => setField('indirizzo', e.target.value)}
-                  style={attemptedSubmit && !address.indirizzo?.trim() ? { borderColor: 'var(--red)' } : undefined}
-                />
-
-                <div className="field-row">
-                  <input 
-                    className="field" 
-                    placeholder="Città" 
-                    value={address.citta || ''} 
-                    onChange={e => setField('citta', e.target.value)}
-                    style={{ flex: 1 }}
-                  />
-                  
-                  {isDelivery && (
-                    <div style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
-                      <span style={{ 
-                        padding: '12px 8px', 
-                        background: 'var(--surface)', 
-                        border: '1px solid var(--border)', 
-                        borderRight: 'none', 
-                        borderRadius: '12px 0 0 12px',
-                        color: 'var(--text-sub)',
-                        fontSize: '15px'
-                      }}>@</span>
+                    <input
+                      className="field"
+                      style={attemptedSubmit && !address.nome?.trim() ? { borderColor: 'var(--red)' } : undefined}
+                      placeholder="Nome e Cognome *"
+                      value={address.nome || ''}
+                      onChange={e => setField('nome', e.target.value)}
+                    />
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                      <span style={{ padding: '12px', background: 'var(--surface)', border: '1px solid var(--border)', borderColor: attemptedSubmit && (!address.telegram || address.telegram.replace('@', '').trim().length === 0) ? 'var(--red)' : undefined, borderRight: 'none', borderRadius: '12px 0 0 12px' }}>@</span>
                       <input
                         className="field"
-                        style={{ 
-                          borderRadius: '0 12px 12px 0', 
-                          marginBottom: 0,
-                          flex: 1,
-                          borderColor: attemptedSubmit && (!address.telegram || address.telegram.replace('@', '').trim().length === 0) ? 'var(--red)' : undefined 
-                        }}
+                        style={{ borderRadius: '0 12px 12px 0', marginBottom: 0, borderColor: attemptedSubmit && (!address.telegram || address.telegram.replace('@', '').trim().length === 0) ? 'var(--red)' : undefined }}
                         placeholder="username Telegram *"
                         value={(address.telegram || '').replace('@', '')}
                         onChange={e => setField('telegram', '@' + e.target.value.replace('@', ''))}
                       />
                     </div>
-                  )}
-                </div>
+                  </div>
+                  <input className="field" placeholder="Numero di Telefono" type="tel" value={address.telefono || ''} onChange={e => setField('telefono', e.target.value)} />
 
-                <input 
-                  className="field" 
-                  placeholder="Numero di Telefono" 
-                  type="tel" 
-                  value={address.telefono || ''} 
-                  onChange={e => setField('telefono', e.target.value)} 
-                />
-              </div>
+                  <AddressPicker
+                    value={address.lat ? { fullAddress: address.fullAddress || [address.indirizzo, address.citta].filter(Boolean).join(', '), lat: address.lat, lng: address.lng } : (address.indirizzo ? { fullAddress: [address.indirizzo, address.citta].filter(Boolean).join(', ') } : null)}
+                    onChange={handleAddressPick}
+                    required
+                    error={attemptedSubmit && !address.indirizzo?.trim() ? 'Seleziona un indirizzo di consegna valido.' : null}
+                  />
+
+                  <button type="button" onClick={requestLocation} disabled={locating} style={{ width: '100%', marginTop: 4, padding: '14px 16px', borderRadius: 100, border: '2px solid', borderColor: location ? 'rgba(125,217,154,0.6)' : 'rgba(255,255,255,0.15)', background: location ? 'rgba(61,170,92,0.12)' : 'rgba(255,255,255,0.04)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: locating ? 'wait' : 'pointer', backdropFilter: 'blur(20px)', boxShadow: location ? 'inset 0 1.5px 0 rgba(255,255,255,0.18), 0 4px 16px rgba(61,170,92,0.2)' : 'inset 0 1.5px 0 rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'all 0.2s' }}>
+                    {locating ? '⏳ Rilevamento...' : location ? '✅ Posizione condivisa' : '📍USA LA MIA POSIZIONE ATTUALE'}
+                  </button>
+
+                  {location && (
+                    <div style={{ marginTop: 10, padding: '10px 14px', background: 'var(--surface2)', border: '1px solid rgba(125,217,154,0.2)', borderRadius: 12, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
+                      <div style={{ fontSize: 12, color: 'var(--text-sub)', lineHeight: 1.5, flex: 1 }}> {location.label}</div>
+                      <button onClick={() => setLocation(null)} style={{ background: 'none', border: 'none', color: '#ff6b6b', fontSize: 12, cursor: 'pointer', flexShrink: 0, padding: 0 }}>✕</button>
+                    </div>
+                  )}
+
+                  <p className="field-hint">* Campi obbligatori per completare l'ordine</p>
+                </div>
+              ) : (
+                <div className="field-group">
+                  <div className="field-row">
+                    <input className="field" placeholder="Nome" value={address.nome || ''} onChange={e => setField('nome', e.target.value)} />
+                    <input className="field" placeholder="Cognome" value={address.cognome || ''} onChange={e => setField('cognome', e.target.value)} />
+                  </div>
+                  <input className="field" placeholder="Telefono" type="tel" value={address.telefono || ''} onChange={e => setField('telefono', e.target.value)} />
+                  <input className="field" placeholder="Indirizzo" value={address.indirizzo || ''} onChange={e => setField('indirizzo', e.target.value)} />
+                  <div className="field-row">
+                    <input className="field" placeholder="CAP" value={address.cap || ''} onChange={e => setField('cap', e.target.value)} />
+                    <input className="field" placeholder="Città" value={address.citta || ''} onChange={e => setField('citta', e.target.value)} />
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Preferred Date */}
@@ -453,9 +477,10 @@ export default function CartPage() {
               </div>
             </div>
 
-            {/* Discount */}
+            {/* Discount Code Section */}
             <div className="section-box">
               <div className="section-box-title">🎟️ Codice Sconto</div>
+              
               <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
                 <input
                   type="text"
@@ -498,12 +523,12 @@ export default function CartPage() {
                   borderRadius: 12 
                 }}>
                   ✅ <strong>{appliedDiscount.code}</strong> — {
-                    appliedDiscount.type === "percent"
-                      ? `${appliedDiscount.value}% di sconto`
-                      : `€${appliedDiscount.value} di sconto`
-                  }
-                  <br />
-                  <strong>-€{discountAmount}</strong> applicati
+  appliedDiscount.type === "percent"
+    ? `${appliedDiscount.value}% di sconto`
+    : `€${appliedDiscount.value} di sconto`
+}
+<br />
+<strong>-€{discountAmount}</strong> applicati
                 </div>
               )}
             </div>

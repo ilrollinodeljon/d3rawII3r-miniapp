@@ -33,7 +33,7 @@ export const DELIVERY_METHODS = [
     id: "delivery_pavia",
     label: "Delivery PV-MI",
     icon: "📍",
-    note: "Il servizio di delivery ha un costo aggiuntivo in base al tragitto. Dopo l'approvazione verrai contattato per il prezzo aggiornato.",
+    note: "Il servizio di delivery ha un costo aggiuntivo in base al tragitto.",
     fields: ["zone", "address"],
     extraCost: true,
   },

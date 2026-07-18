@@ -82,9 +82,9 @@ export async function sendOrderToTelegram(orderData) {
     ``,
     `🚚 <b>Consegna:</b> ${delivery}${courier ? ` (${courier})` : ''}`,
     location
-      ? `📍 <b>GPS:</b> <a href="https://maps.google.com/?q=${location.lat},${location.lng}">Apri su Google Maps</a>`
+      ? ` <b>GPS:</b> <a href="https://maps.google.com/?q=${location.lat},${location.lng}">Apri su Google Maps</a>`
       : null,
-    addressLines ? `📍 <b>Indirizzo:</b>\n${addressLines}` : null,
+    addressLines ? ` <b>Indirizzo:</b>\n${addressLines}` : null,
     preferredDate ? `📅 <b>Data preferita:</b> ${preferredDate}` : null,
     ``,
     `💳 <b>Pagamento:</b> ${payment || 'N/A'}`,
