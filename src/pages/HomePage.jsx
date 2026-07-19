@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { PRODUCTS, SHOP_CONFIG } from '../config';
+import { getRecentlyViewed } from '../utils/recentlyViewed';
 
 /* ─── Mini swipeable card ─────────────────────────────────────────────── */
 function FeaturedCard({ p, onNavigate }) {
@@ -87,6 +88,11 @@ export default function HomePage({ onNavigate, onTabChange }) {
   const featured = PRODUCTS
     .filter(p => p.isNew === true && !p.soldOut)
     .slice(0, 3);
+
+  const recentIds = getRecentlyViewed();
+  const recentProducts = recentIds
+    .map(id => PRODUCTS.find(p => p.id === id))
+    .filter(Boolean);
 
   return (
     
@@ -239,6 +245,29 @@ export default function HomePage({ onNavigate, onTabChange }) {
           ⚠️ Ordine minimo €{SHOP_CONFIG.minOrderShipping} per la spedizione tramite corriere.
           Delivery disponibile solo in Lombardia e Liguria.
         </div>
+
+        {/* ── Recently viewed ── */}
+        {recentProducts.length > 0 && (
+          <div className="recent-section">
+            <div className="recent-header">
+              <span>👁</span> Visti di recente
+            </div>
+            <div className="recent-scroll">
+              {recentProducts.map(p => {
+                const img = (p.media ?? []).find(m => m.type === 'image')?.url
+                  ?? 'https://placehold.co/200x200/141414/555?text=IMG';
+                return (
+                  <div key={p.id} className="recent-card" onClick={() => onNavigate('product', p)}>
+                    <div className="recent-card-img">
+                      <img src={img} alt="" onError={e => { e.target.src = 'https://placehold.co/200x200/141414/555?text=IMG'; }} />
+                    </div>
+                    <div className="recent-card-name">{p.name}</div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         <div className="spacer-16" />
       </div>

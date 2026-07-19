@@ -20,7 +20,7 @@
   --surface3:    #171717;    /* deepest nested surfaces                   */
 
   /* Borders — neutral white only, no green tint */
-  --border:      rgba(255, 255, 255, 0.09);
+  --border:      rgba(255, 255, 255, 0.07);
   --border-glow: rgba(0, 0, 0, 0.35); /* gold glow                 */
 
   /* Text */
@@ -559,15 +559,14 @@ h1 { font-size: 40px; letter-spacing: 3px; }
 
 
 
-/* ── Buttons — More Transparent Glass ─────────────────────── */
-/* ── Buttons — True black glass, works on mobile ──────────── */
+/* ── Buttons — slick translucent glass, dark hairline border ─ */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   width: 100%;
-  padding: 18px 20px;
+  padding: 15px 20px;
   border-radius: 9999px;
   font-family: var(--font-body);
   font-size: 16px;
@@ -582,23 +581,22 @@ h1 { font-size: 40px; letter-spacing: 3px; }
   user-select: none;
   transition: transform 0.12s cubic-bezier(.22,.68,0,1.2),
               box-shadow 0.15s ease,
-              background 0.12s ease;
+              background 0.12s ease,
+              border-color 0.12s ease;
 
-  /* KEY: rgba black at very low opacity — lets blur do the work */
-  background: rgba(0, 0, 0, 0.18);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  /* Translucent — lets the scene behind read through, glass not a solid pill */
+  background: rgba(8, 8, 8, 0.40);
+  /* Dark border instead of a light hairline — crisp edge without a bright ring */
+  border: 1.5px solid rgba(0, 0, 0, 0.70);
   color: #fff;
 
-  /* 3D bevel — top light edge + bottom shadow press */
+  /* Single soft highlight, no heavy double bevel — reads as slim, not bulky */
   box-shadow:
-    inset 0  1.5px 0 rgba(255, 255, 255, 0.20),
-    inset 0 -2px   0 rgba(0, 0, 0, 0.50),
-    0 6px 18px       rgba(0, 0, 0, 0.40),
-    0 1px 4px        rgba(0, 0, 0, 0.30);
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 4px 14px rgba(0, 0, 0, 0.35);
 
-  /* blur samples what's behind — the bg video shows through */
-  backdrop-filter: blur(20px) saturate(1.6) brightness(0.85);
-  -webkit-backdrop-filter: blur(20px) saturate(1.6) brightness(0.85);
+  backdrop-filter: blur(16px) saturate(1.0);
+  -webkit-backdrop-filter: blur(16px) saturate(1.0);
 }
 
 /* Shine streak pseudo-element */
@@ -620,22 +618,20 @@ h1 { font-size: 40px; letter-spacing: 3px; }
 .btn:hover::before { left: 130%; }
 
 .btn:hover {
-  background: rgba(0, 0, 0, 0.24);
+  background: rgba(8, 8, 8, 0.55);
+  border-color: rgba(0, 0, 0, 0.85);
   transform: translateY(-2px);
   box-shadow:
-    inset 0  2px   0 rgba(255, 255, 255, 0.24),
-    inset 0 -2px   0 rgba(0, 0, 0, 0.55),
-    0 10px 26px      rgba(0, 0, 0, 0.50),
-    0  2px  8px      rgba(0, 0, 0, 0.35);
+    inset 0 1px 0 rgba(255, 255, 255, 0.09),
+    0 8px 20px rgba(0, 0, 0, 0.4);
 }
 
 .btn:active {
   transform: scale(0.962) translateY(2px);
-  background: rgba(0, 0, 0, 0.30);
+  background: rgba(4, 4, 4, 0.65);
   box-shadow:
-    inset 0  1px 0 rgba(255, 255, 255, 0.12),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.40),
-    0 2px 8px        rgba(0, 0, 0, 0.45);
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 2px 8px rgba(0, 0, 0, 0.4);
   transition: transform 0.06s ease, box-shadow 0.06s ease;
 }
 
@@ -645,37 +641,36 @@ h1 { font-size: 40px; letter-spacing: 3px; }
   transform: none !important;
 }
 
-/* ── Gold CTA — same glass, warm tint ── */
+/* ── Gold CTA — same slick glass, warm glow instead of a light border ── */
 .btn-gold {
-  background: rgba(180, 130, 20, 0.18);
-  border-color: rgba(244, 197, 66, 0.28);
+  background: rgba(60, 42, 4, 0.30);
+  border-color: rgba(30, 20, 0, 0.75);
   box-shadow:
-    inset 0  1.5px 0 rgba(255, 255, 255, 0.22),
-    inset 0 -2px   0 rgba(0, 0, 0, 0.45),
-    0 6px 18px       rgba(0, 0, 0, 0.42),
-    0 0  16px        rgba(200, 168, 75, 0.14);
-  backdrop-filter: blur(20px) saturate(1.6) brightness(0.85);
-  -webkit-backdrop-filter: blur(20px) saturate(1.6) brightness(0.85);
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 4px 14px rgba(0, 0, 0, 0.35),
+    0 0 14px rgba(200, 168, 75, 0.14);
+  backdrop-filter: blur(16px) saturate(1.0);
+  -webkit-backdrop-filter: blur(16px) saturate(1.0);
 }
 .btn-gold:hover {
-  background: rgba(180, 130, 20, 0.26);
+  background: rgba(70, 50, 6, 0.42);
+  border-color: rgba(40, 28, 0, 0.9);
   box-shadow:
-    inset 0  2px   0 rgba(255, 255, 255, 0.26),
-    inset 0 -2px   0 rgba(0, 0, 0, 0.48),
-    0 10px 26px      rgba(0, 0, 0, 0.50),
-    0  0   24px      rgba(244, 197, 66, 0.20);
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 8px 20px rgba(0, 0, 0, 0.4),
+    0 0 20px rgba(244, 197, 66, 0.20);
 }
 
-/* ── Ghost — even more transparent ── */
+/* ── Ghost — translucent black, dark hairline, no tint ── */
 .btn-ghost {
-  background: rgba(0, 0, 0, 0.12);
-  border-color: rgba(255, 255, 255, 0.11);
-  backdrop-filter: blur(20px) saturate(1.5) brightness(0.80);
-  -webkit-backdrop-filter: blur(20px) saturate(1.5) brightness(0.80);
+  background: rgba(6, 6, 6, 0.38);
+  border-color: rgba(0, 0, 0, 0.68);
+  backdrop-filter: blur(16px) saturate(1.0);
+  -webkit-backdrop-filter: blur(16px) saturate(1.0);
 }
 .btn-ghost:hover {
-  background: rgba(0, 0, 0, 0.20);
-  border-color: rgba(244, 197, 66, 0.24);
+  background: rgba(6, 6, 6, 0.52);
+  border-color: rgba(0, 0, 0, 0.85);
   color: var(--gold-light);
 }
 
@@ -1202,4 +1197,52 @@ h1 { font-size: 40px; letter-spacing: 3px; }
   color: var(--gold);
   font-size: 11px;
   pointer-events: none;
+}
+
+/* ====================================================
+   Recently viewed — home page strip
+   ==================================================== */
+.recent-section { margin-top: 4px; margin-bottom: 8px; }
+.recent-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 16px;
+  margin-bottom: 12px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  color: var(--text-sub);
+  text-transform: uppercase;
+}
+.recent-scroll {
+  display: flex;
+  gap: 10px;
+  padding: 0 16px 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.recent-scroll::-webkit-scrollbar { display: none; }
+.recent-card {
+  flex-shrink: 0;
+  width: 108px;
+  cursor: pointer;
+}
+.recent-card-img {
+  width: 108px;
+  height: 108px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: rgba(4,4,4,0.9);
+  border: 1px solid var(--border);
+}
+.recent-card-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.recent-card-name {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text);
+  margin-top: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

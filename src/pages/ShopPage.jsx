@@ -3,10 +3,10 @@ import { PRODUCTS, CATEGORIES } from '../config';
 
 /* Fallback icons if a category in config.js doesn't define its own `emoji` */
 const CATEGORY_ICON_FALLBACK = {
-  hash: '📦',
-  weed: '🌿',
-  edibles: '🍬',
-  extracts: '💧',
+  hash: '',
+  weed: '',
+  edibles: '',
+  extracts: '',
 };
 
 /* ─── Swipeable image wrap ─────────────────────────────────────────────── */
@@ -175,7 +175,7 @@ export default function ShopPage({ onNavigate }) {
     ...CATEGORIES.filter(c => c.id !== 'new').map(c => ({
       id: c.id,
       label: c.label,
-      icon: c.emoji || CATEGORY_ICON_FALLBACK[c.id] || '📦',
+      icon: c.emoji || CATEGORY_ICON_FALLBACK[c.id] || '',
     })),
   ];
 
