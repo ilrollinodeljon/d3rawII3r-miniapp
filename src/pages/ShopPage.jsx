@@ -1,5 +1,13 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { PRODUCTS, CATEGORIES } from '../config';
+
+/* Fallback icons if a category in config.js doesn't define its own `emoji` */
+const CATEGORY_ICON_FALLBACK = {
+  hash: '📦',
+  weed: '🌿',
+  edibles: '🍬',
+  extracts: '💧',
+};
 
 /* ─── Swipeable image wrap ─────────────────────────────────────────────── */
 function SwipeableImages({ media }) {
@@ -68,7 +76,7 @@ function SwipeableImages({ media }) {
 }
 
 /* ─── Product card ─────────────────────────────────────────────────────── */
-function ProductCard({ p, onNavigate }) {
+function ProductCard({ p, onNavigate, isFav, onToggleFav }) {
   const moved = useRef(false);
   const startX = useRef(null);
 
@@ -81,129 +89,221 @@ function ProductCard({ p, onNavigate }) {
 
   const onClick = () => { if (!moved.current) onNavigate('product', p); };
 
+  const imageCount = (p.media ?? []).filter(m => m.type === 'image').length;
+
   return (
     <div
       className="product-card"
-      style={{
-        opacity: p.soldOut ? 0.60 : 1,
-        cursor: 'pointer',
-        position: 'relative',
-      }}
+      style={{ cursor: 'pointer', position: 'relative' }}
       onMouseDown={onMouseDown}
       onMouseMove={onMouseMove}
       onMouseUp={onMouseUp}
       onClick={onClick}
     >
-      {p.isNew && !p.soldOut && (
-        <div style={{
-          position: 'absolute', top: 9, left: 9, zIndex: 3,
-          background: 'linear-gradient(135deg,#ff2d00,#ffd000)',
-          color: '#fff', fontSize: 9, fontWeight: 900,
-          padding: '3px 8px', borderRadius: 20, letterSpacing: 1,
-          boxShadow: '0 2px 10px rgba(255,94,0,0.5)',
-        }}>NEW</div>
-      )}
+      <div style={{ position: 'relative' }}>
+        {p.isNew && !p.soldOut && (
+          <div style={{
+            position: 'absolute', top: 9, right: 9, zIndex: 3,
+            background: 'linear-gradient(135deg,#ff2d00,#ffd000)',
+            color: '#fff', fontSize: 9, fontWeight: 900,
+            padding: '3px 8px', borderRadius: 20, letterSpacing: 1,
+            boxShadow: '0 2px 10px rgba(255,94,0,0.5)',
+          }}>NEW</div>
+        )}
 
-      {p.soldOut && (
-        <div style={{
-          position: 'absolute', top: 9, left: 9, zIndex: 3,
-          background: 'rgba(255,68,58,0.82)',
-          backdropFilter: 'blur(8px)',
-          border: '1px solid rgba(255,100,90,0.4)',
-          color: '#fff', fontSize: 9, fontWeight: 900,
-          padding: '3px 8px', borderRadius: 20, letterSpacing: 1,
-        }}>SOLD OUT</div>
-      )}
+        {p.brand && <div className="product-card-badge">{p.brand}</div>}
 
-      <SwipeableImages media={p.media} />
+        <button
+          type="button"
+          className={`product-card-fav-btn ${isFav ? 'active' : ''}`}
+          onClick={(e) => { e.stopPropagation(); onToggleFav(p.id); }}
+          aria-label="Preferiti"
+        >
+          {isFav ? '❤️' : '🤍'}
+        </button>
 
-      <div className="product-card-body">
-        {p.brand && <div className="product-card-brand">{p.brand}</div>}
+        {imageCount > 1 && (
+          <div className="product-card-media-count">+{imageCount - 1}</div>
+        )}
+
+        {p.soldOut && (
+          <div className="product-card-soldout-banner">Esaurito</div>
+        )}
+
+        <SwipeableImages media={p.media} />
+      </div>
+
+      <div className="product-card-body" style={{ opacity: p.soldOut ? 0.6 : 1 }}>
         <div className="product-card-name">{p.name} {p.emoji}</div>
         <div className="product-card-desc">{p.description}</div>
         {p.soldOut
-          ? <div style={{ color: 'var(--red)', fontWeight: 700, fontSize: 11, marginTop: 6, opacity: 0.85 }}>
-              Esaurito · tocca per vedere
+          ? <div style={{ color: 'var(--red)', fontWeight: 700, fontSize: 11, marginTop: 8, opacity: 0.85 }}>
+              Tocca per vedere
             </div>
-          : <div className="product-card-price">da €{p.prices[0].price}</div>
+          : <>
+              <div className="product-card-price-label">A partire da</div>
+              <div className="product-card-price">€{p.prices[0].price}</div>
+            </>
         }
       </div>
     </div>
   );
 }
 
-/* ─── Category heading ─────────────────────────────────────────────────── */
-function CategoryHeading({ label, accent }) {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0 16px', marginBottom: 14, marginTop: 30 }}>
-      <h3 style={{
-        fontFamily: 'var(--font-display)', fontSize: 22, letterSpacing: 2,
-        color: '#fff', fontWeight: 400, flexShrink: 0,
-        textShadow: accent
-          ? '0 0 18px rgba(244,197,66,0.45)'
-          : 'none',
-      }}>{label}</h3>
-      <div style={{
-        flex: 1, height: 1,
-        background: accent
-          ? 'linear-gradient(to right, rgba(244,197,66,0.30), transparent)'
-          : 'linear-gradient(to right, rgba(255,255,255,0.10), transparent)',
-      }} />
-    </div>
-  );
-}
-
 /* ─── ShopPage ─────────────────────────────────────────────────────────── */
 export default function ShopPage({ onNavigate }) {
-  const newProducts = PRODUCTS
-    .filter(p => p.isNew && !p.soldOut)
-    .sort((a, b) => b.dateAdded.localeCompare(a.dateAdded))
-    .slice(0, 2);
+  const [search, setSearch] = useState('');
+  const [activeCategory, setActiveCategory] = useState('all');
+  const [priceFilter, setPriceFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('default');
+  // NOTE: favorites are kept in local component state only — they reset on
+  // page unmount/reload. To persist across the app (and across sessions),
+  // move this into the Zustand store the same way cart/orders are handled.
+  const [favorites, setFavorites] = useState(() => new Set());
+
+  const toggleFav = (id) => {
+    setFavorites(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const pills = [
+    { id: 'all', label: 'Tutti', icon: null },
+    { id: 'new', label: 'Novità', icon: '🔥' },
+    ...CATEGORIES.filter(c => c.id !== 'new').map(c => ({
+      id: c.id,
+      label: c.label,
+      icon: c.emoji || CATEGORY_ICON_FALLBACK[c.id] || '📦',
+    })),
+  ];
+
+  const inPriceRange = (price) => {
+    switch (priceFilter) {
+      case 'under-50': return price < 50;
+      case '50-100': return price >= 50 && price <= 100;
+      case '100-200': return price > 100 && price <= 200;
+      case 'over-200': return price > 200;
+      default: return true;
+    }
+  };
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+
+    let list = PRODUCTS.filter(p => {
+      if (activeCategory === 'new' && !(p.isNew && !p.soldOut)) return false;
+      if (activeCategory !== 'all' && activeCategory !== 'new' && p.category !== activeCategory) return false;
+      if (!inPriceRange(p.prices[0]?.price ?? 0)) return false;
+      if (q) {
+        const haystack = `${p.name} ${p.brand ?? ''} ${p.description ?? ''}`.toLowerCase();
+        if (!haystack.includes(q)) return false;
+      }
+      return true;
+    });
+
+    switch (sortBy) {
+      case 'price-asc':
+        list = [...list].sort((a, b) => (a.prices[0]?.price ?? 0) - (b.prices[0]?.price ?? 0));
+        break;
+      case 'price-desc':
+        list = [...list].sort((a, b) => (b.prices[0]?.price ?? 0) - (a.prices[0]?.price ?? 0));
+        break;
+      case 'name':
+        list = [...list].sort((a, b) => a.name.localeCompare(b.name));
+        break;
+      case 'newest':
+        list = [...list].sort((a, b) => (b.dateAdded ?? '').localeCompare(a.dateAdded ?? ''));
+        break;
+      default:
+        list = [...list].sort((a, b) => (a.sortOrder ?? 99) - (b.sortOrder ?? 99));
+    }
+
+    return list;
+  }, [search, activeCategory, priceFilter, sortBy]);
+
+  const resetFilters = () => {
+    setSearch('');
+    setActiveCategory('all');
+    setPriceFilter('all');
+    setSortBy('default');
+  };
 
   return (
-    
-      <div className="container -70">
-        <h2 className="section-title">🛍️ Shop</h2>
-
-        {/* NEW ARRIVALS */}
-        {newProducts.length > 0 && (
-          <div style={{ marginBottom: 36 }}>
-            <CategoryHeading label="🔥 New Arrivals" accent />
-            <div className="product-grid">
-              {newProducts.map(p => <ProductCard key={p.id} p={p} onNavigate={onNavigate} />)}
-            </div>
-          </div>
-        )}
-
-        {/* CATEGORY SECTIONS */}
-        {CATEGORIES.filter(c => c.id !== 'new').map(cat => {
-          const products = PRODUCTS
-            .filter(p => p.category === cat.id)
-            .sort((a, b) => (a.sortOrder ?? 99) - (b.sortOrder ?? 99));
-
-          if (!products.length && !cat.showIfEmpty) return null;
-
-          return (
-            <div key={cat.id} style={{ marginBottom: 36 }}>
-              <CategoryHeading label={cat.label} accent={false} />
-              {products.length > 0
-                ? <div className="product-grid">
-                    {products.map(p => <ProductCard key={p.id} p={p} onNavigate={onNavigate} />)}
-                  </div>
-                : <p style={{ color: 'var(--text-sub)', fontSize: 13, padding: '0 16px' }}>
-                    Nessun prodotto disponibile.
-                  </p>
-              }
-            </div>
-          );
-        })}
-
-        {PRODUCTS.length === 0 && (
-          <p style={{ textAlign: 'center', color: 'var(--text-sub)', padding: '40px 20px' }}>
-            Nessun prodotto disponibile al momento.
-          </p>
-        )}
+    <div className="container -70">
+      <div className="shop-hero">
+        <div className="shop-hero-count">{PRODUCTS.length} PRODOTTI</div>
+        <h2 className="shop-hero-title">Il Catalogo</h2>
+        <div className="shop-hero-divider" />
       </div>
-    
+
+      <div className="shop-search-row">
+        <div className="shop-search-wrap">
+          <span className="field-icon">🔍</span>
+          <input
+            type="text"
+            placeholder="Cerca prodotti..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+        </div>
+        <button type="button" className="shop-reset-btn" onClick={resetFilters} aria-label="Reimposta filtri" title="Reimposta filtri">
+          ⚖️
+        </button>
+      </div>
+
+      <div className="category-pills">
+        {pills.map(c => (
+          <div
+            key={c.id}
+            className={`category-pill ${activeCategory === c.id ? 'active' : ''}`}
+            onClick={() => setActiveCategory(c.id)}
+          >
+            {c.icon && <span>{c.icon}</span>}
+            {c.label}
+          </div>
+        ))}
+      </div>
+
+      <div className="filter-row">
+        <div className="filter-select-btn">
+          <select value={priceFilter} onChange={e => setPriceFilter(e.target.value)}>
+            <option value="all">Filtra per prezzo</option>
+            <option value="under-50">Fino a 50€</option>
+            <option value="50-100">50€ - 100€</option>
+            <option value="100-200">100€ - 200€</option>
+            <option value="over-200">Oltre 200€</option>
+          </select>
+        </div>
+        <div className="filter-select-btn">
+          <select value={sortBy} onChange={e => setSortBy(e.target.value)}>
+            <option value="default">Ordine predefinito</option>
+            <option value="price-asc">Prezzo: crescente</option>
+            <option value="price-desc">Prezzo: decrescente</option>
+            <option value="name">Nome A-Z</option>
+            <option value="newest">Più recenti</option>
+          </select>
+        </div>
+      </div>
+
+      {filtered.length > 0 ? (
+        <div className="product-grid">
+          {filtered.map(p => (
+            <ProductCard
+              key={p.id}
+              p={p}
+              onNavigate={onNavigate}
+              isFav={favorites.has(p.id)}
+              onToggleFav={toggleFav}
+            />
+          ))}
+        </div>
+      ) : (
+        <p style={{ textAlign: 'center', color: 'var(--text-sub)', padding: '40px 20px' }}>
+          Nessun prodotto trovato.
+        </p>
+      )}
+    </div>
   );
 }
