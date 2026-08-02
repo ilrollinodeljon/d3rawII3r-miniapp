@@ -15,6 +15,16 @@ export default function ProductPage({ product: p, onBack }) {
 
   const getQtyKey = (tier) => tier.pcs ?? tier.grams;
   const price = getPriceForGrams(p.prices, qty);
+
+  // Per-unit price, e.g. 440€ over 50g → "8.80€/g". Drops trailing .0 for
+  // whole numbers (e.g. "10.00" → "10"), keeps 1 decimal otherwise.
+  const formatPerUnit = (tierPrice, tierQty) => {
+    if (!tierQty) return null;
+    const perUnit = tierPrice / tierQty;
+    const rounded = perUnit % 1 === 0 ? perUnit.toFixed(0) : perUnit.toFixed(2);
+    return `${rounded}€/${p.unit}`;
+  };
+
   const mediaList = p.media ?? (p.image ? [{ type: 'image', url: p.image }] : []);
   
   const initialIndex = useMemo(() => {
@@ -330,7 +340,8 @@ export default function ProductPage({ product: p, onBack }) {
                   style={{ 
                     padding: '8px 8px', 
                     borderRadius: 9999, 
-                    height: 52,
+                    height: 56,
+                    lineHeight: 1.3,
                     border: sel ? '1.5px solid var(--gold-light)' : '1.5px solid rgba(255,255,255,0.08)',
                     background: sel ? 'rgba(200,168,75,0.16)' : 'rgba(20,20,20,0.55)',
                     color: sel ? 'var(--gold-light)' : '#e5e5e5', 
@@ -339,7 +350,12 @@ export default function ProductPage({ product: p, onBack }) {
                   }}
                 >
                   {tq}{p.unit}<br />
-                  <span style={{ fontSize: 13 }}>€{tier.price}</span>
+                  <span style={{ fontSize: 13 }}>
+                    €{tier.price}
+                    <span style={{ fontSize: 10, opacity: 0.65, fontWeight: 600 }}>
+                      {' '}({formatPerUnit(tier.price, tq)})
+                    </span>
+                  </span>
                 </button>
               );
             })}
@@ -358,6 +374,9 @@ export default function ProductPage({ product: p, onBack }) {
             <span style={{ color: 'var(--text-sub)', fontSize: 14 }}>Selezionato:</span>
             <span style={{ color: 'var(--gold-light)', fontWeight: 800, fontSize: 18 }}>
               {qty} {p.unit} — €{price}
+              <span style={{ color: 'var(--text-sub)', fontWeight: 600, fontSize: 12 }}>
+                {' '}({formatPerUnit(price, qty)})
+              </span>
             </span>
           </div>
 

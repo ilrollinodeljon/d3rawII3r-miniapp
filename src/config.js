@@ -72,15 +72,44 @@ export const PAYMENT_METHODS = [
 export const PRODUCTS = [
   // ── HASH ──────────────────────────────────────────────────
   {
+    id: "cali_plates",
+    dateAdded: "2026-07-19",
+    sortOrder: 1,
+    name: "CaliPlates x Lionboldt.",
+    soldOut: false,
+    isNew: true,
+    category: "hash",
+    brand: "Cali Plates",
+    emoji: "⚡",
+    description: "Realizzati in California con fiore fresco immediatamente congelato per preservare l'integrità di tricomi e terpeni.",
+    media: [
+      { type: "image", url: "/products/cali_plates.jpg" },
+      { type: "image", url: "/products/cali_plates_2.jpg" },
+      { type: "image", url: "/products/cali_plates_3.jpg" }
+    ],
+    minQty: 5,
+    unit: "g",
+    strains: ["TMZ (Too Much Zkittlez)", "FF (Forbitten Fruit)"],
+    prices: [
+      { grams: 5,  price: 200 },
+      { grams: 10,  price: 350 },
+      { grams: 25,  price: 750 },
+      { grams: 50,  price: 1250 },
+      { grams: 100, price: 2200 },
+
+    ],
+  },
+  
+  {
     id: "plasma_static",
     dateAdded: "2026-06-01",
-    sortOrder: 1,
+    sortOrder: 2,
     name: "Plasma Static",
     soldOut: true,
     category: "hash",
     brand: "H.C.M.",
     emoji: "⚡",
-    description: "Electro plasma static.",
+    description: "Hash Plasmastatic (elettrostatico a plasma): resina pura separata a secco con lastre elettriche al plasma, senza solventi né acqua.",
     media: [
       { type: "image", url: "/products/plasma_static.jpg" },
       { type: "image", url: "/products/plasma_static_2.jpg" },
@@ -100,13 +129,13 @@ export const PRODUCTS = [
   {
     id: "fresh_frozen",
     dateAdded: "2026-06-02",
-    sortOrder: 2,
-    name: "Fresh frozen s2026❄️",
+    sortOrder: 3,
+    name: "Fresh frozen s.2026❄️",
     category: "hash",
     isNew: false,
     brand: "H.C.M.",
     emoji: "",
-    description: "fresh frozen",
+    description: "Hash prodotto da materiale fresco congelato subito dopo la raccolta.",
     media: [
       { type: "image", url: "/products/fresh_frozen.jpg" },
       { type: "image", url: "/products/fresh_frozen_2.jpg" },
@@ -127,13 +156,13 @@ export const PRODUCTS = [
   {
     id: "bufalo_plein",
     dateAdded: "2026-06-20",
-    sortOrder: 3,
+    sortOrder: 4,
     name: "Filtrato 120u🏆",
     category: "hash",
     isNew: true,
     brand: "Bufalo Plein",
     emoji: "",
-    description: "filtered 120u",
+    description: "Hash filtrato a 120 micron (120u).",
     media: [
       { type: "image", url: "/products/bufalo_plein.jpg" },
       { type: "image", url: "/products/bufalo_plein_2.jpg" },
@@ -154,7 +183,7 @@ export const PRODUCTS = [
   {
     id: "filtered_90u",
     dateAdded: "2026-06-10",
-    sortOrder: 4,
+    sortOrder: 5,
     name: "WT Filtrato 90u🎁",
     category: "hash",
     isNew: false,
@@ -189,7 +218,7 @@ export const PRODUCTS = [
     isNew: true,
     brand: "Cali Spain Top Shelf",
     emoji: "",
-    description: "Premium Cali Spain Flowers",
+    description: "Premium Cali Spain-Sunset Sherbet: ibrido indica-dominante di genetica californiana (Girl Scout Cookies × Pink Panties). Aroma e sapore dolci di frutti di bosco, agrumi e crema",
     media: [
       { type: "image", url: "/products/cali_spa.jpg" },
       { type: "image", url: "/products/cali_spa_2.jpg" },
@@ -201,10 +230,10 @@ export const PRODUCTS = [
     prices: [
       { grams: 10,  price: 120 },
       { grams: 25,  price: 240 },
-      { grams: 50,  price: 440 },
-      { grams: 100, price: 800 },
-      { grams: 250, price: 1850 },
-      { grams: 500, price: 3600 },
+      { grams: 50,  price: 460 },
+      { grams: 100, price: 850 },
+      { grams: 250, price: 1950 },
+      { grams: 500, price: 3800 },
     ],
   },
 
@@ -218,7 +247,7 @@ export const PRODUCTS = [
     isNew: true,
     brand: "THC EDIBLES",
     emoji: "",
-    description: "Brownie al cioccolato infuso al THC",
+    description: "Brownie al cioccolato infuso al THC realizzato con fiori di Cali Spain straight out of the jar e ingredienti di prima qualità",
     media: [
       { type: "image", url: "/products/mr_brown.jpg" },
       { type: "video", url: "/products/mr_brown_2.mp4" },

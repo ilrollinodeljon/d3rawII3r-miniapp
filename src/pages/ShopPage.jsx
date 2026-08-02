@@ -233,7 +233,7 @@ export default function ShopPage({ onNavigate }) {
   return (
     <div className="container -70">
       <div className="shop-hero">
-        <div className="shop-hero-count">{PRODUCTS.length} PRODOTTI</div>
+        
         <h2 className="shop-hero-title">Il Catalogo</h2>
         <div className="shop-hero-divider" />
       </div>
