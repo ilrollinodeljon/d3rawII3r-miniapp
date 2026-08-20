@@ -137,13 +137,13 @@ function ProductCard({ p, onNavigate, isFav, onToggleFav }) {
         <div className="product-card-name">{p.name} {p.emoji}</div>
         <div className="product-card-desc">{p.description}</div>
         {p.soldOut
-          ? <div style={{ color: 'var(--red)', fontWeight: 700, fontSize: 11, marginTop: 8, opacity: 0.85 }}>
+          ? <div className="product-card-status" style={{ color: 'var(--red)', fontWeight: 700, fontSize: 11, opacity: 0.85 }}>
               Tocca per vedere
             </div>
-          : <>
+          : <div className="product-card-status">
               <div className="product-card-price-label">A partire da</div>
               <div className="product-card-price">€{p.prices[0].price}</div>
-            </>
+            </div>
         }
       </div>
     </div>

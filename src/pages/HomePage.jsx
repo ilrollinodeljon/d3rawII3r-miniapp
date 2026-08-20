@@ -1,36 +1,53 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { PRODUCTS, SHOP_CONFIG } from '../config';
 import { getRecentlyViewed } from '../utils/recentlyViewed';
 
-/* ─── Mini swipeable card ─────────────────────────────────────────────── */
+/* ─── Mini featured card — video (once loaded) or image fallback ───────── */
 function FeaturedCard({ p, onNavigate }) {
   const images = (p.media ?? []).filter(m => m.type === 'image');
-  const [idx, setIdx] = useState(0);
-  const startX = useRef(null);
+  const videos = (p.media ?? []).filter(m => m.type === 'video');
+  const posterSrc = images[0]?.url ?? (p.image || 'https://placehold.co/300x375/141414/555?text=IMG');
+  const videoSrc = videos[0]?.url ?? null;
+
+  const [videoReady, setVideoReady] = useState(false);
+  const videoRef = useRef(null);
   const moved = useRef(false);
+  const startX = useRef(null);
 
-  const go = (dir) => setIdx(i => (i + dir + images.length) % images.length);
+  // Only start showing/playing the video once it's fully buffered enough to
+  // play through without stalling — until then the poster image stays visible.
+  useEffect(() => {
+    if (!videoSrc || !videoRef.current) return;
+    const v = videoRef.current;
+    setVideoReady(false);
 
-  const onTouchStart = (e) => { startX.current = e.touches[0].clientX; moved.current = false; };
-  const onTouchMove = (e) => { 
-    if (startX.current !== null && Math.abs(e.touches[0].clientX - startX.current) > 8) 
-      moved.current = true; 
-  };
-  const onTouchEnd = (e) => {
-    if (startX.current === null) return;
-    const dx = e.changedTouches[0].clientX - startX.current;
-    if (Math.abs(dx) > 28) go(dx < 0 ? 1 : -1);
-    startX.current = null;
-  };
+    const onCanPlayThrough = () => {
+      setVideoReady(true);
+      v.play().catch(() => {}); // autoplay can be blocked silently — poster stays as fallback
+    };
+    const onError = () => setVideoReady(false);
 
+    v.addEventListener('canplaythrough', onCanPlayThrough);
+    v.addEventListener('error', onError);
+    return () => {
+      v.removeEventListener('canplaythrough', onCanPlayThrough);
+      v.removeEventListener('error', onError);
+      v.pause();
+    };
+  }, [videoSrc]);
+
+  // NOTE: per-image swipe-to-cycle was removed here on purpose — these cards
+  // now live in a horizontally swipeable row (see .featured-scroll below),
+  // and a second swipe gesture *inside* each card would fight the row's own
+  // swipe-to-browse-products gesture. Only the first image / first video is
+  // shown per card. If you want multi-image cycling back, it belongs on the
+  // full ProductPage instead, not this compact home-row card.
   const onMouseDown = (e) => { startX.current = e.clientX; moved.current = false; };
-  const onMouseMove = (e) => { 
-    if (startX.current !== null && Math.abs(e.clientX - startX.current) > 8) 
-      moved.current = true; 
+  const onMouseMove = (e) => {
+    if (startX.current !== null && Math.abs(e.clientX - startX.current) > 8)
+      moved.current = true;
   };
   const onMouseUp = () => { startX.current = null; };
-
-  const imgSrc = images[idx]?.url ?? (p.image || 'https://placehold.co/300x375/141414/555?text=IMG');
 
   return (
     <div
@@ -51,26 +68,37 @@ function FeaturedCard({ p, onNavigate }) {
         }}>NEW</div>
       )}
 
-      <div
-        className="product-card-img-wrap"
-        onTouchStart={onTouchStart}
-        onTouchMove={onTouchMove}
-        onTouchEnd={onTouchEnd}
-        style={{ userSelect: 'none' }}
-      >
+      <div className="product-card-img-wrap" style={{ userSelect: 'none', position: 'relative' }}>
         <img
-          src={imgSrc}
+          src={posterSrc}
           alt={p.name}
           draggable={false}
-          style={{ pointerEvents: 'none' }}
+          style={{
+            pointerEvents: 'none',
+            opacity: videoReady ? 0 : 1,
+            transition: 'opacity 0.35s ease',
+          }}
           onError={e => { e.target.src = 'https://placehold.co/300x375/141414/555?text=IMG'; }}
         />
-        {images.length > 1 && (
-          <div className="product-card-dots">
-            {images.map((_, i) => (
-              <div key={i} className={`product-card-dot${i === idx ? ' active' : ''}`} />
-            ))}
-          </div>
+        {videoSrc && (
+          <video
+            ref={videoRef}
+            src={videoSrc}
+            muted
+            loop
+            playsInline
+            preload="auto"
+            style={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              opacity: videoReady ? 1 : 0,
+              transition: 'opacity 0.35s ease',
+              pointerEvents: 'none',
+            }}
+          />
         )}
       </div>
 
@@ -87,7 +115,41 @@ function FeaturedCard({ p, onNavigate }) {
 export default function HomePage({ onNavigate, onTabChange }) {
   const featured = PRODUCTS
     .filter(p => p.isNew === true && !p.soldOut)
-    .slice(0, 3);
+    .sort((a, b) => (b.dateAdded ?? '').localeCompare(a.dateAdded ?? ''));
+
+  // Infinite-loop swipeable row: the list is tripled (prev/current/next set)
+  // so there's always real content on both sides to scroll into. When the
+  // user's swipe gets close to either end, we silently snap scrollLeft back
+  // by exactly one set's width — same content, no visible jump — which is
+  // what makes it feel like it loops forever in both directions.
+  const scrollRef = useRef(null);
+  const [rowReady, setRowReady] = useState(false);
+  const loopItems = featured.length > 1
+    ? [...featured, ...featured, ...featured]
+    : featured; // don't loop-triple a single item, nothing to swipe to
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || featured.length <= 1) { setRowReady(true); return; }
+    // Wait a frame so the tripled content has actually laid out and
+    // scrollWidth is measurable, then start the user on the middle copy.
+    requestAnimationFrame(() => {
+      const oneSetWidth = el.scrollWidth / 3;
+      el.scrollLeft = oneSetWidth;
+      setRowReady(true);
+    });
+  }, [featured.length]);
+
+  const handleScroll = () => {
+    const el = scrollRef.current;
+    if (!el || featured.length <= 1) return;
+    const oneSetWidth = el.scrollWidth / 3;
+    if (el.scrollLeft < oneSetWidth * 0.1) {
+      el.scrollLeft += oneSetWidth;
+    } else if (el.scrollLeft > oneSetWidth * 1.9) {
+      el.scrollLeft -= oneSetWidth;
+    }
+  };
 
   const recentIds = getRecentlyViewed();
   const recentProducts = recentIds
@@ -232,9 +294,16 @@ export default function HomePage({ onNavigate, onTabChange }) {
               </h2>
             </div>
 
-            <div className="product-grid-3" style={{ marginBottom: 24 }}>
-              {featured.map(p => (
-                <FeaturedCard key={p.id} p={p} onNavigate={onNavigate} />
+            <div
+              className="featured-scroll"
+              ref={scrollRef}
+              onScroll={handleScroll}
+              style={{ marginBottom: 24, opacity: rowReady ? 1 : 0, transition: 'opacity 0.2s ease' }}
+            >
+              {loopItems.map((p, i) => (
+                <div key={`${p.id}-${i}`} className="featured-scroll-item">
+                  <FeaturedCard p={p} onNavigate={onNavigate} />
+                </div>
               ))}
             </div>
           </>
