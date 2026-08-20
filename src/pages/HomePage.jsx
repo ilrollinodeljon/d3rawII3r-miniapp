@@ -251,7 +251,7 @@ export default function HomePage({ onNavigate, onTabChange }) {
               height: '68px'
             }}
           >
-            ✈️ Telegram
+            ✈️ TELEGRAM
           </a>
           <a
             href="https://instagram.com/therawller"
@@ -271,7 +271,7 @@ export default function HomePage({ onNavigate, onTabChange }) {
               height: '68px'
             }}
           >
-            📸 Instagram
+            📸 INSTAGRAM
           </a>
         </div>
 
