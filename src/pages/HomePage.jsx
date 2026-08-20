@@ -172,10 +172,10 @@ export default function HomePage({ onNavigate, onTabChange }) {
           
           <h1 style={{
             fontFamily: 'var(--font-display)',
-            fontSize: 48,
+            fontSize: 46,
             letterSpacing: 3,
-            marginTop: 8,
-            marginBottom: 4,
+            marginTop: 3,
+            marginBottom: 0,
             color: '#ffffff',
             textShadow: `
               0 0 10px rgba(255,255,255,0.45),
@@ -190,10 +190,11 @@ export default function HomePage({ onNavigate, onTabChange }) {
 
           <p style={{
             color: '#ffffffbc',
-            fontSize: 16,
+            fontSize: 15,
             fontWeight: 400,
             letterSpacing: 1,
             marginTop: 0,
+            marginBottom: 10,
             textShadow: '0 2px 8px rgba(0,0,0,0.7)',
             textTransform: 'none',
           }}>
@@ -214,7 +215,7 @@ export default function HomePage({ onNavigate, onTabChange }) {
             }}
             onClick={() => onTabChange('orders')}
           >
-            📋 I miei ordini
+            📋 I MIEI ORDINI
           </button>
           <button
             className="btn btn-gold"
