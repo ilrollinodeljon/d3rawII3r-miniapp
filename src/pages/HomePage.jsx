@@ -2,8 +2,18 @@ import { useState, useRef, useEffect } from 'react';
 import { PRODUCTS, SHOP_CONFIG } from '../config';
 import { getRecentlyViewed } from '../utils/recentlyViewed';
 
+// Shortest signed distance from `index` to `center` around a circle of size n.
+// e.g. n=6, center=0, index=5 → -1 (one step left), not +5 (five steps right).
+function signedCircularDistance(index, center, n) {
+  if (n === 0) return 0;
+  let d = index - center;
+  if (d > n / 2) d -= n;
+  if (d < -n / 2) d += n;
+  return d;
+}
+
 /* ─── Mini featured card — video (once loaded) or image fallback ───────── */
-function FeaturedCard({ p, onNavigate }) {
+function FeaturedCard({ p, onClick }) {
   const images = (p.media ?? []).filter(m => m.type === 'image');
   const videos = (p.media ?? []).filter(m => m.type === 'video');
   const posterSrc = images[0]?.url ?? (p.image || 'https://placehold.co/300x375/141414/555?text=IMG');
@@ -11,8 +21,6 @@ function FeaturedCard({ p, onNavigate }) {
 
   const [videoReady, setVideoReady] = useState(false);
   const videoRef = useRef(null);
-  const moved = useRef(false);
-  const startX = useRef(null);
 
   // Only start showing/playing the video once it's fully buffered enough to
   // play through without stalling — until then the poster image stays visible.
@@ -36,29 +44,9 @@ function FeaturedCard({ p, onNavigate }) {
     };
   }, [videoSrc]);
 
-  // NOTE: per-image swipe-to-cycle was removed here on purpose — these cards
-  // now live in a horizontally swipeable row (see .featured-scroll below),
-  // and a second swipe gesture *inside* each card would fight the row's own
-  // swipe-to-browse-products gesture. Only the first image / first video is
-  // shown per card. If you want multi-image cycling back, it belongs on the
-  // full ProductPage instead, not this compact home-row card.
-  const onMouseDown = (e) => { startX.current = e.clientX; moved.current = false; };
-  const onMouseMove = (e) => {
-    if (startX.current !== null && Math.abs(e.clientX - startX.current) > 8)
-      moved.current = true;
-  };
-  const onMouseUp = () => { startX.current = null; };
-
   return (
-    <div
-      className="product-card"
-      style={{ cursor: 'pointer', position: 'relative' }}
-      onMouseDown={onMouseDown}
-      onMouseMove={onMouseMove}
-      onMouseUp={onMouseUp}
-      onClick={() => { if (!moved.current) onNavigate('product', p); }}
-    >
-      {p.isNew && (
+    <div className="product-card" style={{ cursor: 'pointer', position: 'relative' }} onClick={onClick}>
+      {p.isNew && !p.soldOut && (
         <div style={{
           position: 'absolute', top: 8, left: 8, zIndex: 3,
           background: 'linear-gradient(135deg,#ff2d00,#ffd000)',
@@ -66,6 +54,18 @@ function FeaturedCard({ p, onNavigate }) {
           padding: '2px 7px', borderRadius: 20, letterSpacing: 1,
           boxShadow: '0 2px 8px rgb(255, 0, 0)',
         }}>NEW</div>
+      )}
+
+      {p.soldOut && (
+        <div style={{
+          position: 'absolute', top: '50%', left: '50%', zIndex: 4,
+          transform: 'translate(-50%, -50%)',
+          background: 'rgba(220,42,42,0.92)',
+          color: '#fff', fontSize: 10, fontWeight: 900,
+          padding: '5px 14px', borderRadius: 20, letterSpacing: 1,
+          whiteSpace: 'nowrap',
+          boxShadow: '0 4px 14px rgba(0,0,0,0.5)',
+        }}>ESAURITO</div>
       )}
 
       <div className="product-card-img-wrap" style={{ userSelect: 'none', position: 'relative' }}>
@@ -102,7 +102,7 @@ function FeaturedCard({ p, onNavigate }) {
         )}
       </div>
 
-      <div className="product-card-body">
+      <div className="product-card-body" style={{ opacity: p.soldOut ? 0.55 : 1 }}>
         {p.brand && <div className="product-card-brand" style={{ fontSize: 9 }}>{p.brand}</div>}
         <div className="product-card-name" style={{ fontSize: 13 }}>{p.name} {p.emoji}</div>
         <div className="product-card-price" style={{ fontSize: 12 }}>da €{p.prices[0].price}</div>
@@ -114,40 +114,40 @@ function FeaturedCard({ p, onNavigate }) {
 /* ─── HomePage ────────────────────────────────────────────────────────── */
 export default function HomePage({ onNavigate, onTabChange }) {
   const featured = PRODUCTS
-    .filter(p => p.isNew === true && !p.soldOut)
+    .filter(p => p.isNew === true)
     .sort((a, b) => (b.dateAdded ?? '').localeCompare(a.dateAdded ?? ''));
 
-  // Infinite-loop swipeable row: the list is tripled (prev/current/next set)
-  // so there's always real content on both sides to scroll into. When the
-  // user's swipe gets close to either end, we silently snap scrollLeft back
-  // by exactly one set's width — same content, no visible jump — which is
-  // what makes it feel like it loops forever in both directions.
-  const scrollRef = useRef(null);
-  const [rowReady, setRowReady] = useState(false);
-  const loopItems = featured.length > 1
-    ? [...featured, ...featured, ...featured]
-    : featured; // don't loop-triple a single item, nothing to swipe to
+  // ── Auto-rotating "wheel" carousel ──────────────────────────────────
+  // The centered card is full-size/bright; cards further out (by shortest
+  // circular distance) shrink and darken. Advances on its own every few
+  // seconds and loops forever — tapping a side card also jumps it to center
+  // and resets the timer, so a manual tap doesn't get immediately undone by
+  // the next auto-tick.
+  const n = featured.length;
+  const [centerIndex, setCenterIndex] = useState(0);
+  const autoplayRef = useRef(null);
+
+  const startAutoplay = () => {
+    if (autoplayRef.current) clearInterval(autoplayRef.current);
+    if (n <= 1) return;
+    autoplayRef.current = setInterval(() => {
+      setCenterIndex(i => (i + 1) % n);
+    }, 4600); // was 3200ms — slowed to match the smoother/longer 1.1s glide below
+  };
 
   useEffect(() => {
-    const el = scrollRef.current;
-    if (!el || featured.length <= 1) { setRowReady(true); return; }
-    // Wait a frame so the tripled content has actually laid out and
-    // scrollWidth is measurable, then start the user on the middle copy.
-    requestAnimationFrame(() => {
-      const oneSetWidth = el.scrollWidth / 3;
-      el.scrollLeft = oneSetWidth;
-      setRowReady(true);
-    });
-  }, [featured.length]);
+    startAutoplay();
+    return () => clearInterval(autoplayRef.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [n]);
 
-  const handleScroll = () => {
-    const el = scrollRef.current;
-    if (!el || featured.length <= 1) return;
-    const oneSetWidth = el.scrollWidth / 3;
-    if (el.scrollLeft < oneSetWidth * 0.1) {
-      el.scrollLeft += oneSetWidth;
-    } else if (el.scrollLeft > oneSetWidth * 1.9) {
-      el.scrollLeft -= oneSetWidth;
+  const goToCard = (index, product) => {
+    const d = signedCircularDistance(index, centerIndex, n);
+    if (d === 0) {
+      onNavigate('product', product);
+    } else {
+      setCenterIndex(index);
+      startAutoplay(); // give the user's own pick a full interval before it auto-advances again
     }
   };
 
@@ -294,17 +294,31 @@ export default function HomePage({ onNavigate, onTabChange }) {
               </h2>
             </div>
 
-            <div
-              className="featured-scroll"
-              ref={scrollRef}
-              onScroll={handleScroll}
-              style={{ marginBottom: 24, opacity: rowReady ? 1 : 0, transition: 'opacity 0.2s ease' }}
-            >
-              {loopItems.map((p, i) => (
-                <div key={`${p.id}-${i}`} className="featured-scroll-item">
-                  <FeaturedCard p={p} onNavigate={onNavigate} />
-                </div>
-              ))}
+            <div className="featured-wheel">
+              {featured.map((p, i) => {
+                const d = signedCircularDistance(i, centerIndex, n);
+                const absD = Math.abs(d);
+                if (absD > 2) return null; // only render the 5 cards that could plausibly be visible
+
+                const scale = absD === 0 ? 1 : absD === 1 ? 0.9 : 0.48;
+                const dim = absD === 0 ? 1 : absD === 1 ? 0.85 : 0.16;
+                const spacing = 108; // px offset per step away from center
+
+                return (
+                  <div
+                    key={p.id}
+                    className="featured-wheel-item"
+                    style={{
+                      transform: `translateX(${d * spacing}px) scale(${scale})`,
+                      opacity: dim,
+                      filter: `brightness(${0.4 + dim * 0.6})`,
+                      zIndex: 10 - absD,
+                    }}
+                  >
+                    <FeaturedCard p={p} onClick={() => goToCard(i, p)} />
+                  </div>
+                );
+              })}
             </div>
           </>
         )}
