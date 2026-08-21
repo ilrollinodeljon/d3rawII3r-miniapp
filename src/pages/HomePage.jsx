@@ -230,23 +230,23 @@ export default function HomePage({ onNavigate, onTabChange }) {
       <div className="container">
         <div className="spacer-12" />
 
-        {/* ── Hero ── */}
-        <div style={{ textAlign: 'center', padding: '4px 0 16px' }}>
+        {/* ── Hero — kept deliberately small so New Drops sits closer to
+             the fold; this was the single biggest space cost on the page ── */}
+        <div style={{ textAlign: 'center', padding: '0 0 4px' }}>
           <img
             src="/logo.png"
             alt="logo"
-            style={{ width: 128, height: 128, objectFit: 'contain' }}
+            style={{ width: 99, height: 99, objectFit: 'contain' }}
             onError={e => { e.target.style.display = 'none'; }}
           />
-          
-          
 
           <p style={{
             color: '#ffffffbc',
-            fontSize: 16,
+            fontSize: 15,
             fontWeight: 400,
-            letterSpacing: 1,
-            marginTop: 0,
+            letterSpacing: 0.5,
+            marginTop: 2,
+            marginBottom: 12,
             textShadow: '0 2px 8px rgba(0,0,0,0.7)',
             textTransform: 'none',
           }}>
@@ -255,36 +255,37 @@ export default function HomePage({ onNavigate, onTabChange }) {
         </div>
 
         {/* ── CTA Buttons ── */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 8 }}>
           <button
             className="btn btn-ghost"
             style={{ 
               padding: '14px 14px',
-              fontWeight: 700, 
               fontSize: 14,
               borderRadius: '9999px',
               height: '54px'
             }}
             onClick={() => onTabChange('orders')}
           >
-            📋 I miei ordini
+            <span className="btn-label">📋 I MIEI ORDINI</span>
           </button>
           <button
             className="btn btn-gold"
             style={{ 
               padding: '14px 14px',
-              fontWeight: 700, 
               fontSize: 15,
               borderRadius: '9999px',
               height: '54px'
             }}
             onClick={() => onTabChange('shop')}
           >
-            🛍️ SHOP
+            <span className="btn-label">🛍️ SHOP</span>
+            <span className="resin-drip" aria-hidden="true">
+              <i></i><i></i><i></i>
+            </span>
           </button>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 28 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 20 }}>
           <a
             href="https://t.me/ilrawller"
             target="_blank" 
@@ -292,7 +293,6 @@ export default function HomePage({ onNavigate, onTabChange }) {
             className="btn btn-ghost"
             style={{ 
               padding: '14px 14px',
-              fontWeight: 700, 
               fontSize: 15,
               borderRadius: '9999px',
               textDecoration: 'none',
@@ -303,7 +303,7 @@ export default function HomePage({ onNavigate, onTabChange }) {
               height: '54px'
             }}
           >
-            ✈️ TELEGRAM
+            <span className="btn-label">✈️ TELEGRAM</span>
           </a>
           <a
             href="https://instagram.com/therawller"
@@ -312,7 +312,6 @@ export default function HomePage({ onNavigate, onTabChange }) {
             className="btn btn-ghost"
             style={{ 
               padding: '14px 14px',
-              fontWeight: 700, 
               fontSize: 15,
               borderRadius: '9999px',
               textDecoration: 'none',
@@ -323,7 +322,7 @@ export default function HomePage({ onNavigate, onTabChange }) {
               height: '54px'
             }}
           >
-            📸 INSTAGRAM
+            <span className="btn-label">📸 INSTAGRAM</span>
           </a>
         </div>
 
@@ -333,8 +332,8 @@ export default function HomePage({ onNavigate, onTabChange }) {
             <div style={{ textAlign: 'center', marginBottom: 10 }}>
               <h2 style={{
                 fontFamily: 'var(--font-display)',
-                fontSize: 40,
-                letterSpacing: 3,
+                fontSize: 38,
+                letterSpacing: 2,
                 color: '#fff',
                 textShadow: `
                   0 0 20px rgba(255,255,255,0.6),
@@ -343,7 +342,7 @@ export default function HomePage({ onNavigate, onTabChange }) {
                 `,
                 display: 'inline-block',
               }}>
-                🔥NEW DROPS🔥
+                🔥TASTE THE NEW DROPS🔥
               </h2>
             </div>
 
