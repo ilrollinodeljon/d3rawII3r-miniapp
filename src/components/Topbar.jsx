@@ -54,8 +54,15 @@ export default function Topbar({ onBack, onSupport, onProfile }) {
         <h2 style={{
           margin: 0,
           fontFamily: 'var(--font-display)',
-          fontSize: 22, fontWeight: 700, letterSpacing: 4,
+          fontSize: 30, fontWeight: 700, letterSpacing: 4,
           color: '#ffffff',
+          textShadow: `
+              0 0 10px rgba(255,255,255,0.45),
+              0 0 28px rgba(0, 37, 4, 0.33),
+              0 0 60px rgba(200,168,75,0.28),
+              0 0 90px rgba(200,168,75,0.14),
+              0 4px 12px rgba(0,0,0,0.80)
+            `,
         }}>
           THE RAWLLER SHOP
         </h2>

@@ -239,23 +239,7 @@ export default function HomePage({ onNavigate, onTabChange }) {
             onError={e => { e.target.style.display = 'none'; }}
           />
           
-          <h1 style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: 40,
-            letterSpacing: 4,
-            marginTop: 0,
-            marginBottom: 0,
-            color: '#ffffff',
-            textShadow: `
-              0 0 10px rgba(255,255,255,0.45),
-              0 0 28px rgba(0, 37, 4, 0.33),
-              0 0 60px rgba(200,168,75,0.28),
-              0 0 90px rgba(200,168,75,0.14),
-              0 4px 12px rgba(0,0,0,0.80)
-            `,
-          }}>
-            THE  RAWLLER  SHOP
-          </h1>
+          
 
           <p style={{
             color: '#ffffffbc',
@@ -266,7 +250,7 @@ export default function HomePage({ onNavigate, onTabChange }) {
             textShadow: '0 2px 8px rgba(0,0,0,0.7)',
             textTransform: 'none',
           }}>
-            Il miglior terpene a casa tua.
+            TR Shop, il miglior terpene a casa tua.
           </p>
         </div>
 
@@ -409,7 +393,8 @@ export default function HomePage({ onNavigate, onTabChange }) {
         {/* ── Info notice ── */}
         <div className="notice" style={{ marginBottom: 24 }}>
           ⚠️ Ordine minimo €{SHOP_CONFIG.minOrderShipping} per la spedizione tramite corriere.
-          Delivery disponibile solo in Lombardia e Liguria.
+          
+          📍Delivery disponibile solo in Lombardia e Liguria.
         </div>
 
         {/* ── Recently viewed ── */}
