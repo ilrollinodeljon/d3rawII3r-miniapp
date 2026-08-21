@@ -241,10 +241,10 @@ export default function HomePage({ onNavigate, onTabChange }) {
           
           <h1 style={{
             fontFamily: 'var(--font-display)',
-            fontSize: 48,
-            letterSpacing: 3,
-            marginTop: 8,
-            marginBottom: 4,
+            fontSize: 40,
+            letterSpacing: 4,
+            marginTop: 0,
+            marginBottom: 0,
             color: '#ffffff',
             textShadow: `
               0 0 10px rgba(255,255,255,0.45),
@@ -254,7 +254,7 @@ export default function HomePage({ onNavigate, onTabChange }) {
               0 4px 12px rgba(0,0,0,0.80)
             `,
           }}>
-            THE RAWLLER SHOP
+            THE  RAWLLER  SHOP
           </h1>
 
           <p style={{
@@ -277,7 +277,7 @@ export default function HomePage({ onNavigate, onTabChange }) {
             style={{ 
               padding: '20px 16px',
               fontWeight: 500, 
-              fontSize: 18,
+              fontSize: 16,
               borderRadius: '9999px',
               height: '68px'
             }}
@@ -349,8 +349,8 @@ export default function HomePage({ onNavigate, onTabChange }) {
             <div style={{ textAlign: 'center', marginBottom: 10 }}>
               <h2 style={{
                 fontFamily: 'var(--font-display)',
-                fontSize: 48,
-                letterSpacing: 5,
+                fontSize: 40,
+                letterSpacing: 3,
                 color: '#fff',
                 textShadow: `
                   0 0 20px rgba(255,255,255,0.6),
