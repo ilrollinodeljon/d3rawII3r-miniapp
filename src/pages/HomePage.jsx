@@ -2,16 +2,6 @@ import { useState, useRef, useEffect } from 'react';
 import { PRODUCTS, SHOP_CONFIG } from '../config';
 import { getRecentlyViewed } from '../utils/recentlyViewed';
 
-// Shortest signed distance from `index` to `center` around a circle of size n.
-// e.g. n=6, center=0, index=5 → -1 (one step left), not +5 (five steps right).
-function signedCircularDistance(index, center, n) {
-  if (n === 0) return 0;
-  let d = index - center;
-  if (d > n / 2) d -= n;
-  if (d < -n / 2) d += n;
-  return d;
-}
-
 /* ─── Mini featured card — video (once loaded) or image fallback ───────── */
 function FeaturedCard({ p, onClick }) {
   const images = (p.media ?? []).filter(m => m.type === 'image');
@@ -117,22 +107,60 @@ export default function HomePage({ onNavigate, onTabChange }) {
     .filter(p => p.isNew === true)
     .sort((a, b) => (b.dateAdded ?? '').localeCompare(a.dateAdded ?? ''));
 
-  // ── Auto-rotating "wheel" carousel ──────────────────────────────────
-  // The centered card is full-size/bright; cards further out (by shortest
-  // circular distance) shrink and darken. Advances on its own every few
-  // seconds and loops forever — tapping a side card also jumps it to center
-  // and resets the timer, so a manual tap doesn't get immediately undone by
-  // the next auto-tick.
+  // ── Auto-rotating + swipeable "gear" carousel ───────────────────────
+  //
+  // WHAT WAS ACTUALLY WRONG LAST TIME: the tripled-array version reset a
+  // single global `tick` counter by subtracting n whenever it got too big.
+  // That subtraction shifted EVERY card's position by the same amount in
+  // the same instant — not just the one card at the boundary — so the
+  // entire visible row swapped to unrelated products all at once. That's
+  // the "all the products do a switch" you saw.
+  //
+  // THE FIX: no tripled array, no global reset at all. Each product keeps
+  // its own simple index (0..n-1) and we compute, fresh each render, the
+  // single nearest lap of the circle for that product — a plain, cheap
+  // calculation with no shared state to desync. A wrap point is still
+  // mathematically unavoidable somewhere on a circle, so we keep it
+  // harmless by making sure it only ever happens *outside* the visible
+  // window — i.e. the number of cards shown automatically shrinks a bit
+  // for small catalogs, so there's always enough real products to fill
+  // the row without needing to double one up mid-screen.
+  // ── Auto-rotating + swipeable "gear" carousel ───────────────────────
+  //
+  // You want the full row of cards visible even with a small catalog —
+  // that means some products will occasionally appear twice at once (there
+  // just aren't enough distinct items to fill 7 slots otherwise). That's
+  // fine and expected. What actually has to never happen is a JUMP: no
+  // card should ever teleport from one spot to another.
+  //
+  // How this stays jump-free: instead of each product having one "current
+  // position" that gets recalculated (and can flip) every render, each
+  // product can have up to two simultaneous instances — one lap around the
+  // circle, and the next lap after it. Each instance's position is a
+  // plain, continuous straight-line function of `tick` — it enters the
+  // visible row smoothly from one edge and exits smoothly from the other,
+  // and a brand-new instance only ever mounts already sitting just outside
+  // the edge (invisible-ish, about to glide in), never mid-screen. Nothing
+  // is ever reassigned or reset — there's simply nothing left to jump.
   const n = featured.length;
-  const [centerIndex, setCenterIndex] = useState(0);
+
+  const [tick, setTick] = useState(0); // never reset — just grows/shrinks freely, forever
+  const [dragOffset, setDragOffset] = useState(0); // live px offset while a finger/mouse is down
+  const [isDragging, setIsDragging] = useState(false);
   const autoplayRef = useRef(null);
+  const dragStartX = useRef(null);
+  const wheelRef = useRef(null);
+  const movedRef = useRef(false); // true once a drag has moved past a tiny threshold
+
+  const SPACING = 84;         // px between each card's resting position — tune to taste
+  const MAX_STEPS = n <= 1 ? 0 : 3.3; // how many steps out still get rendered (7 cards total)
 
   const startAutoplay = () => {
     if (autoplayRef.current) clearInterval(autoplayRef.current);
     if (n <= 1) return;
     autoplayRef.current = setInterval(() => {
-      setCenterIndex(i => (i + 1) % n);
-    }, 4600); // was 3200ms — slowed to match the smoother/longer 1.1s glide below
+      setTick(t => t + 1);
+    }, 4600);
   };
 
   useEffect(() => {
@@ -141,14 +169,55 @@ export default function HomePage({ onNavigate, onTabChange }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [n]);
 
-  const goToCard = (index, product) => {
-    const d = signedCircularDistance(index, centerIndex, n);
-    if (d === 0) {
+  // For product `i`, find every "lap" k (i shifted by k full trips around
+  // the catalog) whose position currently falls inside the visible window.
+  // Usually exactly one; briefly two when a small catalog can't otherwise
+  // fill the row. Each (i, k) pair is a stable, independent, continuously-
+  // moving instance — nothing about it ever gets reassigned mid-flight.
+  const visibleCards = featured.flatMap((p, i) => {
+    if (n === 0) return [];
+    const kBase = Math.floor((tick - i) / n);
+    const out = [];
+    for (const k of [kBase, kBase + 1]) {
+      const d = i + k * n - tick;
+      if (Math.abs(d) <= MAX_STEPS) out.push({ p, i, k, d });
+    }
+    return out;
+  });
+
+  const handleCardTap = (product, d) => {
+    if (movedRef.current) return;
+    if (Math.round(d) === 0) {
       onNavigate('product', product);
     } else {
-      setCenterIndex(index);
-      startAutoplay(); // give the user's own pick a full interval before it auto-advances again
+      setTick(t => t - d); // shift by exactly this card's current distance → it glides smoothly to center
+      startAutoplay();
     }
+  };
+
+  // ── Drag-to-swipe: the row follows the finger 1:1 while dragging (no
+  // CSS transition, direct tracking), then on release snaps to the
+  // nearest whole step and hands off to the normal animated transition.
+  const onDragStart = (clientX) => {
+    dragStartX.current = clientX;
+    movedRef.current = false;
+    setIsDragging(true);
+    if (autoplayRef.current) clearInterval(autoplayRef.current);
+  };
+  const onDragMove = (clientX) => {
+    if (dragStartX.current === null) return;
+    const dx = clientX - dragStartX.current;
+    if (Math.abs(dx) > 6) movedRef.current = true;
+    setDragOffset(dx);
+  };
+  const onDragEnd = () => {
+    if (dragStartX.current === null) return;
+    const steps = Math.round(-dragOffset / SPACING);
+    setTick(t => t + steps);
+    setDragOffset(0);
+    setIsDragging(false);
+    dragStartX.current = null;
+    startAutoplay();
   };
 
   const recentIds = getRecentlyViewed();
@@ -172,10 +241,10 @@ export default function HomePage({ onNavigate, onTabChange }) {
           
           <h1 style={{
             fontFamily: 'var(--font-display)',
-            fontSize: 46,
+            fontSize: 48,
             letterSpacing: 3,
-            marginTop: 3,
-            marginBottom: 0,
+            marginTop: 8,
+            marginBottom: 4,
             color: '#ffffff',
             textShadow: `
               0 0 10px rgba(255,255,255,0.45),
@@ -190,11 +259,10 @@ export default function HomePage({ onNavigate, onTabChange }) {
 
           <p style={{
             color: '#ffffffbc',
-            fontSize: 15,
+            fontSize: 16,
             fontWeight: 400,
             letterSpacing: 1,
             marginTop: 0,
-            marginBottom: 10,
             textShadow: '0 2px 8px rgba(0,0,0,0.7)',
             textTransform: 'none',
           }}>
@@ -215,7 +283,7 @@ export default function HomePage({ onNavigate, onTabChange }) {
             }}
             onClick={() => onTabChange('orders')}
           >
-            📋 I MIEI ORDINI
+            📋 I miei ordini
           </button>
           <button
             className="btn btn-gold"
@@ -278,7 +346,7 @@ export default function HomePage({ onNavigate, onTabChange }) {
         {/* ── New Drops ── */}
         {featured.length > 0 && (
           <>
-            <div style={{ textAlign: 'center', marginBottom: 18 }}>
+            <div style={{ textAlign: 'center', marginBottom: 10 }}>
               <h2 style={{
                 fontFamily: 'var(--font-display)',
                 fontSize: 48,
@@ -295,28 +363,42 @@ export default function HomePage({ onNavigate, onTabChange }) {
               </h2>
             </div>
 
-            <div className="featured-wheel">
-              {featured.map((p, i) => {
-                const d = signedCircularDistance(i, centerIndex, n);
-                const absD = Math.abs(d);
-                if (absD > 2) return null; // only render the 5 cards that could plausibly be visible
+            <div
+              className="featured-wheel"
+              ref={wheelRef}
+              onTouchStart={e => onDragStart(e.touches[0].clientX)}
+              onTouchMove={e => onDragMove(e.touches[0].clientX)}
+              onTouchEnd={onDragEnd}
+              onMouseDown={e => onDragStart(e.clientX)}
+              onMouseMove={e => { if (dragStartX.current !== null) onDragMove(e.clientX); }}
+              onMouseUp={onDragEnd}
+              onMouseLeave={() => { if (dragStartX.current !== null) onDragEnd(); }}
+            >
+              {visibleCards.map(({ p, k, d }) => {
+                const liveD = d + (isDragging ? dragOffset / SPACING : 0);
+                const absLiveD = Math.abs(liveD);
 
-                const scale = absD === 0 ? 1 : absD === 1 ? 0.9 : 0.48;
-                const dim = absD === 0 ? 1 : absD === 1 ? 0.85 : 0.16;
-                const spacing = 108; // px offset per step away from center
+                // Continuous falloff instead of fixed tiers, so dragging feels
+                // like a smooth physical wheel rather than snapping between steps.
+                const t = MAX_STEPS > 0 ? Math.min(absLiveD / MAX_STEPS, 1) : 0;
+                const scale = 1 - t * 0.62;
+                const dim = 1 - Math.pow(t, 1.4) * 0.85;
 
                 return (
                   <div
-                    key={p.id}
+                    key={`${p.id}-${k}`}
                     className="featured-wheel-item"
                     style={{
-                      transform: `translateX(${d * spacing}px) scale(${scale})`,
+                      transform: `translateX(${liveD * SPACING}px) scale(${scale})`,
                       opacity: dim,
-                      filter: `brightness(${0.4 + dim * 0.6})`,
-                      zIndex: 10 - absD,
+                      filter: `brightness(${0.45 + dim * 0.55})`,
+                      zIndex: 10 - Math.round(absLiveD),
+                      transition: isDragging
+                        ? 'none'
+                        : 'transform 1.1s cubic-bezier(.4,0,.2,1), opacity 1.1s cubic-bezier(.4,0,.2,1), filter 1.1s cubic-bezier(.4,0,.2,1)',
                     }}
                   >
-                    <FeaturedCard p={p} onClick={() => goToCard(i, p)} />
+                    <FeaturedCard p={p} onClick={() => handleCardTap(p, liveD)} />
                   </div>
                 );
               })}

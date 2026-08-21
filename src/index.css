@@ -395,6 +395,8 @@ h1 { font-size: 40px; letter-spacing: 3px; }
   height: 280px;
   margin-bottom: 24px;
   overflow: hidden;
+  touch-action: pan-y; /* horizontal swipe drives the wheel; vertical page-scroll still works */
+  user-select: none;
 }
 .featured-wheel-item {
   position: absolute;
@@ -402,11 +404,11 @@ h1 { font-size: 40px; letter-spacing: 3px; }
   left: 50%;
   width: 130px;
   margin-left: -65px;
-  /* Slower, smoother glide instead of the snappier spring-style easing */
-  transition: transform 1.1s cubic-bezier(.4, 0, .2, 1),
-              opacity 1.1s cubic-bezier(.4, 0, .2, 1),
-              filter 1.1s cubic-bezier(.4, 0, .2, 1);
+  cursor: grab;
+  /* transition is set inline in HomePage.jsx — it's turned off while
+     dragging (for 1:1 finger tracking) and on otherwise (for autoplay/tap). */
 }
+.featured-wheel-item:active { cursor: grabbing; }
 
 /* ── Product card ────────────────────────────────────────────────────── */
 .product-card {
@@ -645,24 +647,29 @@ h1 { font-size: 40px; letter-spacing: 3px; }
   text-decoration: none;
   -webkit-user-select: none;
   user-select: none;
-  transition: transform 0.12s cubic-bezier(.22,.68,0,1.2),
-              box-shadow 0.15s ease,
-              background 0.12s ease,
-              border-color 0.12s ease;
+  transition: transform 0.16s cubic-bezier(.22,.68,0,1.2),
+              box-shadow 0.18s ease,
+              background 0.14s ease,
+              border-color 0.14s ease;
 
-  /* Translucent — lets the scene behind read through, glass not a solid pill */
-  background: rgba(8, 8, 8, 0.40);
-  /* Dark border instead of a light hairline — crisp edge without a bright ring */
-  border: 1.5px solid rgba(0, 0, 0, 0.70);
+  /* More transparent — true see-through glass, not a tinted solid */
+  background: rgba(6, 6, 6, 0.30);
+  /* Dark, slightly thicker edge — a real glass rim, not a light hairline */
+  border: 1.5px solid rgba(0, 0, 0, 0.78);
   color: #fff;
 
-  /* Single soft highlight, no heavy double bevel — reads as slim, not bulky */
+  /* Deep, layered shadow for real floating-glass depth:
+     - a soft top highlight (the "glass" catching light)
+     - a tight contact shadow right under the button (grounds it)
+     - a big soft ambient shadow further out (the "more shadow behind it" ask) */
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.06),
-    0 4px 14px rgba(0, 0, 0, 0.35);
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.35),
+    0 3px 8px rgba(0, 0, 0, 0.45),
+    0 16px 36px rgba(0, 0, 0, 0.55);
 
-  backdrop-filter: blur(16px) saturate(1.0);
-  -webkit-backdrop-filter: blur(16px) saturate(1.0);
+  backdrop-filter: blur(18px) saturate(1.05);
+  -webkit-backdrop-filter: blur(18px) saturate(1.05);
 }
 
 /* Shine streak pseudo-element */
@@ -684,59 +691,73 @@ h1 { font-size: 40px; letter-spacing: 3px; }
 .btn:hover::before { left: 130%; }
 
 .btn:hover {
-  background: rgba(8, 8, 8, 0.55);
-  border-color: rgba(0, 0, 0, 0.85);
-  transform: translateY(-2px);
+  background: rgba(8, 8, 8, 0.42);
+  border-color: rgba(0, 0, 0, 0.9);
+  transform: translateY(-3px);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.09),
-    0 8px 20px rgba(0, 0, 0, 0.4);
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.15),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+    0 4px 10px rgba(0, 0, 0, 0.5),
+    0 22px 44px rgba(0, 0, 0, 0.6);
 }
 
+/* Pre-press "give" — a quick puff up before it settles down, like a real
+   button being pushed, instead of just an instant flat shrink. */
+@keyframes btnPress {
+  0%   { transform: translateY(-3px) scale(1); }
+  30%  { transform: translateY(0px) scale(1.045); }
+  100% { transform: translateY(2px) scale(0.96); }
+}
 .btn:active {
-  transform: scale(0.962) translateY(2px);
-  background: rgba(4, 4, 4, 0.65);
+  animation: btnPress 0.32s cubic-bezier(.34, 1.56, .64, 1) forwards;
+  background: rgba(3, 3, 3, 0.60);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    0 2px 8px rgba(0, 0, 0, 0.4);
-  transition: transform 0.06s ease, box-shadow 0.06s ease;
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 1px 3px rgba(0, 0, 0, 0.5),
+    0 2px 6px rgba(0, 0, 0, 0.4);
 }
 
 .btn:disabled {
   opacity: 0.30;
   cursor: not-allowed;
   transform: none !important;
+  animation: none !important;
 }
 
-/* ── Gold CTA — same slick glass, warm glow instead of a light border ── */
+/* ── Gold CTA — same deep glass, warm glow instead of a light border ── */
 .btn-gold {
-  background: rgba(60, 42, 4, 0.30);
-  border-color: rgba(30, 20, 0, 0.75);
+  background: rgba(50, 36, 4, 0.24);
+  border-color: rgba(28, 19, 0, 0.8);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    0 4px 14px rgba(0, 0, 0, 0.35),
-    0 0 14px rgba(200, 168, 75, 0.14);
-  backdrop-filter: blur(16px) saturate(1.0);
-  -webkit-backdrop-filter: blur(16px) saturate(1.0);
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.14),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.35),
+    0 3px 8px rgba(0, 0, 0, 0.45),
+    0 16px 36px rgba(0, 0, 0, 0.55),
+    0 0 22px rgba(200, 168, 75, 0.16);
+  backdrop-filter: blur(18px) saturate(1.05);
+  -webkit-backdrop-filter: blur(18px) saturate(1.05);
 }
 .btn-gold:hover {
-  background: rgba(70, 50, 6, 0.42);
-  border-color: rgba(40, 28, 0, 0.9);
+  background: rgba(62, 45, 6, 0.34);
+  border-color: rgba(40, 28, 0, 0.95);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    0 8px 20px rgba(0, 0, 0, 0.4),
-    0 0 20px rgba(244, 197, 66, 0.20);
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.18),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+    0 4px 10px rgba(0, 0, 0, 0.5),
+    0 22px 44px rgba(0, 0, 0, 0.6),
+    0 0 30px rgba(244, 197, 66, 0.24);
 }
 
 /* ── Ghost — translucent black, dark hairline, no tint ── */
 .btn-ghost {
-  background: rgba(6, 6, 6, 0.38);
-  border-color: rgba(0, 0, 0, 0.68);
-  backdrop-filter: blur(16px) saturate(1.0);
-  -webkit-backdrop-filter: blur(16px) saturate(1.0);
+  background: rgba(5, 5, 5, 0.28);
+  border-color: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(18px) saturate(1.0);
+  -webkit-backdrop-filter: blur(18px) saturate(1.0);
 }
 .btn-ghost:hover {
-  background: rgba(6, 6, 6, 0.52);
-  border-color: rgba(0, 0, 0, 0.85);
+  background: rgba(6, 6, 6, 0.42);
+  border-color: rgba(0, 0, 0, 0.9);
   color: var(--gold-light);
 }
 
