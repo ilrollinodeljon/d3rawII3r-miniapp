@@ -160,7 +160,7 @@ export default function HomePage({ onNavigate, onTabChange }) {
     if (n <= 1) return;
     autoplayRef.current = setInterval(() => {
       setTick(t => t + 1);
-    }, 4600);
+    }, 2800); // faster auto-advance
   };
 
   useEffect(() => {
@@ -255,15 +255,15 @@ export default function HomePage({ onNavigate, onTabChange }) {
         </div>
 
         {/* ── CTA Buttons ── */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
           <button
             className="btn btn-ghost"
             style={{ 
-              padding: '20px 16px',
-              fontWeight: 500, 
-              fontSize: 16,
+              padding: '14px 14px',
+              fontWeight: 700, 
+              fontSize: 14,
               borderRadius: '9999px',
-              height: '68px'
+              height: '54px'
             }}
             onClick={() => onTabChange('orders')}
           >
@@ -272,11 +272,11 @@ export default function HomePage({ onNavigate, onTabChange }) {
           <button
             className="btn btn-gold"
             style={{ 
-              padding: '20px 16px',
-              fontWeight: 500, 
-              fontSize: 18,
+              padding: '14px 14px',
+              fontWeight: 700, 
+              fontSize: 15,
               borderRadius: '9999px',
-              height: '68px'
+              height: '54px'
             }}
             onClick={() => onTabChange('shop')}
           >
@@ -284,23 +284,23 @@ export default function HomePage({ onNavigate, onTabChange }) {
           </button>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 32 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 28 }}>
           <a
             href="https://t.me/ilrawller"
             target="_blank" 
             rel="noreferrer"
             className="btn btn-ghost"
             style={{ 
-              padding: '20px 16px',
-              fontWeight: 500, 
-              fontSize: 18,
+              padding: '14px 14px',
+              fontWeight: 700, 
+              fontSize: 15,
               borderRadius: '9999px',
               textDecoration: 'none',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               gap: 8,
-              height: '68px'
+              height: '54px'
             }}
           >
             ✈️ TELEGRAM
@@ -311,16 +311,16 @@ export default function HomePage({ onNavigate, onTabChange }) {
             rel="noreferrer"
             className="btn btn-ghost"
             style={{ 
-              padding: '20px 16px',
-              fontWeight: 500, 
-              fontSize: 18,
+              padding: '14px 14px',
+              fontWeight: 700, 
+              fontSize: 15,
               borderRadius: '9999px',
               textDecoration: 'none',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               gap: 8,
-              height: '68px'
+              height: '54px'
             }}
           >
             📸 INSTAGRAM
@@ -364,9 +364,11 @@ export default function HomePage({ onNavigate, onTabChange }) {
 
                 // Continuous falloff instead of fixed tiers, so dragging feels
                 // like a smooth physical wheel rather than snapping between steps.
+                // Falloff is gentler than before — side cards stay noticeably
+                // visible instead of fading into the background.
                 const t = MAX_STEPS > 0 ? Math.min(absLiveD / MAX_STEPS, 1) : 0;
-                const scale = 1 - t * 0.62;
-                const dim = 1 - Math.pow(t, 1.4) * 0.85;
+                const scale = 1 - t * 0.5;
+                const dim = 1 - Math.pow(t, 1.2) * 0.55;
 
                 return (
                   <div
@@ -375,11 +377,14 @@ export default function HomePage({ onNavigate, onTabChange }) {
                     style={{
                       transform: `translateX(${liveD * SPACING}px) scale(${scale})`,
                       opacity: dim,
-                      filter: `brightness(${0.45 + dim * 0.55})`,
+                      filter: `brightness(${0.62 + dim * 0.38})`,
                       zIndex: 10 - Math.round(absLiveD),
+                      // Bouncy overshoot-then-settle easing — each card "clicks"
+                      // into its resting spot like a gear tooth engaging, and
+                      // runs faster than a plain smooth glide.
                       transition: isDragging
                         ? 'none'
-                        : 'transform 1.1s cubic-bezier(.4,0,.2,1), opacity 1.1s cubic-bezier(.4,0,.2,1), filter 1.1s cubic-bezier(.4,0,.2,1)',
+                        : 'transform 0.6s cubic-bezier(.34,1.56,.64,1), opacity 0.5s ease-out, filter 0.5s ease-out',
                     }}
                   >
                     <FeaturedCard p={p} onClick={() => handleCardTap(p, liveD)} />

@@ -627,19 +627,19 @@ h1 { font-size: 40px; letter-spacing: 3px; }
 
 
 
-/* ── Buttons — slick translucent glass, dark hairline border ─ */
+/* ── Buttons — smaller domed glass, dark rim, engraved text ─ */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   width: 100%;
-  padding: 15px 20px;
+  padding: 12px 18px;
   border-radius: 9999px;
   font-family: var(--font-body);
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
-  letter-spacing: 0.4px;
+  letter-spacing: 0.5px;
   cursor: pointer;
   text-align: center;
   position: relative;
@@ -652,24 +652,37 @@ h1 { font-size: 40px; letter-spacing: 3px; }
               background 0.14s ease,
               border-color 0.14s ease;
 
-  /* More transparent — true see-through glass, not a tinted solid */
-  background: rgba(6, 6, 6, 0.30);
+  /* Domed glass: near-transparent at the core, thickening to a darker,
+     denser rim — reads as a convex lens of glass rather than a flat tint */
+  background:
+    radial-gradient(120% 140% at 50% 15%, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0) 42%),
+    radial-gradient(90% 130% at 50% 50%, rgba(10,10,10,0.08) 0%, rgba(5,5,5,0.48) 60%, rgba(0,0,0,0.88) 100%);
   /* Dark, slightly thicker edge — a real glass rim, not a light hairline */
-  border: 1.5px solid rgba(0, 0, 0, 0.78);
+  border: 1.5px solid rgba(0, 0, 0, 0.85);
   color: #fff;
 
-  /* Deep, layered shadow for real floating-glass depth:
-     - a soft top highlight (the "glass" catching light)
+  /* Deep, layered shadow for real floating-glass, domed depth:
+     - a crisp rim highlight up top (catching light on the curve)
+     - an inner dark falloff toward the base (gives it convex thickness)
      - a tight contact shadow right under the button (grounds it)
-     - a big soft ambient shadow further out (the "more shadow behind it" ask) */
+     - a big soft ambient shadow further out (real "floating" depth) */
   box-shadow:
-    inset 0 1.5px 0 rgba(255, 255, 255, 0.12),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.35),
-    0 3px 8px rgba(0, 0, 0, 0.45),
-    0 16px 36px rgba(0, 0, 0, 0.55);
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.18),
+    inset 0 -9px 16px rgba(0, 0, 0, 0.55),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.4),
+    0 2px 6px rgba(0, 0, 0, 0.55),
+    0 16px 32px rgba(0, 0, 0, 0.65);
 
-  backdrop-filter: blur(18px) saturate(1.05);
-  -webkit-backdrop-filter: blur(18px) saturate(1.05);
+  backdrop-filter: blur(16px) saturate(1.05);
+  -webkit-backdrop-filter: blur(16px) saturate(1.05);
+
+  /* Engraved / carved-in-stone lettering: a dark groove shadow sitting
+     above the glyph, a thin bright rim catching light just beneath it,
+     plus a faint astral glow so it still reads as bright, not muddy */
+  text-shadow:
+    0 -1px 1px rgba(0, 0, 0, 0.92),
+    0 1px 0 rgba(255, 255, 255, 0.32),
+    0 0 12px rgba(255, 255, 255, 0.10);
 }
 
 /* Shine streak pseudo-element */
@@ -691,14 +704,17 @@ h1 { font-size: 40px; letter-spacing: 3px; }
 .btn:hover::before { left: 130%; }
 
 .btn:hover {
-  background: rgba(8, 8, 8, 0.42);
-  border-color: rgba(0, 0, 0, 0.9);
+  background:
+    radial-gradient(120% 140% at 50% 15%, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0) 44%),
+    radial-gradient(90% 130% at 50% 50%, rgba(14,14,14,0.14) 0%, rgba(7,7,7,0.56) 60%, rgba(0,0,0,0.94) 100%);
+  border-color: rgba(0, 0, 0, 0.95);
   transform: translateY(-3px);
   box-shadow:
-    inset 0 1.5px 0 rgba(255, 255, 255, 0.15),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
-    0 4px 10px rgba(0, 0, 0, 0.5),
-    0 22px 44px rgba(0, 0, 0, 0.6);
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -9px 16px rgba(0, 0, 0, 0.6),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.45),
+    0 4px 10px rgba(0, 0, 0, 0.55),
+    0 22px 42px rgba(0, 0, 0, 0.7);
 }
 
 /* Pre-press "give" — a quick puff up before it settles down, like a real
@@ -710,10 +726,11 @@ h1 { font-size: 40px; letter-spacing: 3px; }
 }
 .btn:active {
   animation: btnPress 0.32s cubic-bezier(.34, 1.56, .64, 1) forwards;
-  background: rgba(3, 3, 3, 0.60);
+  background:
+    radial-gradient(90% 130% at 50% 50%, rgba(3,3,3,0.35) 0%, rgba(0,0,0,0.78) 60%, rgba(0,0,0,0.98) 100%);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.06),
-    inset 0 1px 3px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 2px 6px rgba(0, 0, 0, 0.75),
     0 2px 6px rgba(0, 0, 0, 0.4);
 }
 
@@ -724,40 +741,102 @@ h1 { font-size: 40px; letter-spacing: 3px; }
   animation: none !important;
 }
 
-/* ── Gold CTA — same deep glass, warm glow instead of a light border ── */
+/* ── Gold CTA (Shop button) — same domed glass, darker amber core, warm
+   glow, and a dripping-highlight running down off the bottom edge to set
+   it apart from every other button on the page ── */
 .btn-gold {
-  background: rgba(50, 36, 4, 0.24);
-  border-color: rgba(28, 19, 0, 0.8);
+  overflow: visible; /* let the drip hang below the pill instead of clipping */
+  background:
+    radial-gradient(120% 140% at 50% 15%, rgba(255,226,36,0.12) 0%, rgba(255,226,36,0) 46%),
+    radial-gradient(90% 130% at 50% 50%, rgba(35,26,3,0.10) 0%, rgba(20,14,1,0.55) 60%, rgba(8,6,0,0.92) 100%);
+  border-color: rgba(20, 14, 0, 0.9);
   box-shadow:
-    inset 0 1.5px 0 rgba(255, 255, 255, 0.14),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.35),
-    0 3px 8px rgba(0, 0, 0, 0.45),
-    0 16px 36px rgba(0, 0, 0, 0.55),
-    0 0 22px rgba(200, 168, 75, 0.16);
-  backdrop-filter: blur(18px) saturate(1.05);
-  -webkit-backdrop-filter: blur(18px) saturate(1.05);
+    inset 0 1.5px 0 rgba(255, 238, 150, 0.26),
+    inset 0 -9px 16px rgba(0, 0, 0, 0.5),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.4),
+    0 2px 6px rgba(0, 0, 0, 0.55),
+    0 16px 32px rgba(0, 0, 0, 0.65),
+    0 0 22px rgba(255, 226, 36, 0.18);
+  backdrop-filter: blur(16px) saturate(1.05);
+  -webkit-backdrop-filter: blur(16px) saturate(1.05);
+  animation: goldPulse 2.8s ease-in-out infinite;
 }
 .btn-gold:hover {
-  background: rgba(62, 45, 6, 0.34);
-  border-color: rgba(40, 28, 0, 0.95);
+  background:
+    radial-gradient(120% 140% at 50% 15%, rgba(255,226,36,0.16) 0%, rgba(255,226,36,0) 48%),
+    radial-gradient(90% 130% at 50% 50%, rgba(46,34,4,0.16) 0%, rgba(26,18,1,0.62) 60%, rgba(10,7,0,0.96) 100%);
+  border-color: rgba(30, 21, 0, 0.98);
   box-shadow:
-    inset 0 1.5px 0 rgba(255, 255, 255, 0.18),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
-    0 4px 10px rgba(0, 0, 0, 0.5),
-    0 22px 44px rgba(0, 0, 0, 0.6),
-    0 0 30px rgba(244, 197, 66, 0.24);
+    inset 0 1.5px 0 rgba(255, 238, 150, 0.32),
+    inset 0 -9px 16px rgba(0, 0, 0, 0.55),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.45),
+    0 4px 10px rgba(0, 0, 0, 0.55),
+    0 22px 42px rgba(0, 0, 0, 0.7),
+    0 0 32px rgba(255, 226, 36, 0.30);
+}
+
+/* Subtle breathing glow so the CTA reads as "alive" against the flat black
+   backgrounds of the other buttons */
+@keyframes goldPulse {
+  0%, 100% {
+    box-shadow:
+      inset 0 1.5px 0 rgba(255, 238, 150, 0.26),
+      inset 0 -9px 16px rgba(0, 0, 0, 0.5),
+      inset 0 0 0 1px rgba(0, 0, 0, 0.4),
+      0 2px 6px rgba(0, 0, 0, 0.55),
+      0 16px 32px rgba(0, 0, 0, 0.65),
+      0 0 20px rgba(255, 226, 36, 0.16);
+  }
+  50% {
+    box-shadow:
+      inset 0 1.5px 0 rgba(255, 238, 150, 0.34),
+      inset 0 -9px 16px rgba(0, 0, 0, 0.5),
+      inset 0 0 0 1px rgba(0, 0, 0, 0.4),
+      0 2px 6px rgba(0, 0, 0, 0.55),
+      0 16px 32px rgba(0, 0, 0, 0.65),
+      0 0 34px rgba(255, 226, 36, 0.34);
+  }
+}
+
+/* Dripping-highlight — small molten-gold drops that bead at the bottom rim
+   and fall away, looping endlessly. Distinguishes SHOP from every other btn. */
+.btn-gold::after {
+  content: '';
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  bottom: -2px;
+  height: 22px;
+  pointer-events: none;
+  background:
+    radial-gradient(circle, rgba(255,226,36,0.95) 0%, rgba(255,226,36,0) 72%) 14% 0 / 7px 7px no-repeat,
+    radial-gradient(circle, rgba(255,238,140,0.92) 0%, rgba(255,238,140,0) 72%) 40% 0 / 5px 9px no-repeat,
+    radial-gradient(circle, rgba(255,226,36,0.95) 0%, rgba(255,226,36,0) 72%) 66% 0 / 9px 13px no-repeat,
+    radial-gradient(circle, rgba(255,238,140,0.88) 0%, rgba(255,238,140,0) 72%) 88% 0 / 4px 6px no-repeat;
+  filter: blur(0.4px);
+  animation: dripFall 2.4s cubic-bezier(.55,0,.85,.35) infinite;
+}
+@keyframes dripFall {
+  0%   { background-position: 14% -2px, 40% -1px, 66% -3px, 88% 0px; opacity: 0; }
+  10%  { opacity: 1; }
+  55%  { opacity: 0.85; }
+  100% { background-position: 14% 18px, 40% 24px, 66% 28px, 88% 12px; opacity: 0; }
 }
 
 /* ── Ghost — translucent black, dark hairline, no tint ── */
 .btn-ghost {
-  background: rgba(5, 5, 5, 0.28);
-  border-color: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(18px) saturate(1.0);
-  -webkit-backdrop-filter: blur(18px) saturate(1.0);
+  background:
+    radial-gradient(120% 140% at 50% 15%, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0) 40%),
+    radial-gradient(90% 130% at 50% 50%, rgba(8,8,8,0.06) 0%, rgba(4,4,4,0.42) 60%, rgba(0,0,0,0.82) 100%);
+  border-color: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(16px) saturate(1.0);
+  -webkit-backdrop-filter: blur(16px) saturate(1.0);
 }
 .btn-ghost:hover {
-  background: rgba(6, 6, 6, 0.42);
-  border-color: rgba(0, 0, 0, 0.9);
+  background:
+    radial-gradient(120% 140% at 50% 15%, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0) 42%),
+    radial-gradient(90% 130% at 50% 50%, rgba(10,10,10,0.1) 0%, rgba(5,5,5,0.5) 60%, rgba(0,0,0,0.9) 100%);
+  border-color: rgba(0, 0, 0, 0.95);
   color: var(--gold-light);
 }
 
