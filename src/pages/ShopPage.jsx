@@ -234,8 +234,10 @@ export default function ShopPage({ onNavigate }) {
     <div className="container -70">
       <div className="shop-hero">
         
-        <h2 className="shop-hero-title">Il Catalogo</h2>
-        <div className="shop-hero-divider" />
+        <h2 className="shop-hero-title">🛒 CATALOGO 🛒</h2>
+
+        
+        
       </div>
 
       <div className="shop-search-row">

@@ -333,7 +333,7 @@ export default function HomePage({ onNavigate, onTabChange }) {
               <h2 style={{
                 fontFamily: 'var(--font-display)',
                 fontSize: 38,
-                letterSpacing: 1,
+                letterSpacing: 0,
                 color: '#fff',
                 textShadow: `
                   0 0 20px rgba(255,255,255,0.6),
@@ -342,7 +342,7 @@ export default function HomePage({ onNavigate, onTabChange }) {
                 `,
                 display: 'inline-block',
               }}>
-                🔥TASTE THE NEW DROPS🔥
+                🔥TASTE THE NEW GAS🔥
               </h2>
             </div>
 
