@@ -44,7 +44,7 @@ export default function Topbar({ onBack, onSupport, onProfile }) {
         <img
           src="/logo-badge.png"
           alt="logo"
-          style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
+          style={{ width: 52, height: 52, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
           onError={e => { e.target.style.display = 'none'; }}
         />
       )}
@@ -54,7 +54,7 @@ export default function Topbar({ onBack, onSupport, onProfile }) {
         <h2 style={{
           margin: 0,
           fontFamily: 'var(--font-display)',
-          fontSize: 22, fontWeight: 700, letterSpacing: 2,
+          fontSize: 22, fontWeight: 700, letterSpacing: 4,
           color: '#ffffff',
         }}>
           THE RAWLLER SHOP
