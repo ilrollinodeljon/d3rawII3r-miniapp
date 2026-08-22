@@ -342,7 +342,7 @@ export default function HomePage({ onNavigate, onTabChange }) {
                 `,
                 display: 'inline-block',
               }}>
-                🔥TASTE THE NEW GAS🔥
+                🔥TASTE THE GAS🔥
               </h2>
             </div>
 
