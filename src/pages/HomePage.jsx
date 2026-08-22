@@ -151,6 +151,8 @@ export default function HomePage({ onNavigate, onTabChange }) {
   const dragStartX = useRef(null);
   const wheelRef = useRef(null);
   const movedRef = useRef(false); // true once a drag has moved past a tiny threshold
+  const velocityRef = useRef(0);  // px/ms at the moment of release, for flick-to-swipe
+  const lastMoveRef = useRef({ x: 0, t: 0 });
 
   const SPACING = 84;         // px between each card's resting position — tune to taste
   const MAX_STEPS = n <= 1 ? 0 : 3.3; // how many steps out still get rendered (7 cards total)
@@ -160,7 +162,7 @@ export default function HomePage({ onNavigate, onTabChange }) {
     if (n <= 1) return;
     autoplayRef.current = setInterval(() => {
       setTick(t => t + 1);
-    }, 2800); // faster auto-advance
+    }, 2400); // faster auto-advance
   };
 
   useEffect(() => {
@@ -196,12 +198,16 @@ export default function HomePage({ onNavigate, onTabChange }) {
   };
 
   // ── Drag-to-swipe: the row follows the finger 1:1 while dragging (no
-  // CSS transition, direct tracking), then on release snaps to the
-  // nearest whole step and hands off to the normal animated transition.
+  // CSS transition, direct tracking). On release, a quick flick carries
+  // extra steps in the swipe direction (velocity-based) instead of only
+  // ever landing on the nearest card — makes fast swipes actually feel
+  // fast instead of always braking to +/-1.
   const onDragStart = (clientX) => {
     dragStartX.current = clientX;
     movedRef.current = false;
     setIsDragging(true);
+    velocityRef.current = 0;
+    lastMoveRef.current = { x: clientX, t: performance.now() };
     if (autoplayRef.current) clearInterval(autoplayRef.current);
   };
   const onDragMove = (clientX) => {
@@ -209,14 +215,30 @@ export default function HomePage({ onNavigate, onTabChange }) {
     const dx = clientX - dragStartX.current;
     if (Math.abs(dx) > 6) movedRef.current = true;
     setDragOffset(dx);
+
+    const now = performance.now();
+    const dt = now - lastMoveRef.current.t;
+    if (dt > 0) {
+      const instV = (clientX - lastMoveRef.current.x) / dt; // px/ms
+      // light smoothing so one jittery sample can't dominate the flick
+      velocityRef.current = velocityRef.current * 0.7 + instV * 0.3;
+    }
+    lastMoveRef.current = { x: clientX, t: now };
   };
   const onDragEnd = () => {
     if (dragStartX.current === null) return;
-    const steps = Math.round(-dragOffset / SPACING);
+    const baseSteps = Math.round(-dragOffset / SPACING);
+    // Fast flick adds momentum: extra whole steps in the swipe direction,
+    // capped so it never rockets across the whole wheel in one release.
+    const flickSteps = Math.abs(velocityRef.current) > 0.5
+      ? Math.sign(-velocityRef.current) * Math.min(2, Math.round(Math.abs(velocityRef.current) * 2))
+      : 0;
+    const steps = baseSteps + (Math.sign(flickSteps) === Math.sign(baseSteps) || baseSteps === 0 ? flickSteps : 0);
     setTick(t => t + steps);
     setDragOffset(0);
     setIsDragging(false);
     dragStartX.current = null;
+    velocityRef.current = 0;
     startAutoplay();
   };
 
@@ -230,23 +252,22 @@ export default function HomePage({ onNavigate, onTabChange }) {
       <div className="container">
         <div className="spacer-12" />
 
-        {/* ── Hero — kept deliberately small so New Drops sits closer to
-             the fold; this was the single biggest space cost on the page ── */}
-        <div style={{ textAlign: 'center', padding: '0 0 4px' }}>
+        {/* ── Hero ── */}
+        <div style={{ textAlign: 'center', padding: '4px 0 8px' }}>
           <img
             src="/logo.png"
             alt="logo"
-            style={{ width: 99, height: 99, objectFit: 'contain' }}
+            style={{ width: 132, height: 132, objectFit: 'contain' }}
             onError={e => { e.target.style.display = 'none'; }}
           />
 
           <p style={{
             color: '#ffffffbc',
-            fontSize: 15,
+            fontSize: 17,
             fontWeight: 400,
             letterSpacing: 0.5,
-            marginTop: 2,
-            marginBottom: 12,
+            marginTop: 4,
+            marginBottom: 14,
             textShadow: '0 2px 8px rgba(0,0,0,0.7)',
             textTransform: 'none',
           }}>
@@ -383,7 +404,7 @@ export default function HomePage({ onNavigate, onTabChange }) {
                       // runs faster than a plain smooth glide.
                       transition: isDragging
                         ? 'none'
-                        : 'transform 0.6s cubic-bezier(.34,1.56,.64,1), opacity 0.5s ease-out, filter 0.5s ease-out',
+                        : 'transform 0.4s cubic-bezier(.3,1.3,.5,1), opacity 0.32s ease-out, filter 0.32s ease-out',
                     }}
                   >
                     <FeaturedCard p={p} onClick={() => handleCardTap(p, liveD)} />
