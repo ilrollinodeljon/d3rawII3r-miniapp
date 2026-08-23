@@ -280,10 +280,10 @@ export default function HomePage({ onNavigate, onTabChange }) {
           <button
             className="btn btn-ghost"
             style={{ 
-              padding: '14px 14px',
-              fontSize: 14,
-              borderRadius: '9999px',
-              height: '54px'
+              padding: '10px 14px',
+              fontSize: 13,
+              borderRadius: '17px',
+              height: '44px'
             }}
             onClick={() => onTabChange('orders')}
           >
@@ -292,17 +292,14 @@ export default function HomePage({ onNavigate, onTabChange }) {
           <button
             className="btn btn-gold"
             style={{ 
-              padding: '14px 14px',
-              fontSize: 15,
-              borderRadius: '9999px',
-              height: '54px'
+              padding: '10px 14px',
+              fontSize: 14,
+              borderRadius: '17px',
+              height: '44px'
             }}
             onClick={() => onTabChange('shop')}
           >
             <span className="btn-label">🛍️ SHOP</span>
-            <span className="resin-drip" aria-hidden="true">
-              <i></i><i></i><i></i>
-            </span>
           </button>
         </div>
 
@@ -313,15 +310,15 @@ export default function HomePage({ onNavigate, onTabChange }) {
             rel="noreferrer"
             className="btn btn-ghost"
             style={{ 
-              padding: '14px 14px',
-              fontSize: 15,
-              borderRadius: '9999px',
+              padding: '10px 14px',
+              fontSize: 14,
+              borderRadius: '17px',
               textDecoration: 'none',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: 8,
-              height: '54px'
+              gap: 7,
+              height: '44px'
             }}
           >
             <span className="btn-label">✈️ TELEGRAM</span>
@@ -332,15 +329,15 @@ export default function HomePage({ onNavigate, onTabChange }) {
             rel="noreferrer"
             className="btn btn-ghost"
             style={{ 
-              padding: '14px 14px',
-              fontSize: 15,
-              borderRadius: '9999px',
+              padding: '10px 14px',
+              fontSize: 14,
+              borderRadius: '17px',
               textDecoration: 'none',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: 8,
-              height: '54px'
+              gap: 7,
+              height: '44px'
             }}
           >
             <span className="btn-label">📸 INSTAGRAM</span>

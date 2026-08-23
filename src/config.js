@@ -33,7 +33,7 @@ export const DELIVERY_METHODS = [
     id: "delivery_pavia",
     label: "Delivery PV-MI-IM",
     icon: "📍",
-    note: "Il servizio di delivery ha un costo aggiuntivo in base al tragitto.",
+    note: "Il servizio di delivery ha un costo aggiuntivo in base al tragitt,ti sarà comunicato al momento della ricezione dell'ordine.",
     fields: ["zone", "address"],
     extraCost: true,
   },
@@ -98,7 +98,6 @@ export const PRODUCTS = [
       { grams: 100, price: 2200 },
 ],
   },
-  
   {
     id: "plasma_static",
     dateAdded: "2026-06-01",
@@ -274,9 +273,9 @@ export const PRODUCTS = [
     name: "Mr. Brown🧁",
     category: "edibles",
     isNew: true,
-    brand: "THC EDIBLES",
+    brand: "T*C EDIBLES",
     emoji: "",
-    description: "Brownie al cioccolato infuso al THC realizzato con fiori di Cali Spain straight out of the jar e ingredienti di prima qualità",
+    description: "Brownie al cioccolato infuso al T*C realizzato con fiori di Cali Spain straight out of the jar e ingredienti di prima qualità",
     media: [
       { type: "image", url: "/products/mr_brown.jpg" },
       { type: "video", url: "/products/mr_brown_2.mp4" },
