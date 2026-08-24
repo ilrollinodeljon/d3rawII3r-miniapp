@@ -257,7 +257,7 @@ export default function HomePage({ onNavigate, onTabChange }) {
           <img
             src="/logo.png"
             alt="logo"
-            style={{ width: 120, height: 120, objectFit: 'contain' }}
+            style={{ width: 115, height: 115, objectFit: 'contain' }}
             onError={e => { e.target.style.display = 'none'; }}
           />
 
@@ -266,8 +266,8 @@ export default function HomePage({ onNavigate, onTabChange }) {
             fontSize: 17,
             fontWeight: 400,
             letterSpacing: 0.5,
-            marginTop: 4,
-            marginBottom: 14,
+            marginTop: 2,
+            marginBottom: 8,
             textShadow: '0 2px 8px rgba(0,0,0,0.7)',
             textTransform: 'none',
           }}>
