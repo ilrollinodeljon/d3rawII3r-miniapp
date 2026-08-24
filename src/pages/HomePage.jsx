@@ -257,17 +257,17 @@ export default function HomePage({ onNavigate, onTabChange }) {
           <img
             src="/logo.png"
             alt="logo"
-            style={{ width: 115, height: 115, objectFit: 'contain' }}
+            style={{ width: 108, height: 108, objectFit: 'contain' }}
             onError={e => { e.target.style.display = 'none'; }}
           />
 
           <p style={{
             color: '#ffffffbc',
-            fontSize: 17,
+            fontSize: 14,
             fontWeight: 400,
             letterSpacing: 0.5,
-            marginTop: 2,
-            marginBottom: 8,
+            marginTop: 0,
+            marginBottom: 5,
             textShadow: '0 2px 8px rgba(0,0,0,0.7)',
             textTransform: 'none',
           }}>
