@@ -618,7 +618,7 @@ h1 { font-size: 40px; letter-spacing: 3px; }
 /* ── Notice ──────────────────────────────────────────────────────────── */
 .notice {
   background: rgba(0, 0, 0, 0.563);
-  border: 1px solid rgba(255, 255, 255, 0.135);
+  border: 1px solid rgba(255, 255, 255, 0.076);
   border-radius: var(--radius-sm);
   padding: 10px 14px;
   font-size: 12px; color: rgb(255, 255, 255); line-height: 1.5;

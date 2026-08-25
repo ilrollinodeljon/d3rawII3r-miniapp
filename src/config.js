@@ -273,9 +273,9 @@ export const PRODUCTS = [
     name: "Mr. Brown🧁",
     category: "edibles",
     isNew: true,
-    brand: "T*C EDIBLES",
+    brand: "INFUSED EDIBLES",
     emoji: "",
-    description: "Brownie al cioccolato infuso al T*C realizzato con fiori di Cali Spain straight out of the jar e ingredienti di prima qualità",
+    description: "Brownie al cioccolato infuso realizzato con fiori di Cali Spain e ingredienti di prima qualità per garantire un'esperienza di 4-6 ore.",
     media: [
       { type: "image", url: "/products/mr_brown.jpg" },
       { type: "video", url: "/products/mr_brown_2.mp4" },
