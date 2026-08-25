@@ -25,6 +25,19 @@ export default function ProductPage({ product: p, onBack }) {
     return `${rounded}€/${p.unit}`;
   };
 
+  // The price-tier pills are a fixed width (1/3 of the grid), but the
+  // "€{price} ({perUnit})" line gets a lot longer on the bigger tiers
+  // (€120 vs €3600) and was overflowing/wrapping outside the pill. Rather
+  // than one fixed size that's cramped on small tiers or overflowing on
+  // big ones, step the font size down as that specific line gets longer.
+  const priceLineFontSize = (tierPrice, tierQty) => {
+    const label = `€${tierPrice} (${formatPerUnit(tierPrice, tierQty)})`;
+    if (label.length <= 13) return 13;
+    if (label.length <= 15) return 11.5;
+    if (label.length <= 17) return 10.5;
+    return 9.5;
+  };
+
   const mediaList = p.media ?? (p.image ? [{ type: 'image', url: p.image }] : []);
   
   const initialIndex = useMemo(() => {
@@ -333,26 +346,32 @@ export default function ProductPage({ product: p, onBack }) {
             {p.prices.map(tier => {
               const tq = getQtyKey(tier);
               const sel = qty === tq;
+              const priceFS = priceLineFontSize(tier.price, tq);
               return (
                 <button 
                   key={tq} 
                   onClick={() => setQty(tq)}
                   style={{ 
-                    padding: '8px 8px', 
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '6px 4px', 
                     borderRadius: 9999, 
                     height: 56,
-                    lineHeight: 1.3,
+                    overflow: 'hidden',
                     border: sel ? '1.5px solid var(--gold-light)' : '1.5px solid rgba(255,255,255,0.08)',
                     background: sel ? 'rgba(200,168,75,0.16)' : 'rgba(20,20,20,0.55)',
                     color: sel ? 'var(--gold-light)' : '#e5e5e5', 
-                    fontWeight: 700, 
-                    fontSize: 14 
+                    fontWeight: 700
                   }}
                 >
-                  {tq}{p.unit}<br />
-                  <span style={{ fontSize: 13 }}>
+                  <span style={{ fontSize: 14, lineHeight: 1.2, whiteSpace: 'nowrap' }}>
+                    {tq}{p.unit}
+                  </span>
+                  <span style={{ fontSize: priceFS, lineHeight: 1.25, whiteSpace: 'nowrap', marginTop: 1 }}>
                     €{tier.price}
-                    <span style={{ fontSize: 10, opacity: 0.65, fontWeight: 600 }}>
+                    <span style={{ fontSize: priceFS * 0.78, opacity: 0.65, fontWeight: 600 }}>
                       {' '}({formatPerUnit(tier.price, tq)})
                     </span>
                   </span>
