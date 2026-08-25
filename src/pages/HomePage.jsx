@@ -281,21 +281,21 @@ export default function HomePage({ onNavigate, onTabChange }) {
             className="btn btn-ghost"
             style={{ 
               padding: '10px 14px',
-              fontSize: 13,
+              fontSize: 14,
               borderRadius: '17px',
-              height: '44px'
+              height: '46px'
             }}
             onClick={() => onTabChange('orders')}
           >
             <span className="btn-label">📋 I MIEI ORDINI</span>
           </button>
           <button
-            className="btn btn-gold"
+            className="btn btn-ghost"
             style={{ 
               padding: '10px 14px',
               fontSize: 14,
               borderRadius: '17px',
-              height: '44px'
+              height: '46px'
             }}
             onClick={() => onTabChange('shop')}
           >
@@ -318,7 +318,7 @@ export default function HomePage({ onNavigate, onTabChange }) {
               alignItems: 'center',
               justifyContent: 'center',
               gap: 7,
-              height: '44px'
+              height: '46px'
             }}
           >
             <span className="btn-label">✈️ TELEGRAM</span>
@@ -337,7 +337,7 @@ export default function HomePage({ onNavigate, onTabChange }) {
               alignItems: 'center',
               justifyContent: 'center',
               gap: 7,
-              height: '44px'
+              height: '46px'
             }}
           >
             <span className="btn-label">📸 INSTAGRAM</span>
@@ -347,7 +347,7 @@ export default function HomePage({ onNavigate, onTabChange }) {
         {/* ── New Drops ── */}
         {featured.length > 0 && (
           <>
-            <div style={{ textAlign: 'center', marginBottom: 10 }}>
+            <div style={{ textAlign: 'center', marginBottom: 4 }}>
               <h2 style={{
                 fontFamily: 'var(--font-display)',
                 fontSize: 38,
