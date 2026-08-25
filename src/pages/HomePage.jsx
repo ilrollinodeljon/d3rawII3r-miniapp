@@ -253,7 +253,7 @@ export default function HomePage({ onNavigate, onTabChange }) {
         <div className="spacer-12" />
 
         {/* ── Hero ── */}
-        <div style={{ textAlign: 'center', padding: '4px 0 8px' }}>
+        <div style={{ textAlign: 'center', padding: '0px 0 8px' }}>
           <img
             src="/logo.png"
             alt="logo"
@@ -414,9 +414,9 @@ export default function HomePage({ onNavigate, onTabChange }) {
 
         {/* ── Info notice ── */}
         <div className="notice" style={{ marginBottom: 24 }}>
-          ⚠️ Ordine minimo €{SHOP_CONFIG.minOrderShipping} per la spedizione tramite corriere.
+          📍📍📍📍📍Delivery disponibile in Lombardia, Liguria e Piemonte.📍📍📍📍📍
+          ⚠️⚠️⚠️Ordine minimo €{SHOP_CONFIG.minOrderShipping} per la spedizione tramite corriere.⚠️⚠️⚠️           
           
-          📍Delivery disponibile solo in Lombardia e Liguria.
         </div>
 
         {/* ── Recently viewed ── */}
