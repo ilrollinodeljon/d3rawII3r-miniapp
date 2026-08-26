@@ -511,7 +511,7 @@ export default function CartPage() {
             {error && <p className="error-text" style={{ margin: '12px 0' }}>⚠️ {error}</p>}
 
             <button 
-              className="btn btn-gold" 
+              className="btn btn-ghost" 
               onClick={handleSubmit} 
               disabled={sending || cart.length === 0 || !cartValidation.valid}
             >
