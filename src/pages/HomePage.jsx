@@ -253,11 +253,11 @@ export default function HomePage({ onNavigate, onTabChange }) {
         <div className="spacer-12" />
 
         {/* ── Hero ── */}
-        <div style={{ textAlign: 'center', padding: '0px 0 6px' }}>
+        <div style={{ textAlign: 'center', padding: '4px 0 8px' }}>
           <img
             src="/logo.png"
             alt="logo"
-            style={{ width: 105, height: 105, objectFit: 'contain' }}
+            style={{ width: 108, height: 108, objectFit: 'contain' }}
             onError={e => { e.target.style.display = 'none'; }}
           />
 
@@ -281,13 +281,13 @@ export default function HomePage({ onNavigate, onTabChange }) {
             className="btn btn-ghost"
             style={{ 
               padding: '10px 14px',
-              fontSize: 14,
+              fontSize: 13,
               borderRadius: '17px',
-              height: '46px'
+              height: '44px'
             }}
-            onClick={() => onTabChange('orders')}
+            onClick={() => onNavigate('work-with-us')}
           >
-            <span className="btn-label">📋 I MIEI ORDINI</span>
+            <span className="btn-label">🤝 LAVORA CON NOI</span>
           </button>
           <button
             className="btn btn-ghost"
@@ -295,7 +295,7 @@ export default function HomePage({ onNavigate, onTabChange }) {
               padding: '10px 14px',
               fontSize: 14,
               borderRadius: '17px',
-              height: '46px'
+              height: '44px'
             }}
             onClick={() => onTabChange('shop')}
           >
@@ -318,7 +318,7 @@ export default function HomePage({ onNavigate, onTabChange }) {
               alignItems: 'center',
               justifyContent: 'center',
               gap: 7,
-              height: '46px'
+              height: '44px'
             }}
           >
             <span className="btn-label">✈️ TELEGRAM</span>
@@ -337,7 +337,7 @@ export default function HomePage({ onNavigate, onTabChange }) {
               alignItems: 'center',
               justifyContent: 'center',
               gap: 7,
-              height: '46px'
+              height: '44px'
             }}
           >
             <span className="btn-label">📸 INSTAGRAM</span>
@@ -347,7 +347,7 @@ export default function HomePage({ onNavigate, onTabChange }) {
         {/* ── New Drops ── */}
         {featured.length > 0 && (
           <>
-            <div style={{ textAlign: 'center', marginBottom: 4 }}>
+            <div style={{ textAlign: 'center', marginBottom: 10 }}>
               <h2 style={{
                 fontFamily: 'var(--font-display)',
                 fontSize: 38,
@@ -414,9 +414,9 @@ export default function HomePage({ onNavigate, onTabChange }) {
 
         {/* ── Info notice ── */}
         <div className="notice" style={{ marginBottom: 24 }}>
-          📍Delivery disponibile in Lombardia, Liguria e Piemonte.📍
-          ⚠️Ordine minimo €{SHOP_CONFIG.minOrderShipping} per la spedizione tramite corriere.⚠️           
+          ⚠️ Ordine minimo €{SHOP_CONFIG.minOrderShipping} per la spedizione tramite corriere.
           
+          📍Delivery disponibile solo in Lombardia e Liguria.
         </div>
 
         {/* ── Recently viewed ── */}

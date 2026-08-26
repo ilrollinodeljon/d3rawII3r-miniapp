@@ -7,6 +7,7 @@ import CartPage from './pages/CartPage';
 import OrdersPage from './pages/OrdersPage';
 import SupportPage from './pages/SupportPage';
 import ProfilePage from './pages/ProfilePage';
+import WorkWithUsPage from './pages/WorkWithUsPage';
 import BottomNav from './components/BottomNav';
 import Topbar from './components/Topbar';
 
@@ -97,6 +98,7 @@ export default function App() {
       case 'home': return <HomePage onNavigate={navigate} onTabChange={changeTab} />;
       case 'shop': return <ShopPage onNavigate={navigate} />;
       case 'product': return <ProductPage product={selectedProduct} onBack={goBack} />;
+      case 'work-with-us': return <WorkWithUsPage onBack={goBack} />;
       case 'cart': return <CartPage />;
       case 'orders': return <OrdersPage />;
       case 'support': return <SupportPage />;

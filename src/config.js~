@@ -55,7 +55,7 @@ export const DELIVERY_METHODS = [
         label: "UPS",
         icon: "🚛",
         fields: ["nome", "cognome", "telefono", "indirizzo", "cap", "citta"],
-      },"ckd"
+      },ckd
     ],
   },
 ];
