@@ -55,7 +55,7 @@ function FeaturedCard({ p, onClick }) {
           padding: '5px 14px', borderRadius: 20, letterSpacing: 1,
           whiteSpace: 'nowrap',
           boxShadow: '0 4px 14px rgba(0,0,0,0.5)',
-        }}>ESAURITO</div>
+        }}>Soldout</div>
       )}
 
       <div className="product-card-img-wrap" style={{ userSelect: 'none', position: 'relative' }}>

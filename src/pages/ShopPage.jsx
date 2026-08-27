@@ -127,7 +127,7 @@ function ProductCard({ p, onNavigate, isFav, onToggleFav }) {
         )}
 
         {p.soldOut && (
-          <div className="product-card-soldout-banner">Esaurito</div>
+          <div className="product-card-soldout-banner">Soldout</div>
         )}
 
         <SwipeableImages media={p.media} />
