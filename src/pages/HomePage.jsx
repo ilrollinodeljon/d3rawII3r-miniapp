@@ -299,7 +299,7 @@ export default function HomePage({ onNavigate, onTabChange }) {
             }}
             onClick={() => onTabChange('shop')}
           >
-            <span className="btn-label">🛍️ SHOP</span>
+            <span className="btn-label">🛍️ SHOP 🛍️</span>
           </button>
         </div>
 
