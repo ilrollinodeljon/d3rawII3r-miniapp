@@ -255,9 +255,9 @@ export default function HomePage({ onNavigate, onTabChange }) {
         {/* ── Hero ── */}
         <div style={{ textAlign: 'center', padding: '4px 0 8px' }}>
           <img
-            src="/logo.png"
+            src="/logo-badge.png"
             alt="logo"
-            style={{ width: 108, height: 108, objectFit: 'contain' }}
+            style={{ width: 90, height: 90, objectFit: 'contain' }}
             onError={e => { e.target.style.display = 'none'; }}
           />
 

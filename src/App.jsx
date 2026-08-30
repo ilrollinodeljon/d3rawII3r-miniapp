@@ -124,7 +124,7 @@ export default function App() {
           height: '100%',
           objectFit: 'cover',
           zIndex: 0,
-          opacity: 0.55,
+          opacity: 0.95,
           filter: 'brightness(0.78)',
           pointerEvents: 'none',
         }}

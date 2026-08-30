@@ -42,9 +42,9 @@ export default function Topbar({ onBack, onSupport, onProfile }) {
         </button>
       ) : (
         <img
-          src="/logo-badge.png"
+          src="/logo.png"
           alt="logo"
-          style={{ width: 52, height: 52, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
+          style={{ width: 44, height: 44, borderRadius: '00%', objectFit: 'cover', flexShrink: 0 }}
           onError={e => { e.target.style.display = 'none'; }}
         />
       )}
