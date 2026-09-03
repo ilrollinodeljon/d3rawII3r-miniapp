@@ -19,6 +19,7 @@ export default function App() {
 
   const bgVideoRef = useRef(null);
 
+  // ── Navigation helpers (defined first so effects can safely close over them) ──
   const navigate = (page, data) => {
     setStack(s => [...s, { tab, selectedProduct }]);
     if (page === 'product') setSelectedProduct(data);
@@ -40,6 +41,7 @@ export default function App() {
     setSelectedProduct(null);
   };
 
+  // ── Telegram WebApp init + lock scrolling ──
   useEffect(() => {
     const tg = window.Telegram?.WebApp;
     if (tg) {
@@ -55,7 +57,9 @@ export default function App() {
     document.body.style.margin = '0';
   }, []);
 
-  // Deep-link from bot buttons: ?page=shop | support | work-with-us
+  // ── Deep-link support from bot buttons (?page=shop / work-with-us / support) ──
+  // Runs only on the very first mount while tab is still 'home'.
+  // work-with-us goes through navigate() so the back button returns to Home.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const page = params.get('page');
@@ -67,15 +71,18 @@ export default function App() {
       navigate('work-with-us');
     }
 
+    // Strip the query so a later pull-to-refresh lands on Home
     window.history.replaceState({}, '', window.location.pathname);
-  }, []);
+  }, []); // intentionally empty – only run once on mount
 
+  // ── Keep background video playing ──
   useEffect(() => {
     if (bgVideoRef.current) {
       bgVideoRef.current.play().catch(() => {});
     }
   }, [tab]);
 
+  // ── Pull-to-Refresh ──
   useEffect(() => {
     const scrollContainer = document.getElementById('main-scroll');
     if (!scrollContainer) return;
@@ -106,20 +113,30 @@ export default function App() {
 
   const renderPage = () => {
     switch (tab) {
-      case 'home': return <HomePage onNavigate={navigate} onTabChange={changeTab} />;
-      case 'shop': return <ShopPage onNavigate={navigate} />;
-      case 'product': return <ProductPage product={selectedProduct} onBack={goBack} />;
-      case 'work-with-us': return <WorkWithUsPage onBack={goBack} />;
-      case 'cart': return <CartPage />;
-      case 'orders': return <OrdersPage />;
-      case 'support': return <SupportPage />;
-      case 'profile': return <ProfilePage />;
-      default: return <HomePage onNavigate={navigate} onTabChange={changeTab} />;
+      case 'home':
+        return <HomePage onNavigate={navigate} onTabChange={changeTab} />;
+      case 'shop':
+        return <ShopPage onNavigate={navigate} />;
+      case 'product':
+        return <ProductPage product={selectedProduct} onBack={goBack} />;
+      case 'work-with-us':
+        return <WorkWithUsPage onBack={goBack} />;
+      case 'cart':
+        return <CartPage />;
+      case 'orders':
+        return <OrdersPage />;
+      case 'support':
+        return <SupportPage />;
+      case 'profile':
+        return <ProfilePage />;
+      default:
+        return <HomePage onNavigate={navigate} onTabChange={changeTab} />;
     }
   };
 
   return (
     <div style={{ height: '100vh', position: 'relative', overflow: 'hidden' }}>
+      {/* Persistent Background Video */}
       <video
         ref={bgVideoRef}
         autoPlay
@@ -141,12 +158,14 @@ export default function App() {
         <source src="/bg.mp4" type="video/mp4" />
       </video>
 
+      {/* Global Fixed Topbar */}
       <Topbar
         onBack={stack.length > 0 ? goBack : null}
         onSupport={() => changeTab('support')}
         onProfile={() => changeTab('profile')}
       />
 
+      {/* Scrollable Content */}
       <div
         id="main-scroll"
         style={{
@@ -166,7 +185,11 @@ export default function App() {
       </div>
 
       <BottomNav
-        active={['home', 'shop', 'cart', 'orders', 'support', 'profile'].includes(tab) ? tab : 'home'}
+        active={
+          ['home', 'shop', 'cart', 'orders', 'support', 'profile'].includes(tab)
+            ? tab
+            : 'home'
+        }
         onChange={changeTab}
         cartCount={cart.length}
       />
