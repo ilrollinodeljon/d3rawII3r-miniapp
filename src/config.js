@@ -71,10 +71,41 @@ export const PAYMENT_METHODS = [
 // ===========================================
 export const PRODUCTS = [
   // ── HASH ──────────────────────────────────────────────────
-  {
-    id: "cali_plates",
+ {
+    
+    
+    id: "nino-frozen",
     dateAdded: "2026-07-19",
     sortOrder: 1,
+    name: "Niño's Farm s2026 Frozen Premium 120/90u",
+    soldOut: false,
+    isNew: true,
+    category: "hash",
+    brand: "Niño's Farm",
+    emoji: "",
+    description: "que",
+    media: [
+      { type: "video", url: "/products/nino-frozen.mp4" },
+      { type: "image", url: "/products/nino-frozen.jpg" },
+      { type: "image", url: "/products/nino-frozen.PNG" }
+    ],
+    minQty: 5,
+    unit: "g",
+    strains: ["White Cookies"], 
+    prices: [
+     { grams: 10,  price: 125 },
+      { grams: 25,  price: 280 },
+      { grams: 50,  price: 480 },
+      { grams: 100, price: 950 },
+      { grams: 250, price: 2400 },
+      { grams: 500, price: 4450 },
+],
+  }, {
+    
+    
+    id: "cali_plates",
+    dateAdded: "2026-07-19",
+    sortOrder: 2,
     name: "CaliPlates x Lionboldt limited edition⚡️",
     soldOut: true,
     isNew: true,
@@ -101,7 +132,7 @@ export const PRODUCTS = [
   {
     id: "plasma_static",
     dateAdded: "2026-06-01",
-    sortOrder: 2,
+    sortOrder: 3,
     name: "Plasma Static",
     isNew: true,
     soldOut: true,
@@ -128,11 +159,11 @@ export const PRODUCTS = [
   {
     id: "fresh_frozen",
     dateAdded: "2026-06-02",
-    sortOrder: 3,
+    sortOrder: 4,
     name: "Fresh frozen s.2026❄️",
     category: "hash",
-    isNew: true,
-    soldOut: false,
+    isNew: false,
+    soldOut: true,
     brand: "H.C.M.",
     emoji: "",
     description: "Hash prodotto da materiale fresco congelato subito dopo la raccolta per preservare l'integrità di tricomi e terpeni.",
@@ -156,7 +187,7 @@ export const PRODUCTS = [
   {
     id: "bufalo_plein",
     dateAdded: "2026-06-20",
-    sortOrder: 4,
+    sortOrder: 5,
     name: "Filtrato 120u🏆",
     category: "hash",
     isNew: true,
@@ -183,7 +214,7 @@ export const PRODUCTS = [
   {
     id: "filtered_90u",
     dateAdded: "2026-06-10",
-    sortOrder: 5,
+    sortOrder: 6,
     name: "WT Filtrato 90u🎁",
     category: "hash",
     isNew: true,
