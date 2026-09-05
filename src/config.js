@@ -77,21 +77,20 @@ export const PRODUCTS = [
     id: "nino-frozen",
     dateAdded: "2026-07-19",
     sortOrder: 1,
-    name: "Niño's Farm s2026 Frozen Premium 120/90u",
+    name: "Niño's Farm🔥 Frozen Premium s2026",
     soldOut: false,
     isNew: true,
     category: "hash",
     brand: "Niño's Farm",
     emoji: "",
-    description: "que",
+    description: "Fresh Frozen crafted from top-shelf single source flower harvested at peak trichome maturity with a 120/90 micron pull capturing the purest heads for a full spectrum terpene profile",
     media: [
       { type: "video", url: "/products/nino-frozen.mp4" },
-      { type: "image", url: "/products/nino-frozen.jpg" },
-      { type: "image", url: "/products/nino-frozen.PNG" }
+      { type: "image", url: "/products/nino-frozen.JPG" },
     ],
     minQty: 5,
     unit: "g",
-    strains: ["White Cookies"], 
+    strains: ["White Cookies", "Orange Punch"], 
     prices: [
      { grams: 10,  price: 125 },
       { grams: 25,  price: 280 },
@@ -116,7 +115,7 @@ export const PRODUCTS = [
     media: [
       { type: "image", url: "/products/cali_plates.jpg" },
       { type: "image", url: "/products/cali_plates_2.jpg" },
-      { type: "image", url: "/products/cali_plates_3.jpg" }
+      { type: "image", url: "/products/cali_plates_3.jpg" },
     ],
     minQty: 5,
     unit: "g",
