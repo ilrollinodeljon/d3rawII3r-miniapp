@@ -309,7 +309,7 @@ export default function HomePage({ onNavigate, onTabChange }) {
             style={{ fontSize: 13 }}
             onClick={() => onNavigate('work-with-us')}
           >
-            <span className="btn-label">🤝 LAVORA CON NOI</span>
+            <span className="btn-label">🤝LAVORA CON NOI</span>
           </button>
           <button
             className="btn btn-ghost"
