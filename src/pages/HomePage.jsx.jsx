@@ -2,40 +2,13 @@ import { useState, useRef, useEffect } from 'react';
 import { PRODUCTS, SHOP_CONFIG } from '../config';
 import { getRecentlyViewed } from '../utils/recentlyViewed';
 
-/* ─── Mini featured card — video (once loaded) or image fallback ───────── */
-function FeaturedCard({ p, onClick }) {
+/* ─── Mini featured card — always the still image, never the video ─────── */
+function FeaturedCard({ p }) {
   const images = (p.media ?? []).filter(m => m.type === 'image');
-  const videos = (p.media ?? []).filter(m => m.type === 'video');
   const posterSrc = images[0]?.url ?? (p.image || 'https://placehold.co/300x375/141414/555?text=IMG');
-  const videoSrc = videos[0]?.url ?? null;
-
-  const [videoReady, setVideoReady] = useState(false);
-  const videoRef = useRef(null);
-
-  // Only start showing/playing the video once it's fully buffered enough to
-  // play through without stalling — until then the poster image stays visible.
-  useEffect(() => {
-    if (!videoSrc || !videoRef.current) return;
-    const v = videoRef.current;
-    setVideoReady(false);
-
-    const onCanPlayThrough = () => {
-      setVideoReady(true);
-      v.play().catch(() => {}); // autoplay can be blocked silently — poster stays as fallback
-    };
-    const onError = () => setVideoReady(false);
-
-    v.addEventListener('canplaythrough', onCanPlayThrough);
-    v.addEventListener('error', onError);
-    return () => {
-      v.removeEventListener('canplaythrough', onCanPlayThrough);
-      v.removeEventListener('error', onError);
-      v.pause();
-    };
-  }, [videoSrc]);
 
   return (
-    <div className="product-card" style={{ cursor: 'pointer', position: 'relative' }} onClick={onClick}>
+    <div className="product-card" style={{ cursor: 'pointer', position: 'relative' }}>
       {p.isNew && !p.soldOut && (
         <div style={{
           position: 'absolute', top: 8, left: 8, zIndex: 3,
@@ -63,33 +36,9 @@ function FeaturedCard({ p, onClick }) {
           src={posterSrc}
           alt={p.name}
           draggable={false}
-          style={{
-            pointerEvents: 'none',
-            opacity: videoReady ? 0 : 1,
-            transition: 'opacity 0.35s ease',
-          }}
+          style={{ pointerEvents: 'none' }}
           onError={e => { e.target.src = 'https://placehold.co/300x375/141414/555?text=IMG'; }}
         />
-        {videoSrc && (
-          <video
-            ref={videoRef}
-            src={videoSrc}
-            muted
-            loop
-            playsInline
-            preload="auto"
-            style={{
-              position: 'absolute',
-              inset: 0,
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              opacity: videoReady ? 1 : 0,
-              transition: 'opacity 0.35s ease',
-              pointerEvents: 'none',
-            }}
-          />
-        )}
       </div>
 
       <div className="product-card-body" style={{ opacity: p.soldOut ? 0.55 : 1 }}>
