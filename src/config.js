@@ -92,7 +92,7 @@ export const PRODUCTS = [
     unit: "g",
     strains: ["White Cookies", "Orange Punch"], 
     prices: [
-     { grams: 10,  price: 125 },
+     { grams: 10,  price: 130 },
       { grams: 25,  price: 280 },
       { grams: 50,  price: 480 },
       { grams: 100, price: 950 },
