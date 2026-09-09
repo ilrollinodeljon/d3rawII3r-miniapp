@@ -95,10 +95,10 @@ export const PRODUCTS = [
      { grams: 10,  price: 130 },
       { grams: 25,  price: 280 },
       { grams: 50,  price: 480 },
-      { grams: 100, price: 950 },
-      { grams: 250, price: 2400 },
-      { grams: 500, price: 4450 },
-      { grams: 1000, price: 8500 },
+      { grams: 100, price: 850 },
+      { grams: 250, price: 2000 },
+      { grams: 500, price: 3850 },
+      { grams: 1000, price: 7500 },
 ],
   }, {
     
