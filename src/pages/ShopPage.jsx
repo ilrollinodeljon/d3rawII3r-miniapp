@@ -290,17 +290,55 @@ export default function ShopPage({ onNavigate }) {
       </div>
 
       {filtered.length > 0 ? (
-        <div className="product-grid">
-          {filtered.map(p => (
-            <ProductCard
-              key={p.id}
-              p={p}
-              onNavigate={onNavigate}
-              isFav={favorites.has(p.id)}
-              onToggleFav={toggleFav}
-            />
-          ))}
-        </div>
+        <>
+          {(() => {
+            const availableProducts = filtered.filter(p => !p.soldOut);
+            const soldOutProducts = filtered.filter(p => p.soldOut);
+
+            return (
+              <>
+                {availableProducts.length > 0 && (
+                  <div className="product-grid">
+                    {availableProducts.map(p => (
+                      <ProductCard
+                        key={p.id}
+                        p={p}
+                        onNavigate={onNavigate}
+                        isFav={favorites.has(p.id)}
+                        onToggleFav={toggleFav}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {soldOutProducts.length > 0 && (
+                  <>
+                    <button
+                      type="button"
+                      className="btn btn-gold"
+                      style={{ margin: '24px 0', fontSize: 15.5 }}
+                      onClick={() => onNavigate('work-with-us')}
+                    >
+                      🤝 LAVORA CON NOI
+                    </button>
+
+                    <div className="product-grid">
+                      {soldOutProducts.map(p => (
+                        <ProductCard
+                          key={p.id}
+                          p={p}
+                          onNavigate={onNavigate}
+                          isFav={favorites.has(p.id)}
+                          onToggleFav={toggleFav}
+                        />
+                      ))}
+                    </div>
+                  </>
+                )}
+              </>
+            );
+          })()}
+        </>
       ) : (
         <p style={{ textAlign: 'center', color: 'var(--text-sub)', padding: '40px 20px' }}>
           Nessun prodotto trovato.

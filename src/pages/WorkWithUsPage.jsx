@@ -82,6 +82,8 @@ export default function WorkWithUsPage({ onBack }) {
   const [video, setVideo] = useState(null);
   const [note, setNote] = useState('');
   const [status, setStatus] = useState('idle'); // idle | sending | sent | error
+  const [errorMessage, setErrorMessage] = useState('');
+  const [converting, setConverting] = useState(null); // which slot is mid-HEIC-conversion, if any
 
   const photo1Ref = useRef(null);
   const photo2Ref = useRef(null);
@@ -108,9 +110,44 @@ export default function WorkWithUsPage({ onBack }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const pickFile = (current, setter) => (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  // iPhones hand over HEIC/HEIF when a photo is picked from the library
+  // (not shot live) — Telegram's sendMediaGroup rejects that format outright,
+  // and most browsers can't even preview it. Convert to JPEG client-side
+  // before it ever reaches state, so both the preview and the upload work
+  // everywhere. Requires `npm install heic2any` in the Mini App project;
+  // loaded on demand so nobody pays for the WASM decoder unless they
+  // actually pick a HEIC file.
+  const isHeic = (file) =>
+    /image\/heic|image\/heif/i.test(file.type) ||
+    /\.heic$|\.heif$/i.test(file.name);
+
+  const pickFile = (current, setter, { slotKey, convertHeic = false } = {}) => async (e) => {
+    const rawFile = e.target.files?.[0];
+    if (!rawFile) return;
+
+    let file = rawFile;
+
+    if (convertHeic && isHeic(rawFile)) {
+      setConverting(slotKey);
+      try {
+        const heic2any = (await import('heic2any')).default;
+        const converted = await heic2any({ blob: rawFile, toType: 'image/jpeg', quality: 0.9 });
+        const blob = Array.isArray(converted) ? converted[0] : converted;
+        file = new File(
+          [blob],
+          rawFile.name.replace(/\.(heic|heif)$/i, '.jpg'),
+          { type: 'image/jpeg' }
+        );
+      } catch (err) {
+        console.error('HEIC conversion failed:', err);
+        setConverting(null);
+        e.target.value = '';
+        alert('Questa foto è in formato HEIC e non è stato possibile convertirla automaticamente. Prova a scattarne una nuova o a scegliere un\'immagine JPEG/PNG dalla libreria.');
+        return;
+      }
+      setConverting(null);
+    }
+
     if (current) URL.revokeObjectURL(current.previewUrl);
     setter({ file, previewUrl: URL.createObjectURL(file) });
   };
@@ -126,6 +163,7 @@ export default function WorkWithUsPage({ onBack }) {
   const handleSubmit = async () => {
     if (!ready || status === 'sending') return;
     setStatus('sending');
+    setErrorMessage('');
     try {
       const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
       await sendVendorApplication({
@@ -138,6 +176,7 @@ export default function WorkWithUsPage({ onBack }) {
       window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success');
     } catch (err) {
       console.error('sendVendorApplication failed:', err);
+      setErrorMessage(err.message || 'Errore sconosciuto');
       setStatus('error');
       window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('error');
     }
@@ -165,21 +204,21 @@ export default function WorkWithUsPage({ onBack }) {
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
           <UploadSlot
-            label="Foto 1"
+            label={converting === 'photo1' ? 'Conversione…' : 'Foto 1'}
             media={photo1}
             inputRef={photo1Ref}
             accept="image/*"
             aspect="1/1"
-            onPick={pickFile(photo1, setPhoto1)}
+            onPick={pickFile(photo1, setPhoto1, { slotKey: 'photo1', convertHeic: true })}
             onClear={clearSlot(photo1, setPhoto1, photo1Ref)}
           />
           <UploadSlot
-            label="Foto 2"
+            label={converting === 'photo2' ? 'Conversione…' : 'Foto 2'}
             media={photo2}
             inputRef={photo2Ref}
             accept="image/*"
             aspect="1/1"
-            onPick={pickFile(photo2, setPhoto2)}
+            onPick={pickFile(photo2, setPhoto2, { slotKey: 'photo2', convertHeic: true })}
             onClear={clearSlot(photo2, setPhoto2, photo2Ref)}
           />
         </div>
@@ -232,17 +271,24 @@ export default function WorkWithUsPage({ onBack }) {
             ✓ Candidatura inviata — ti ricontattiamo entro 24h
           </div>
         ) : (
-          <button
-            className="btn btn-gold"
-            onClick={handleSubmit}
-            disabled={!ready || status === 'sending'}
-          >
-            {status === 'sending'
-              ? 'Invio in corso…'
-              : status === 'error'
-                ? '⚠️ Invio non riuscito — riprova'
-                : '📩 Invia candidatura'}
-          </button>
+          <>
+            <button
+              className="btn btn-gold"
+              onClick={handleSubmit}
+              disabled={!ready || status === 'sending'}
+            >
+              {status === 'sending'
+                ? 'Invio in corso…'
+                : status === 'error'
+                  ? '⚠️ Invio non riuscito — riprova'
+                  : '📩 Invia candidatura'}
+            </button>
+            {status === 'error' && errorMessage && (
+              <p style={{ textAlign: 'center', color: 'var(--red, #e05a5a)', fontSize: 12, marginTop: 8 }}>
+                {errorMessage}
+              </p>
+            )}
+          </>
         )}
 
         {!ready && status === 'idle' && (

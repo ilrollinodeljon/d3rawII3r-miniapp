@@ -247,8 +247,8 @@ export const PRODUCTS = [
     name: "Sunset Sherbet🌺",
     category: "weed",
     isNew: true,
-    soldOut: false,
-    brand: "Cali Spain Top Shelf",
+    soldOut: true,
+    brand: "Cali Spain",
     emoji: "",
     description: "Premium Cali Spain-Sunset Sherbet: ibrido indica-dominante di genetica californiana (Girl Scout Cookies × Pink Panties). Aroma e sapore dolci di frutti di bosco, agrumi e crema",
     media: [
@@ -275,9 +275,9 @@ export const PRODUCTS = [
     sortOrder: 2,
     name: "Super Lemon Haze🍋⚡️",
     category: "weed",
-    isNew: true,
+    isNew: false,
     soldOut: true,
-    brand: "Cali Spain",
+    brand: "Spali",
     emoji: "",
     description: "La Super Lemon Haze è una varietà ibrida a predominanza sativa nata dall'incrocio tra Lemon Skunk e Super Silver Haze. Questa varietà possiede spiccate caratteristiche agrumate: il profumo è vivace, citrico e leggermente dolce.",
     media: [
