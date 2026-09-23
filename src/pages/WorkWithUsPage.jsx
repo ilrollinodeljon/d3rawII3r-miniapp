@@ -110,6 +110,15 @@ export default function WorkWithUsPage({ onBack }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Telegram's own hard limits (photo: 10MB, video: 50MB via the multipart
+  // upload path we use). Checking client-side means a bad pick fails fast
+  // with a clear message instead of uploading megabytes just to get a 400
+  // back from Telegram, and it closes off someone deliberately trying to
+  // push oversized files through the form.
+  const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
+  const MAX_VIDEO_BYTES = 50 * 1024 * 1024;
+  const MAX_NOTE_LENGTH = 400; // keeps the built caption safely under Telegram's 1024-char cap
+
   // iPhones hand over HEIC/HEIF when a photo is picked from the library
   // (not shot live) — Telegram's sendMediaGroup rejects that format outright,
   // and most browsers can't even preview it. Convert to JPEG client-side
@@ -121,9 +130,19 @@ export default function WorkWithUsPage({ onBack }) {
     /image\/heic|image\/heif/i.test(file.type) ||
     /\.heic$|\.heif$/i.test(file.name);
 
-  const pickFile = (current, setter, { slotKey, convertHeic = false } = {}) => async (e) => {
+  const pickFile = (current, setter, { slotKey, convertHeic = false, isVideoSlot = false } = {}) => async (e) => {
     const rawFile = e.target.files?.[0];
     if (!rawFile) return;
+
+    // Belt-and-suspenders on top of the input's `accept` attribute, which a
+    // browser/OS file picker can bypass (e.g. "All files" on some Android
+    // pickers) — reject anything that isn't actually image/video data.
+    const expectedPrefix = isVideoSlot ? 'video/' : 'image/';
+    if (rawFile.type && !rawFile.type.startsWith(expectedPrefix) && !(convertHeic && isHeic(rawFile))) {
+      e.target.value = '';
+      alert(isVideoSlot ? 'Seleziona un file video valido.' : 'Seleziona un file immagine valido.');
+      return;
+    }
 
     let file = rawFile;
 
@@ -148,6 +167,14 @@ export default function WorkWithUsPage({ onBack }) {
       setConverting(null);
     }
 
+    const maxBytes = isVideoSlot ? MAX_VIDEO_BYTES : MAX_PHOTO_BYTES;
+    if (file.size > maxBytes) {
+      e.target.value = '';
+      const limitMb = Math.round(maxBytes / (1024 * 1024));
+      alert(`File troppo grande (max ${limitMb}MB). Scegline uno più leggero.`);
+      return;
+    }
+
     if (current) URL.revokeObjectURL(current.previewUrl);
     setter({ file, previewUrl: URL.createObjectURL(file) });
   };
@@ -165,12 +192,14 @@ export default function WorkWithUsPage({ onBack }) {
     setStatus('sending');
     setErrorMessage('');
     try {
-      const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
+      // We no longer read/send initDataUnsafe.user ourselves — the Worker
+      // verifies Telegram's signed initData server-side and derives the
+      // trusted user identity from that instead, so nothing client-supplied
+      // is trusted for who the applicant actually is.
       await sendVendorApplication({
         photos: [photo1.file, photo2.file],
         video: video.file,
-        note,
-        user: tgUser
+        note
       });
       setStatus('sent');
       window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success');
@@ -231,7 +260,7 @@ export default function WorkWithUsPage({ onBack }) {
             accept="video/*"
             isVideo
             aspect="16/9"
-            onPick={pickFile(video, setVideo)}
+            onPick={pickFile(video, setVideo, { isVideoSlot: true })}
             onClear={clearSlot(video, setVideo, videoRef)}
           />
         </div>
@@ -240,9 +269,10 @@ export default function WorkWithUsPage({ onBack }) {
           <div className="section-box-title">✏️ Nota (opzionale)</div>
           <textarea
             value={note}
-            onChange={e => setNote(e.target.value)}
+            onChange={e => setNote(e.target.value.slice(0, MAX_NOTE_LENGTH))}
             placeholder="Es. tipo di prodotto, quantità disponibile, dove ti trovi…"
             rows={3}
+            maxLength={MAX_NOTE_LENGTH}
             style={{
               width: '100%',
               marginTop: 12,
@@ -256,6 +286,9 @@ export default function WorkWithUsPage({ onBack }) {
               fontFamily: 'inherit'
             }}
           />
+          <div style={{ textAlign: 'right', fontSize: 10.5, color: 'var(--text-sub)', marginTop: 4 }}>
+            {note.length}/{MAX_NOTE_LENGTH}
+          </div>
         </div>
 
         {status === 'sent' ? (
