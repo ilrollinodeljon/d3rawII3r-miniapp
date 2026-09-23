@@ -246,7 +246,7 @@ export const PRODUCTS = [
     sortOrder: 1,
     name: "Sunset Sherbet🌺",
     category: "weed",
-    isNew: true,
+    isNew: false,
     soldOut: true,
     brand: "Cali Spain",
     emoji: "",
