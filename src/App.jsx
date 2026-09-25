@@ -67,7 +67,17 @@ export default function App() {
       navigate('work-with-us');
     }
 
-    window.history.replaceState({}, '', window.location.pathname);
+    // Only drop the ?page=... query string — keep the URL hash intact.
+    // Telegram delivers the Mini App's launch data (what initData is built
+    // from) via the hash (#tgWebAppData=...). Wiping it here doesn't break
+    // the CURRENT session (Telegram.WebApp.initData is already cached in
+    // memory from the initial load), but it silently breaks any LATER full
+    // page reload in this session — including the pull-to-refresh gesture
+    // below — since that reloads the page at whatever URL is currently in
+    // the address bar. Reload after the hash was stripped = a fresh page
+    // load with no launch data = initData comes back empty for the rest
+    // of that session, which is exactly what was breaking order submission.
+    window.history.replaceState({}, '', window.location.pathname + window.location.hash);
   }, []);
 
   useEffect(() => {
