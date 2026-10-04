@@ -86,33 +86,85 @@ export default function App() {
     }
   }, [tab]);
 
+  // ── Pull-to-refresh, safe version ──────────────────────────────────────
+  // The previous implementation called window.location.reload() on this
+  // gesture. That's what was silently breaking orders: a full page reload
+  // re-launches the WebView from whatever's currently in the address bar,
+  // and Telegram's signed initData is only guaranteed present on the
+  // ORIGINAL launch URL — a reload can lose it for the rest of the
+  // session, and on some platforms a full navigation like this can be
+  // treated as leaving the Mini App entirely rather than refreshing it.
+  //
+  // This version never touches the URL or reloads the page. "Refresh"
+  // here means re-syncing cart/orders/notifications/checkoutData/balance
+  // from Telegram CloudStorage — the actual data this app can meaningfully
+  // refresh without blowing away its own session.
+  //
+  // Implemented once here (not per-page) because every "page" in this app
+  // renders inside the same #main-scroll container below — they all get
+  // this for free with no per-page code needed.
+  const [pullDistance, setPullDistance] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
+  const pullDistanceRef = useRef(0);
+  const pullStartY = useRef(null);
+
+  const doRefresh = async () => {
+    setRefreshing(true);
+    window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('light');
+    useStore.getState().loadAllData();
+    await new Promise(r => setTimeout(r, 500)); // keep the spinner visible briefly, not an instant flash
+    setRefreshing(false);
+    pullDistanceRef.current = 0;
+    setPullDistance(0);
+  };
+
   useEffect(() => {
     const scrollContainer = document.getElementById('main-scroll');
     if (!scrollContainer) return;
 
-    let startY = 0;
+    const PULL_THRESHOLD = 70;
+    const PULL_MAX = 100;
 
     const handleTouchStart = (e) => {
-      startY = e.touches[0].clientY;
+      pullStartY.current = scrollContainer.scrollTop <= 0 ? e.touches[0].clientY : null;
     };
 
-    const handleTouchEnd = (e) => {
-      const endY = e.changedTouches[0].clientY;
-      const scrollTop = scrollContainer.scrollTop;
-
-      if (scrollTop <= 0 && startY < 100 && endY - startY > 130) {
-        window.location.reload();
+    const handleTouchMove = (e) => {
+      if (pullStartY.current === null || refreshing) return;
+      const dy = e.touches[0].clientY - pullStartY.current;
+      if (dy > 0 && scrollContainer.scrollTop <= 0) {
+        const next = Math.min(dy * 0.5, PULL_MAX); // damped, elastic feel
+        pullDistanceRef.current = next;
+        setPullDistance(next);
+      } else {
+        pullDistanceRef.current = 0;
+        setPullDistance(0);
       }
     };
 
+    const handleTouchEnd = () => {
+      if (pullStartY.current === null) return;
+      pullStartY.current = null;
+      if (pullDistanceRef.current >= PULL_THRESHOLD) {
+        doRefresh();
+      } else {
+        pullDistanceRef.current = 0;
+        setPullDistance(0);
+      }
+    };
+
+    // passive: true throughout — we only ever read touch positions, never
+    // preventDefault, so native scrolling stays completely untouched.
     scrollContainer.addEventListener('touchstart', handleTouchStart, { passive: true });
+    scrollContainer.addEventListener('touchmove', handleTouchMove, { passive: true });
     scrollContainer.addEventListener('touchend', handleTouchEnd, { passive: true });
 
     return () => {
       scrollContainer.removeEventListener('touchstart', handleTouchStart);
+      scrollContainer.removeEventListener('touchmove', handleTouchMove);
       scrollContainer.removeEventListener('touchend', handleTouchEnd);
     };
-  }, []);
+  }, [refreshing]);
 
   const renderPage = () => {
     switch (tab) {
@@ -174,6 +226,41 @@ export default function App() {
       >
         {renderPage()}
       </div>
+
+      {(pullDistance > 0 || refreshing) && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 66,
+            left: '50%',
+            transform: `translateX(-50%) scale(${refreshing ? 1 : Math.min(0.5 + pullDistance / 140, 1)})`,
+            zIndex: 40,
+            opacity: refreshing ? 1 : Math.min(pullDistance / 70, 1),
+            pointerEvents: 'none',
+            transition: pullDistance === 0 && !refreshing ? 'opacity 0.2s ease, transform 0.2s ease' : 'none',
+          }}
+        >
+          <div
+            style={{
+              width: 30,
+              height: 30,
+              borderRadius: '50%',
+              border: '2.5px solid rgba(255,255,255,0.2)',
+              borderTopColor: '#fff',
+              background: 'rgba(0,0,0,0.4)',
+              backdropFilter: 'blur(8px)',
+              animation: refreshing ? 'pull-refresh-spin 0.7s linear infinite' : 'none',
+              transform: refreshing ? 'none' : `rotate(${pullDistance * 3}deg)`,
+            }}
+          />
+        </div>
+      )}
+
+      <style>{`
+        @keyframes pull-refresh-spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
 
       <BottomNav
         active={['home', 'shop', 'cart', 'orders', 'support', 'profile'].includes(tab) ? tab : 'home'}

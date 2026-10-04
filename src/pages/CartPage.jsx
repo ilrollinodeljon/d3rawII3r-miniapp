@@ -161,6 +161,29 @@ export default function CartPage() {
     setSending(true);
     setError('');
     try {
+      // Send to Telegram FIRST, and let a failure here actually be a
+      // failure. Previously this call was wrapped in its own inner
+      // try/catch that just logged the error and fell through to
+      // clearCart() + the success screen regardless of whether it
+      // actually worked — meaning a customer whose order silently failed
+      // to reach the group saw the exact same "✅ Ordine inviato!" screen,
+      // success haptic, and emptied cart as someone whose order went
+      // through. That's what was making every send failure invisible.
+      await sendOrderToTelegram({
+        user, cart, total: finalTotal,
+        subtotal,
+        discountCode: appliedDiscount?.code || discount,
+        discountAmount,
+        delivery: deliveryMethod?.label,
+        courier: isDelivery ? null : courierObj?.label,
+        address,
+        location,
+        payment: availablePayments.find(p => p.id === payment)?.label,
+        notes,
+        preferredDate,
+      });
+
+      // Only record/clear/celebrate once Telegram actually confirmed it.
       const newOrder = {
         id: Date.now(),
         cart: [...cart],
@@ -181,29 +204,17 @@ export default function CartPage() {
         markDiscountAsUsed(appliedDiscount.code);
       }
 
-      try {
-        await sendOrderToTelegram({
-          user, cart, total: finalTotal,
-          subtotal,
-          discountCode: appliedDiscount?.code || discount,
-          discountAmount,
-          delivery: deliveryMethod?.label,
-          courier: isDelivery ? null : courierObj?.label,
-          address,
-          location,
-          payment: availablePayments.find(p => p.id === payment)?.label,
-          notes,
-          preferredDate,
-        });
-      } catch (telegramErr) {
-        console.error('Telegram send failed:', telegramErr);
-      }
-
       clearCart();
       setSuccess(true);
       window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success');
     } catch (e) {
-      setError("Errore nell'invio. Riprova o contatta il supporto.");
+      console.error('Order submission failed:', e);
+      // Surface the real reason when we have one (e.g. this session's
+      // Worker-relay errors: "initData non valido", "Totale non
+      // corretto...", "Troppi ordini in poco tempo...") rather than a
+      // generic message that hides what actually happened.
+      setError(e?.message || "Errore nell'invio. Riprova o contatta il supporto.");
+      window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('error');
     } finally {
       setSending(false);
     }
