@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import { PRODUCTS } from './config';
+const inStock = (i) => { const p = PRODUCTS.find(x => x.id === i.productId); return !!p && !p.soldOut; };
 
 // ── Hardcoded promo codes (non-referral) ──────────────────────────────
 const PROMO_CODES = {
@@ -59,7 +61,7 @@ export const useStore = create((set, get) => ({
   },
 
   loadAllData: () => {
-    get().loadFromCloud('cart',           [],                   (d) => set({ cart: d }));
+    get().loadFromCloud('cart',           [],                   (d) => set({ cart: d.filter(inStock) }));
     get().loadFromCloud('orders',         [],                   (d) => set({ orders: d }));
     get().loadFromCloud('notifications',  get().notifications,  (d) => set({ notifications: d }));
     get().loadFromCloud('checkoutData',   get().checkoutData,   (d) => set({ checkoutData: d }));
@@ -209,6 +211,7 @@ export const useStore = create((set, get) => ({
 
   // ── Cart CRUD ───────────────────────────────────────────────────────
   addToCart: (product, qty, strain) => {
+    if (product?.soldOut) return;
     const existing = get().cart.find(i => i.productId === product.id && i.strain === strain);
     const image    = product.media?.find(m => m.type === 'image')?.url || product.image || '';
     const unit     = product.unit ?? 'g';

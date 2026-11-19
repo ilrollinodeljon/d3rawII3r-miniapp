@@ -7,3 +7,7 @@ dist
 .netlify
 bot/
 bot/
+.env.*
+!.env.example
+*_files/
+*~

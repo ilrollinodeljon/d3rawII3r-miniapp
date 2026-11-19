@@ -239,7 +239,7 @@ export default function HomePage({ onNavigate, onTabChange }) {
 
           <p style={{
             color: '#ffffffbc',
-            fontSize: 14,
+            fontSize: 16,
             fontWeight: 400,
             letterSpacing: 0.5,
             marginTop: 0,
