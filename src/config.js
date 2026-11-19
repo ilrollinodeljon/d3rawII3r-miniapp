@@ -217,7 +217,7 @@ export const PRODUCTS = [
     sortOrder: 6,
     name: "WT Filtrato 90u🎁",
     category: "hash",
-    isNew: true,
+    isNew: false,
     brand: "Hash Angels",
     emoji: "",
     description: "dry 90u.",
