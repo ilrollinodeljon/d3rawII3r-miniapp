@@ -195,7 +195,7 @@ export const PRODUCTS = [
     emoji: "",
     description: "Hash prodotto da materiale fresco congelato e pressato.",
     media: [
-      { type: "image", url: "/products/fresh_frozen.jpg" },
+      { type: "image", url: "/products/frozen_2027.jpg" },
       { type: "video", url: "/products/fresh_frozen.mp4" }
     ],
     minQty: 10,
