@@ -70,6 +70,33 @@ export const PAYMENT_METHODS = [
 //  sortOrder: lower number = shown first within category
 // ===========================================
 export const PRODUCTS = [
+  {
+    id: "cali_gelato",
+    dateAdded: "2026-06-26",
+    sortOrder: 3,
+    name: "Gelato #41🍦",
+    category: "weed",
+    isNew: true,
+    soldOut: false,
+    brand: "Cali USA",
+    emoji: "",
+    description: "Gelato 41 (circa 60% indica e 40% sativa) creato incrociando Sunset Sherbet e Thin Mint Girl Scout Cookies. profilo aromatico complesso che ricorda i dessert, con note di crema dolce, vaniglia, agrumi, menta e cioccolato, talvolta con un finale gassoso o di benzina. ",
+    media: [
+      { type: "image", url: "/products/cali_spa_2.jpg" },
+      { type: "video", url: "/products/cali_spa.mp4" }
+    ],
+    minQty: 10,
+    unit: "g",
+    strains: null,
+    prices: [
+      { grams: 10,  price: 120 },
+      { grams: 25,  price: 240 },
+      { grams: 50,  price: 450 },
+      { grams: 100, price: 850 },
+      { grams: 250, price: 1950 },
+      { grams: 500, price: 3600 },
+    ],
+  },
   // ── HASH ──────────────────────────────────────────────────
  {
     
