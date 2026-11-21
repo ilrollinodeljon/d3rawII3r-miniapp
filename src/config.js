@@ -169,7 +169,6 @@ export const PRODUCTS = [
     description: "Hash prodotto da materiale fresco congelato subito dopo la raccolta per preservare l'integrità di tricomi e terpeni.",
     media: [
       { type: "image", url: "/products/fresh_frozen.jpg" },
-      { type: "image", url: "/products/fresh_frozen_2.jpg" },
       { type: "video", url: "/products/fresh_frozen.mp4" }
     ],
     minQty: 10,
@@ -196,7 +195,7 @@ export const PRODUCTS = [
     emoji: "",
     description: "Hash prodotto da materiale fresco congelato e pressato.",
     media: [
-      { type: "image", url: "/products/frozen_2027.jpg" },
+      { type: "image", url: "/products/fresh_frozen.jpg" },
       { type: "video", url: "/products/fresh_frozen.mp4" }
     ],
     minQty: 10,
@@ -309,7 +308,6 @@ export const PRODUCTS = [
     description: "La Lemon Haze è una varietà a predominanza sativa che profuma e ha il sapore di fette di limone fresco appena sbucciate. La Lemon Haze è stata ottenuta incrociando la Lemon Skunk con la Silver Haze. Le sue cime sono di colore verde e giallo, con peli ambrati sui tricomi che le conferiscono quella sfumatura gialla.",
     media: [
       { type: "image", url: "/products/lemon_haze.jpg" },
-      { type: "image", url: "/products/lemon_haze_2.jpg" },
       { type: "video", url: "/products/lemon_haze.mp4" }
     ],
     minQty: 10,
